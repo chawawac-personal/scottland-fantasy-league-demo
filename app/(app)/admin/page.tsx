@@ -293,7 +293,7 @@ export default function AdminPage() {
         title="Admin Panel"
         subtitle="Scottland Fantasy League Management"
         rightContent={
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-xl">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-xl">
             <Shield className="w-4 h-4 text-red-400" />
             <span className="text-xs font-bold text-red-400">Admin Access</span>
           </div>
@@ -304,13 +304,13 @@ export default function AdminPage() {
         {/* Tab navigation */}
         <div className="flex gap-2 flex-wrap">
           {[
-            { id: "overview", label: "Overview", icon: BarChart2 },
-            { id: "players", label: "Players", icon: Trophy },
-            { id: "users", label: "Users", icon: Users },
-            { id: "matches", label: "Matches", icon: Radio },
-            { id: "notifications", label: "Notifications", icon: Bell },
-            { id: "leagues",       label: "Leagues",       icon: Trophy      },
-            { id: "flags",         label: "Feature Flags", icon: ToggleLeft  },
+            { id: "overview",       label: "Overview",       short: "Overview", icon: BarChart2 },
+            { id: "players",        label: "Players",        short: "Players",  icon: Trophy    },
+            { id: "users",          label: "Users",          short: "Users",    icon: Users     },
+            { id: "matches",        label: "Matches",        short: "Matches",  icon: Radio     },
+            { id: "notifications",  label: "Notifications",  short: "Notifs",   icon: Bell      },
+            { id: "leagues",        label: "Leagues",        short: "Leagues",  icon: Trophy    },
+            { id: "flags",          label: "Feature Flags",  short: "Flags",    icon: ToggleLeft},
           ].map((tab) => (
             <button
               key={tab.id}
@@ -322,8 +322,9 @@ export default function AdminPage() {
                   : "border-slate-200 text-muted-foreground hover:border-sfc-blue/20 hover:text-sfc-black"
               )}
             >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
+              <tab.icon className="w-4 h-4 shrink-0" />
+              <span className="sm:hidden">{tab.short}</span>
+              <span className="hidden sm:inline">{tab.label}</span>
             </button>
           ))}
         </div>
@@ -416,144 +417,211 @@ export default function AdminPage() {
 
           {activeTab === "players" && (
             <motion.div key="players" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <div className="glass-card overflow-x-auto">
-                <div className="flex items-center justify-between p-4 border-b border-slate-200">
+              <div className="glass-card">
+                <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200">
                   <h2 className="font-bold text-sfc-black">Player Management</h2>
-                  <button className="btn-primary text-xs py-2 flex items-center gap-1.5">
+                  <button className="btn-primary text-xs py-2 flex items-center gap-1.5 shrink-0">
                     <Plus className="w-3 h-3" /> Add Player
                   </button>
                 </div>
-                <table className="w-full">
-                  <thead className="bg-slate-100/20">
-                    <tr>
-                      <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground">Player</th>
-                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Pos</th>
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Price</th>
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Points</th>
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Goals</th>
-                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Injured</th>
-                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {players.map((player) => (
-                      <tr key={player.id} className="data-table-row">
-                        <td className="px-5 py-3.5">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-display text-sfc-blue/70">
-                              {player.name.split(" ").map(n => n[0]).join("")}
-                            </div>
-                            <span className="text-sm font-medium text-sfc-black">{player.name}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3.5 text-center">
-                          <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", getPositionColor(player.position))}>
-                            {player.position}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3.5 text-right text-sm text-amber-400">{formatPrice(player.price)}</td>
-                        <td className="px-4 py-3.5 text-right text-sm font-bold text-sfc-blue">{player.total_points}</td>
-                        <td className="px-4 py-3.5 text-right text-sm text-sfc-black">{player.goals}</td>
-                        <td className="px-4 py-3.5 text-center">
-                          <button onClick={() => toggleInjury(player.id)}>
-                            {player.is_injured
-                              ? <XCircle className="w-5 h-5 text-red-400 mx-auto" />
-                              : <CheckCircle className="w-5 h-5 text-sfc-blue mx-auto" />
-                            }
-                          </button>
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <div className="flex items-center justify-center gap-2">
-                            <button onClick={() => setEditingPlayer(player.id)} className="p-1.5 rounded-lg border border-slate-200 hover:border-sfc-blue/30 text-muted-foreground hover:text-sfc-blue transition-colors">
-                              <Edit className="w-3.5 h-3.5" />
-                            </button>
-                            <button className="p-1.5 rounded-lg border border-slate-200 hover:border-red-500/30 text-muted-foreground hover:text-red-400 transition-colors">
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
+
+                {/* Mobile: card list */}
+                <div className="sm:hidden divide-y divide-slate-100">
+                  {players.map((player) => (
+                    <div key={player.id} className="flex items-center gap-3 px-4 py-3">
+                      <div className="w-8 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-display text-sfc-blue/70 shrink-0">
+                        {player.name.split(" ").map(n => n[0]).join("")}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-sfc-black truncate">{player.name}</p>
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", getPositionColor(player.position))}>{player.position}</span>
+                          <span className="text-xs font-bold text-sfc-blue">{player.total_points}pts</span>
+                          <span className="text-xs text-amber-400">{formatPrice(player.price)}</span>
+                          {player.is_injured && <span className="text-[9px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded font-bold">INJ</span>}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button onClick={() => toggleInjury(player.id)} className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+                          {player.is_injured
+                            ? <XCircle className="w-4 h-4 text-red-400" />
+                            : <CheckCircle className="w-4 h-4 text-sfc-blue" />}
+                        </button>
+                        <button onClick={() => setEditingPlayer(player.id)} className="p-1.5 rounded-lg border border-slate-200 hover:border-sfc-blue/30 text-muted-foreground hover:text-sfc-blue transition-colors">
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+                        <button className="p-1.5 rounded-lg border border-slate-200 hover:border-red-500/30 text-muted-foreground hover:text-red-400 transition-colors">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop: table */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-slate-100/20">
+                      <tr>
+                        <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground">Player</th>
+                        <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Pos</th>
+                        <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Price</th>
+                        <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Points</th>
+                        <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Goals</th>
+                        <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Injured</th>
+                        <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {players.map((player) => (
+                        <tr key={player.id} className="data-table-row">
+                          <td className="px-5 py-3.5">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-display text-sfc-blue/70">
+                                {player.name.split(" ").map(n => n[0]).join("")}
+                              </div>
+                              <span className="text-sm font-medium text-sfc-black">{player.name}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3.5 text-center">
+                            <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", getPositionColor(player.position))}>
+                              {player.position}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3.5 text-right text-sm text-amber-400">{formatPrice(player.price)}</td>
+                          <td className="px-4 py-3.5 text-right text-sm font-bold text-sfc-blue">{player.total_points}</td>
+                          <td className="px-4 py-3.5 text-right text-sm text-sfc-black">{player.goals}</td>
+                          <td className="px-4 py-3.5 text-center">
+                            <button onClick={() => toggleInjury(player.id)}>
+                              {player.is_injured
+                                ? <XCircle className="w-5 h-5 text-red-400 mx-auto" />
+                                : <CheckCircle className="w-5 h-5 text-sfc-blue mx-auto" />}
+                            </button>
+                          </td>
+                          <td className="px-4 py-3.5">
+                            <div className="flex items-center justify-center gap-2">
+                              <button onClick={() => setEditingPlayer(player.id)} className="p-1.5 rounded-lg border border-slate-200 hover:border-sfc-blue/30 text-muted-foreground hover:text-sfc-blue transition-colors">
+                                <Edit className="w-3.5 h-3.5" />
+                              </button>
+                              <button className="p-1.5 rounded-lg border border-slate-200 hover:border-red-500/30 text-muted-foreground hover:text-red-400 transition-colors">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </motion.div>
           )}
 
           {activeTab === "users" && (
             <motion.div key="users" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <div className="glass-card overflow-x-auto">
-                <div className="p-4 border-b border-slate-200">
+              <div className="glass-card">
+                <div className="p-4 sm:p-5 border-b border-slate-200">
                   <h2 className="font-bold text-sfc-black">User Management</h2>
                 </div>
-                <table className="w-full">
-                  <thead className="bg-slate-100/20">
-                    <tr>
-                      <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground">User</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Email</th>
-                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Role</th>
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Points</th>
-                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Joined</th>
-                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Status</th>
-                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map((user) => (
-                      <tr key={user.id} className="data-table-row">
-                        <td className="px-5 py-3.5">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-sfc-blue/10 border border-sfc-blue/20 flex items-center justify-center text-xs font-bold text-sfc-blue">
-                              {user.username[0]}
-                            </div>
-                            <span className="text-sm text-sfc-black">@{user.username}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3.5 text-left text-sm text-muted-foreground">{user.email}</td>
-                        <td className="px-4 py-3.5 text-center">
+
+                {/* Mobile: card list */}
+                <div className="sm:hidden divide-y divide-slate-100">
+                  {users.map((user) => (
+                    <div key={user.id} className="flex items-center gap-3 px-4 py-3">
+                      <div className="w-8 h-8 rounded-lg bg-sfc-blue/10 border border-sfc-blue/20 flex items-center justify-center text-xs font-bold text-sfc-blue shrink-0">
+                        {user.username[0].toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-medium text-sfc-black truncate">@{user.username}</p>
                           <span className={cn(
-                            "text-xs font-bold px-2 py-0.5 rounded-full border",
-                            user.level === "Admin"
-                              ? "bg-red-500/20 border-red-500/30 text-red-400"
-                              : user.level === "Mod"
-                                ? "bg-purple-500/20 border-purple-500/30 text-purple-400"
-                                : "bg-slate-100 border-slate-200 text-muted-foreground"
-                          )}>
-                            {user.level}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3.5 text-right text-sm text-sfc-black">{user.points.toLocaleString()}</td>
-                        <td className="px-4 py-3.5 text-center text-xs text-muted-foreground">{user.joined}</td>
-                        <td className="px-4 py-3.5 text-center">
-                          <span className={cn(
-                            "text-xs font-bold px-2 py-0.5 rounded-full border",
-                            user.status === "active"
-                              ? "bg-sfc-blue/20 border-sfc-blue/30 text-sfc-blue"
-                              : "bg-red-500/20 border-red-500/30 text-red-400"
-                          )}>
-                            {user.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <div className="flex items-center justify-center gap-2">
-                            <select
-                              defaultValue={user.level === "Admin" ? "admin" : user.level === "Manager" ? "manager" : user.level === "Mod" ? "moderator" : "user"}
-                              onChange={async (e) => {
-                                await updateUserRoleAction(user.userId, e.target.value);
-                                setUsers(prev => prev.map(u => u.id === user.id ? { ...u, level: e.target.value === "admin" ? "Admin" : e.target.value === "manager" ? "Manager" : e.target.value === "moderator" ? "Mod" : "User" } : u));
-                              }}
-                              className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:border-sfc-blue/50 text-sfc-black"
-                            >
-                              <option value="user">User</option>
-                              <option value="manager">Manager</option>
-                              <option value="admin">Admin</option>
-                            </select>
-                          </div>
-                        </td>
+                            "text-[10px] font-bold px-1.5 py-0.5 rounded-full border",
+                            user.level === "Admin" ? "bg-red-500/20 border-red-500/30 text-red-400" :
+                            user.level === "Mod"   ? "bg-purple-500/20 border-purple-500/30 text-purple-400" :
+                                                     "bg-slate-100 border-slate-200 text-muted-foreground"
+                          )}>{user.level}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">{user.points.toLocaleString()} pts · {user.joined}</p>
+                      </div>
+                      <select
+                        defaultValue={user.level === "Admin" ? "admin" : user.level === "Manager" ? "manager" : user.level === "Mod" ? "moderator" : "user"}
+                        onChange={async (e) => {
+                          await updateUserRoleAction(user.userId, e.target.value);
+                          setUsers(prev => prev.map(u => u.id === user.id ? { ...u, level: e.target.value === "admin" ? "Admin" : e.target.value === "manager" ? "Manager" : e.target.value === "moderator" ? "Mod" : "User" } : u));
+                        }}
+                        className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:border-sfc-blue/50 text-sfc-black shrink-0"
+                      >
+                        <option value="user">User</option>
+                        <option value="manager">Manager</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop: table */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-slate-100/20">
+                      <tr>
+                        <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground">User</th>
+                        <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Email</th>
+                        <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Role</th>
+                        <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Points</th>
+                        <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Joined</th>
+                        <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Status</th>
+                        <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {users.map((user) => (
+                        <tr key={user.id} className="data-table-row">
+                          <td className="px-5 py-3.5">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-lg bg-sfc-blue/10 border border-sfc-blue/20 flex items-center justify-center text-xs font-bold text-sfc-blue">
+                                {user.username[0]}
+                              </div>
+                              <span className="text-sm text-sfc-black">@{user.username}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3.5 text-left text-sm text-muted-foreground">{user.email}</td>
+                          <td className="px-4 py-3.5 text-center">
+                            <span className={cn(
+                              "text-xs font-bold px-2 py-0.5 rounded-full border",
+                              user.level === "Admin" ? "bg-red-500/20 border-red-500/30 text-red-400" :
+                              user.level === "Mod"   ? "bg-purple-500/20 border-purple-500/30 text-purple-400" :
+                                                       "bg-slate-100 border-slate-200 text-muted-foreground"
+                            )}>{user.level}</span>
+                          </td>
+                          <td className="px-4 py-3.5 text-right text-sm text-sfc-black">{user.points.toLocaleString()}</td>
+                          <td className="px-4 py-3.5 text-center text-xs text-muted-foreground">{user.joined}</td>
+                          <td className="px-4 py-3.5 text-center">
+                            <span className={cn(
+                              "text-xs font-bold px-2 py-0.5 rounded-full border",
+                              user.status === "active" ? "bg-sfc-blue/20 border-sfc-blue/30 text-sfc-blue" : "bg-red-500/20 border-red-500/30 text-red-400"
+                            )}>{user.status}</span>
+                          </td>
+                          <td className="px-4 py-3.5">
+                            <div className="flex items-center justify-center gap-2">
+                              <select
+                                defaultValue={user.level === "Admin" ? "admin" : user.level === "Manager" ? "manager" : user.level === "Mod" ? "moderator" : "user"}
+                                onChange={async (e) => {
+                                  await updateUserRoleAction(user.userId, e.target.value);
+                                  setUsers(prev => prev.map(u => u.id === user.id ? { ...u, level: e.target.value === "admin" ? "Admin" : e.target.value === "manager" ? "Manager" : e.target.value === "moderator" ? "Mod" : "User" } : u));
+                                }}
+                                className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:border-sfc-blue/50 text-sfc-black"
+                              >
+                                <option value="user">User</option>
+                                <option value="manager">Manager</option>
+                                <option value="admin">Admin</option>
+                              </select>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </motion.div>
           )}
@@ -640,11 +708,11 @@ export default function AdminPage() {
             <motion.div key="matches" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-5">
               <div className="glass-card overflow-hidden">
                 <div className="flex items-center justify-between p-5 border-b border-slate-200">
-                  <div>
+                  <div className="min-w-0">
                     <h2 className="font-bold text-sfc-black">Fixture Management</h2>
-                    <p className="text-xs text-muted-foreground mt-0.5">Set match status and enter player stats to calculate fantasy points</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">Set match status and enter player stats to calculate fantasy points</p>
                   </div>
-                  <button onClick={() => setAddFixtureOpen(true)} className="btn-primary text-xs py-2 flex items-center gap-1.5">
+                  <button onClick={() => setAddFixtureOpen(true)} className="btn-primary text-xs py-2 px-3 flex items-center gap-1.5 shrink-0">
                     <Plus className="w-3 h-3" /> Add Fixture
                   </button>
                 </div>
@@ -690,31 +758,28 @@ export default function AdminPage() {
                   {dbMatches.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-10">No matches found</p>
                   ) : dbMatches.map((m) => (
-                    <div key={m.id} className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50/50 transition-colors">
+                    <div key={m.id} className="flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-3 sm:py-4 hover:bg-slate-50/50 transition-colors">
                       {/* Matchday + date */}
-                      <div className="w-24 shrink-0">
+                      <div className="w-14 sm:w-24 shrink-0">
                         <p className="text-xs font-bold text-sfc-blue">MD{m.matchday}</p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                        <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">
                           {new Date(m.kickoff_time).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                          {" · "}
-                          {new Date(m.kickoff_time).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                          <span className="hidden sm:inline"> · {new Date(m.kickoff_time).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</span>
                         </p>
                       </div>
 
                       {/* Teams + score */}
-                      <div className="flex-1 flex items-center justify-center gap-3">
-                        <span className={cn("text-sm font-bold text-right w-36 truncate", m.home_team === "Scottland FC" && "text-sfc-blue")}>{m.home_team}</span>
-                        <span className="text-sm font-bold text-sfc-black min-w-[48px] text-center">
-                          {m.status === "finished" || m.status === "live"
-                            ? `${m.home_score ?? 0} – ${m.away_score ?? 0}`
-                            : "vs"}
+                      <div className="flex-1 min-w-0 flex items-center justify-center gap-1.5 sm:gap-3">
+                        <span className={cn("text-xs sm:text-sm font-bold text-right flex-1 truncate", m.home_team === "Scottland FC" && "text-sfc-blue")}>{m.home_team}</span>
+                        <span className="text-xs sm:text-sm font-bold text-sfc-black shrink-0 w-10 sm:w-12 text-center">
+                          {m.status === "finished" || m.status === "live" ? `${m.home_score ?? 0}–${m.away_score ?? 0}` : "vs"}
                         </span>
-                        <span className={cn("text-sm font-bold w-36 truncate", m.away_team === "Scottland FC" && "text-sfc-blue")}>{m.away_team}</span>
+                        <span className={cn("text-xs sm:text-sm font-bold flex-1 truncate", m.away_team === "Scottland FC" && "text-sfc-blue")}>{m.away_team}</span>
                       </div>
 
-                      {/* Status badge */}
+                      {/* Status badge — hidden on mobile */}
                       <span className={cn(
-                        "text-[10px] font-bold px-2 py-1 rounded-lg border shrink-0",
+                        "hidden sm:inline text-[10px] font-bold px-2 py-1 rounded-lg border shrink-0",
                         m.status === "live"      ? "bg-red-500/20 border-red-500/30 text-red-500 animate-pulse" :
                         m.status === "finished"  ? "bg-slate-100 border-slate-200 text-muted-foreground" :
                         m.status === "postponed" ? "bg-amber-500/10 border-amber-500/30 text-amber-500" :
@@ -724,30 +789,23 @@ export default function AdminPage() {
                       </span>
 
                       {/* Actions */}
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="shrink-0">
                         {m.status === "scheduled" && (
-                          <button
-                            onClick={() => updateMatchStatus(m.id, "live")}
-                            disabled={statusUpdating === m.id}
-                            className="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500/20 transition-colors disabled:opacity-50"
-                          >
-                            {statusUpdating === m.id ? "…" : "▶ Set Live"}
+                          <button onClick={() => updateMatchStatus(m.id, "live")} disabled={statusUpdating === m.id}
+                            className="text-[10px] font-bold px-2 sm:px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500/20 transition-colors disabled:opacity-50 whitespace-nowrap">
+                            {statusUpdating === m.id ? "…" : "▶ Live"}
                           </button>
                         )}
                         {m.status === "live" && (
-                          <button
-                            onClick={() => openScoring(m)}
-                            className="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-sfc-blue/10 border border-sfc-blue/30 text-sfc-blue hover:bg-sfc-blue/20 transition-colors flex items-center gap-1"
-                          >
-                            <Zap className="w-3 h-3" /> Enter Stats
+                          <button onClick={() => openScoring(m)}
+                            className="text-[10px] font-bold px-2 sm:px-3 py-1.5 rounded-lg bg-sfc-blue/10 border border-sfc-blue/30 text-sfc-blue hover:bg-sfc-blue/20 transition-colors flex items-center gap-1 whitespace-nowrap">
+                            <Zap className="w-3 h-3" /> Stats
                           </button>
                         )}
                         {m.status === "finished" && (
-                          <button
-                            onClick={() => openScoring(m)}
-                            className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-slate-200 text-muted-foreground hover:border-sfc-blue/30 hover:text-sfc-blue transition-colors flex items-center gap-1"
-                          >
-                            <Edit className="w-3 h-3" /> Edit Stats
+                          <button onClick={() => openScoring(m)}
+                            className="text-[10px] font-bold px-2 sm:px-3 py-1.5 rounded-lg border border-slate-200 text-muted-foreground hover:border-sfc-blue/30 hover:text-sfc-blue transition-colors flex items-center gap-1 whitespace-nowrap">
+                            <Edit className="w-3 h-3" /> Edit
                           </button>
                         )}
                       </div>
@@ -788,8 +846,8 @@ export default function AdminPage() {
                         { key: "second", label: "🥈 2nd Place Prize" },
                         { key: "third",  label: "🥉 3rd Place Prize" },
                       ].map(({ key, label }) => (
-                        <div key={key} className="flex items-center gap-3">
-                          <label className="text-xs font-medium text-muted-foreground w-32 shrink-0">{label}</label>
+                        <div key={key} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                          <label className="text-xs font-medium text-muted-foreground sm:w-32 sm:shrink-0">{label}</label>
                           <input
                             type="text"
                             value={editingPrizes[league.id]?.[key as "first" | "second" | "third"] ?? ""}
@@ -920,7 +978,8 @@ export default function AdminPage() {
                   {statsLoading ? (
                     <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">Loading players…</div>
                   ) : (
-                    <table className="w-full text-sm">
+                    <div className="overflow-x-auto">
+                    <table className="w-full min-w-[580px] text-sm">
                       <thead className="bg-slate-50 border-b border-slate-200 sticky top-0">
                         <tr>
                           <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Player</th>
@@ -981,26 +1040,27 @@ export default function AdminPage() {
                         })}
                       </tbody>
                     </table>
+                    </div>
                   )}
                 </div>
 
                 {/* Footer */}
-                <div className="p-5 border-t border-slate-200 flex items-center justify-between gap-4 shrink-0 bg-slate-50/50">
-                  <p className="text-xs text-muted-foreground">
+                <div className="p-4 sm:p-5 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center gap-3 shrink-0 bg-slate-50/50">
+                  <p className="text-xs text-muted-foreground hidden sm:block flex-1">
                     <Clock className="w-3 h-3 inline mr-1" />
                     Set minutes to 0 to exclude a player. Points auto-calculate via DB trigger when saved.
                   </p>
-                  <div className="flex items-center gap-3">
-                    <button onClick={() => setScoringMatch(null)} disabled={savingStats} className="btn-outline text-sm px-5 py-2.5">
+                  <div className="flex items-center gap-3 justify-end sm:shrink-0">
+                    <button onClick={() => setScoringMatch(null)} disabled={savingStats} className="btn-outline text-sm px-4 sm:px-5 py-2.5">
                       Cancel
                     </button>
                     <button onClick={saveAndFinalise} disabled={savingStats || statsLoading}
-                      className="btn-primary text-sm px-6 py-2.5 flex items-center gap-2 disabled:opacity-60">
+                      className="btn-primary text-sm px-4 sm:px-6 py-2.5 flex items-center gap-2 disabled:opacity-60">
                       {savingStats ? (
                         <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                          {calculating ? "Calculating points…" : "Saving stats…"}</>
+                          {calculating ? "Calculating…" : "Saving…"}</>
                       ) : (
-                        <><Zap className="w-4 h-4" /> Finalise &amp; Calculate Points</>
+                        <><Zap className="w-4 h-4" /> <span className="hidden sm:inline">Finalise &amp; Calculate </span>Points</>
                       )}
                     </button>
                   </div>
