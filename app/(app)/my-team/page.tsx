@@ -318,39 +318,7 @@ export default function MyTeamPage() {
 
   return (
     <div className="min-h-screen">
-      <TopBar
-        title="My Team"
-        subtitle="Build your perfect XI"
-        rightContent={
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCaptainMode(captainMode === "captain" ? "none" : "captain")}
-              className={cn(
-                "btn-outline text-xs py-1.5 px-3 flex items-center gap-1",
-                captainMode === "captain" && "border-yellow-500/50 text-yellow-400"
-              )}
-            >
-              <Crown className="w-3 h-3" /> Set Captain
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className={cn(
-                "text-xs py-1.5 px-4 flex items-center gap-1 rounded-xl border font-medium transition-all",
-                saveStatus === "success"
-                  ? "bg-emerald-600/20 border-emerald-600/40 text-emerald-600"
-                  : "btn-primary"
-              )}
-            >
-              {saveStatus === "success"
-                ? <><Check className="w-3 h-3" /> Saved!</>
-                : saveStatus === "error"
-                  ? <><AlertCircle className="w-3 h-3" /> Error</>
-                  : <><Save className="w-3 h-3" /> {saving ? "Saving..." : "Save Team"}</>}
-            </button>
-          </div>
-        }
-      />
+      <TopBar title="My Team" subtitle="Build your perfect XI" />
 
       <div className="p-4 sm:p-6 lg:p-8">
 
@@ -361,7 +329,7 @@ export default function MyTeamPage() {
             <p className="font-semibold mb-1">How to build your team</p>
             <div className="text-xs text-muted-foreground space-y-0.5">
               <p>• <strong>Pick 11 players</strong> from the list on the right — tap to add or remove.</p>
-              <p>• <strong>Set your Captain</strong> (2× points) using the button above, then click a player on the pitch. Your Vice-Captain scores 1.5×.</p>
+              <p>• <strong>Set your Captain</strong> (2× points) using the Captain button, then tap a player on the pitch. Your Vice-Captain scores 1.5×.</p>
               <p>• <strong>Drag &amp; drop</strong> players on the pitch to reorder positions, or swap starters with bench players.</p>
               <p>• <strong>Change formation</strong> using the dropdown, then hit <strong>Save Team</strong> to lock in your selection.</p>
             </div>
@@ -405,37 +373,69 @@ export default function MyTeamPage() {
             </div>
           </div>
 
-          <div className="col-span-3 flex justify-end sm:ml-auto sm:col-span-auto relative">
-            <button
-              onClick={() => setShowFormationPicker(!showFormationPicker)}
-              className="glass-card px-4 py-3 flex items-center gap-2 hover:border-sfc-blue/20 transition-colors"
-            >
-              <span className="text-sm font-bold text-sfc-blue">{formation}</span>
-              <ChevronDown className="w-4 h-4 text-muted-foreground" />
-            </button>
-            <AnimatePresence>
-              {showFormationPicker && (
-                <motion.div
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  className="absolute right-0 top-full mt-2 glass-card p-2 z-50 min-w-[120px]"
-                >
-                  {Object.keys(FORMATIONS).map((f) => (
-                    <button
-                      key={f}
-                      onClick={() => { setFormation(f as keyof typeof FORMATIONS); setShowFormationPicker(false); }}
-                      className={cn(
-                        "w-full text-left px-3 py-2 rounded-lg text-sm transition-colors",
-                        formation === f ? "bg-sfc-blue/20 text-sfc-blue" : "hover:bg-slate-100/50 text-sfc-black"
-                      )}
-                    >
-                      {f}
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
+          <div className="col-span-3 sm:col-span-auto sm:ml-auto flex items-center justify-between sm:justify-end gap-2">
+            {/* Formation picker */}
+            <div className="relative">
+              <button
+                onClick={() => setShowFormationPicker(!showFormationPicker)}
+                className="glass-card px-4 py-3 flex items-center gap-2 hover:border-sfc-blue/20 transition-colors"
+              >
+                <span className="text-sm font-bold text-sfc-blue">{formation}</span>
+                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+              </button>
+              <AnimatePresence>
+                {showFormationPicker && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    className="absolute left-0 top-full mt-2 glass-card p-2 z-50 min-w-[120px]"
+                  >
+                    {Object.keys(FORMATIONS).map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => { setFormation(f as keyof typeof FORMATIONS); setShowFormationPicker(false); }}
+                        className={cn(
+                          "w-full text-left px-3 py-2 rounded-lg text-sm transition-colors",
+                          formation === f ? "bg-sfc-blue/20 text-sfc-blue" : "hover:bg-slate-100/50 text-sfc-black"
+                        )}
+                      >
+                        {f}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCaptainMode(captainMode === "captain" ? "none" : "captain")}
+                className={cn(
+                  "btn-outline text-xs py-2 px-3 flex items-center gap-1",
+                  captainMode === "captain" && "border-yellow-500/50 text-yellow-400"
+                )}
+              >
+                <Crown className="w-3 h-3" /> Captain
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className={cn(
+                  "text-xs py-2 px-4 flex items-center gap-1 rounded-xl border font-medium transition-all",
+                  saveStatus === "success"
+                    ? "bg-emerald-600/20 border-emerald-600/40 text-emerald-600"
+                    : "btn-primary"
+                )}
+              >
+                {saveStatus === "success"
+                  ? <><Check className="w-3 h-3" /> Saved!</>
+                  : saveStatus === "error"
+                    ? <><AlertCircle className="w-3 h-3" /> Error</>
+                    : <><Save className="w-3 h-3" /> {saving ? "Saving..." : "Save"}</>}
+              </button>
+            </div>
           </div>
         </div>
 
