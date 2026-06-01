@@ -50,7 +50,7 @@ BEGIN
         CASE v_level
           WHEN 2  THEN 'Junior Fan'
           WHEN 3  THEN 'Dedicated Fan'
-          WHEN 4  THEN 'Season Ticket Holder'
+          WHEN 4  THEN 'Faithful Supporter'
           WHEN 5  THEN 'Die-Hard Supporter'
           WHEN 6  THEN 'Legend'
           WHEN 7  THEN 'Club Icon'
