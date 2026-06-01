@@ -82,11 +82,11 @@ const config: Config = {
           "linear-gradient(90deg, #F59E0B, #F97316)",
       },
       boxShadow: {
-        "blue-glow": "0 0 20px rgba(29,78,216,0.2), 0 0 40px rgba(29,78,216,0.08)",
-        "blue-glow-lg": "0 0 40px rgba(29,78,216,0.3), 0 0 80px rgba(29,78,216,0.12)",
-        "card-hover": "0 8px 32px rgba(15,23,42,0.1), 0 0 0 1px rgba(29,78,216,0.12)",
-        glass: "0 4px 24px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.06)",
-        "gold-glow": "0 0 20px rgba(245,158,11,0.3)",
+        "blue-glow": "0 0 12px rgba(29,78,216,0.18), 0 0 24px rgba(29,78,216,0.06)",
+        "blue-glow-lg": "0 0 20px rgba(29,78,216,0.22), 0 0 40px rgba(29,78,216,0.08)",
+        "card-hover": "0 4px 16px rgba(15,23,42,0.08), 0 0 0 1px rgba(29,78,216,0.1)",
+        glass: "0 2px 12px rgba(15,23,42,0.06), 0 1px 3px rgba(15,23,42,0.04)",
+        "gold-glow": "0 0 12px rgba(245,158,11,0.2)",
       },
       borderRadius: {
         lg: "var(--radius)",

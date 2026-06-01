@@ -34,9 +34,11 @@
 
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
 
   body {
+    overflow-x: hidden;
     @apply bg-slate-50 text-sfc-black font-sans antialiased;
     background-image:
       radial-gradient(ellipse at 20% 10%, rgba(29,78,216,0.04) 0%, transparent 50%),
