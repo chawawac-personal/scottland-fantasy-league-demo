@@ -176,33 +176,26 @@ export default function ManagerPage() {
 
   return (
     <div className="min-h-screen">
-      <TopBar
-        title="Manager Panel"
-        subtitle="Match scoring and player management"
-        rightContent={
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-sfc-blue/10 border border-sfc-blue/20 rounded-xl">
-            <Radio className="w-4 h-4 text-sfc-blue" />
-            <span className="text-xs font-bold text-sfc-blue">Manager Access</span>
-          </div>
-        }
-      />
+      <TopBar title="Manager Panel" subtitle="Match scoring and player management" />
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-5">
         {/* Tab nav */}
         <div className="flex gap-2">
           {[
-            { id: "matches", label: "Matches & Scoring", icon: Radio },
-            { id: "players", label: "Players",           icon: Trophy },
+            { id: "matches", label: "Matches & Scoring", short: "Matches", icon: Radio },
+            { id: "players", label: "Players",           short: "Players", icon: Trophy },
           ].map((tab) => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={cn(
-                "flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-medium border transition-all",
+                "flex-1 sm:flex-none flex items-center justify-center sm:justify-start gap-1.5 px-3 sm:px-5 py-2.5 rounded-xl text-sm font-medium border transition-all",
                 activeTab === tab.id
                   ? "bg-sfc-blue/10 border-sfc-blue/30 text-sfc-blue"
                   : "border-slate-200 text-muted-foreground hover:border-sfc-blue/20 hover:text-sfc-black"
               )}
             >
-              <tab.icon className="w-4 h-4" />{tab.label}
+              <tab.icon className="w-4 h-4 shrink-0" />
+              <span className="sm:hidden">{tab.short}</span>
+              <span className="hidden sm:inline">{tab.label}</span>
             </button>
           ))}
         </div>
@@ -212,12 +205,12 @@ export default function ManagerPage() {
           {activeTab === "matches" && (
             <motion.div key="matches" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="glass-card overflow-hidden">
-                <div className="flex items-center justify-between p-5 border-b border-slate-200">
-                  <div>
+                <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200 gap-3">
+                  <div className="min-w-0">
                     <h2 className="font-bold text-sfc-black">Fixture Management</h2>
-                    <p className="text-xs text-muted-foreground mt-0.5">Set match status · Enter stats · Finalise points</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">Set match status · Enter stats · Finalise points</p>
                   </div>
-                  <button onClick={() => setAddFixtureOpen(true)} className="btn-primary text-xs py-2 flex items-center gap-1.5">
+                  <button onClick={() => setAddFixtureOpen(true)} className="btn-primary text-xs py-2 px-3 flex items-center gap-1.5 shrink-0">
                     <Plus className="w-3 h-3" /> Add Fixture
                   </button>
                 </div>
@@ -251,44 +244,51 @@ export default function ManagerPage() {
                   {matches.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-10">No fixtures yet</p>
                   ) : matches.map((m) => (
-                    <div key={m.id} className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50/50 transition-colors">
-                      <div className="w-24 shrink-0">
+                    <div key={m.id} className="flex items-center gap-2 sm:gap-4 px-3 sm:px-5 py-3 sm:py-4 hover:bg-slate-50/50 transition-colors">
+                      {/* Matchday + date */}
+                      <div className="w-14 sm:w-24 shrink-0">
                         <p className="text-xs font-bold text-sfc-blue">MD{m.matchday}</p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                        <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight">
                           {new Date(m.kickoff_time).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                          {" · "}{new Date(m.kickoff_time).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                          <span className="hidden sm:inline"> · {new Date(m.kickoff_time).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</span>
                         </p>
                       </div>
-                      <div className="flex-1 flex items-center justify-center gap-3">
-                        <span className={cn("text-sm font-bold text-right w-36 truncate", m.home_team === "Scottland FC" && "text-sfc-blue")}>{m.home_team}</span>
-                        <span className="text-sm font-bold text-sfc-black min-w-[48px] text-center">
-                          {m.status === "finished" || m.status === "live" ? `${m.home_score ?? 0} – ${m.away_score ?? 0}` : "vs"}
+
+                      {/* Teams + score */}
+                      <div className="flex-1 min-w-0 flex items-center justify-center gap-1.5 sm:gap-3">
+                        <span className={cn("text-xs sm:text-sm font-bold text-right flex-1 truncate", m.home_team === "Scottland FC" && "text-sfc-blue")}>{m.home_team}</span>
+                        <span className="text-xs sm:text-sm font-bold text-sfc-black shrink-0 w-10 sm:w-12 text-center">
+                          {m.status === "finished" || m.status === "live" ? `${m.home_score ?? 0}–${m.away_score ?? 0}` : "vs"}
                         </span>
-                        <span className={cn("text-sm font-bold w-36 truncate", m.away_team === "Scottland FC" && "text-sfc-blue")}>{m.away_team}</span>
+                        <span className={cn("text-xs sm:text-sm font-bold flex-1 truncate", m.away_team === "Scottland FC" && "text-sfc-blue")}>{m.away_team}</span>
                       </div>
-                      <span className={cn("text-[10px] font-bold px-2 py-1 rounded-lg border shrink-0",
+
+                      {/* Status badge — hidden on mobile to save space */}
+                      <span className={cn("hidden sm:inline text-[10px] font-bold px-2 py-1 rounded-lg border shrink-0",
                         m.status === "live" ? "bg-red-500/20 border-red-500/30 text-red-500 animate-pulse" :
                         m.status === "finished" ? "bg-slate-100 border-slate-200 text-muted-foreground" :
                         "bg-sfc-blue/10 border-sfc-blue/30 text-sfc-blue")}>
                         {m.status.toUpperCase()}
                       </span>
-                      <div className="flex items-center gap-2 shrink-0">
+
+                      {/* Action */}
+                      <div className="shrink-0">
                         {m.status === "scheduled" && (
                           <button onClick={() => updateMatchStatus(m.id, "live")} disabled={statusUpdating === m.id}
-                            className="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500/20 transition-colors disabled:opacity-50">
-                            {statusUpdating === m.id ? "…" : "▶ Set Live"}
+                            className="text-[10px] font-bold px-2 sm:px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500/20 transition-colors disabled:opacity-50 whitespace-nowrap">
+                            {statusUpdating === m.id ? "…" : "▶ Live"}
                           </button>
                         )}
                         {m.status === "live" && (
                           <button onClick={() => openScoring(m)}
-                            className="text-[10px] font-bold px-3 py-1.5 rounded-lg bg-sfc-blue/10 border border-sfc-blue/30 text-sfc-blue hover:bg-sfc-blue/20 transition-colors flex items-center gap-1">
-                            <Zap className="w-3 h-3" /> Enter Stats
+                            className="text-[10px] font-bold px-2 sm:px-3 py-1.5 rounded-lg bg-sfc-blue/10 border border-sfc-blue/30 text-sfc-blue hover:bg-sfc-blue/20 transition-colors flex items-center gap-1 whitespace-nowrap">
+                            <Zap className="w-3 h-3" /> Stats
                           </button>
                         )}
                         {m.status === "finished" && (
                           <button onClick={() => openScoring(m)}
-                            className="text-[10px] font-bold px-3 py-1.5 rounded-lg border border-slate-200 text-muted-foreground hover:border-sfc-blue/30 hover:text-sfc-blue transition-colors flex items-center gap-1">
-                            <Edit className="w-3 h-3" /> Edit Stats
+                            className="text-[10px] font-bold px-2 sm:px-3 py-1.5 rounded-lg border border-slate-200 text-muted-foreground hover:border-sfc-blue/30 hover:text-sfc-blue transition-colors flex items-center gap-1 whitespace-nowrap">
+                            <Edit className="w-3 h-3" /> Edit
                           </button>
                         )}
                       </div>
@@ -435,18 +435,18 @@ export default function ManagerPage() {
                   )}
                 </div>
 
-                <div className="p-5 border-t border-slate-200 flex items-center justify-between gap-4 shrink-0 bg-slate-50/50">
-                  <p className="text-xs text-muted-foreground">
+                <div className="p-4 sm:p-5 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center gap-3 shrink-0 bg-slate-50/50">
+                  <p className="text-xs text-muted-foreground hidden sm:block flex-1">
                     <Clock className="w-3 h-3 inline mr-1" />
                     Set minutes to 0 to exclude a player. Points auto-calculate on save.
                   </p>
-                  <div className="flex items-center gap-3">
-                    <button onClick={() => setScoringMatch(null)} disabled={savingStats} className="btn-outline text-sm px-5 py-2.5">Cancel</button>
+                  <div className="flex items-center gap-3 sm:shrink-0 justify-end">
+                    <button onClick={() => setScoringMatch(null)} disabled={savingStats} className="btn-outline text-sm px-4 sm:px-5 py-2.5">Cancel</button>
                     <button onClick={saveAndFinalise} disabled={savingStats || statsLoading}
-                      className="btn-primary text-sm px-6 py-2.5 flex items-center gap-2 disabled:opacity-60">
+                      className="btn-primary text-sm px-4 sm:px-6 py-2.5 flex items-center gap-2 disabled:opacity-60">
                       {savingStats
                         ? <><span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />{calculating ? "Calculating…" : "Saving…"}</>
-                        : <><Zap className="w-4 h-4" /> Finalise &amp; Calculate Points</>}
+                        : <><Zap className="w-4 h-4" /> <span className="hidden sm:inline">Finalise &amp; Calculate </span>Points</>}
                     </button>
                   </div>
                 </div>
