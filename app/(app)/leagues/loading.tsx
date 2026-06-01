@@ -12,7 +12,7 @@ export default function LeaguesLoading() {
 
       <div className="p-6 space-y-5">
         {/* Weekly top 3 */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="glass-card p-4 flex items-center gap-3">
               <Skeleton className="w-10 h-10 rounded-full shrink-0" />

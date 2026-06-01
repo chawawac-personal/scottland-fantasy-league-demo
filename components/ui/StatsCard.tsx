@@ -30,8 +30,8 @@ export function StatsCard({ title, value, subtitle, icon: Icon, trend, accentCol
       transition={{ delay }}
       className="glass-card-hover p-6"
     >
-      <div className="flex items-start justify-between mb-5">
-        <div className={cn("p-3 rounded-xl border", accent.bg, accent.border)}>
+      <div className="flex flex-col items-center sm:flex-row sm:items-start sm:justify-between mb-5">
+        <div className={cn("p-3 rounded-xl border mb-3 sm:mb-0", accent.bg, accent.border)}>
           <Icon className={cn("w-5 h-5", accent.icon)} />
         </div>
         {trend !== undefined && (
@@ -46,9 +46,9 @@ export function StatsCard({ title, value, subtitle, icon: Icon, trend, accentCol
           </div>
         )}
       </div>
-      <p className={cn("text-3xl font-display tracking-wider mb-1.5", accent.value)}>{value}</p>
-      <p className="text-sm font-semibold text-sfc-black">{title}</p>
-      {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
+      <p className={cn("text-3xl font-display tracking-wider mb-1.5 text-center sm:text-left", accent.value)}>{value}</p>
+      <p className="text-sm font-semibold text-sfc-black text-center sm:text-left">{title}</p>
+      {subtitle && <p className="text-xs text-muted-foreground mt-1 text-center sm:text-left">{subtitle}</p>}
     </motion.div>
   );
 }

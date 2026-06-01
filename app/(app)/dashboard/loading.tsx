@@ -4,12 +4,12 @@ export default function DashboardLoading() {
   return (
     <div className="min-h-screen">
       {/* TopBar skeleton */}
-      <div className="h-16 flex items-center justify-between px-6 border-b border-slate-200 bg-white">
+      <div className="h-16 flex items-center justify-between px-4 sm:px-6 border-b border-slate-200 bg-white">
         <div className="space-y-1.5">
           <Skeleton className="h-5 w-36" />
           <Skeleton className="h-3 w-52" />
         </div>
-        <div className="flex items-center gap-3">
+        <div className="hidden sm:flex items-center gap-3">
           <Skeleton className="h-9 w-52 rounded-xl" />
           <Skeleton className="h-9 w-9 rounded-xl" />
           <Skeleton className="h-9 w-24 rounded-xl" />
@@ -75,7 +75,7 @@ export default function DashboardLoading() {
         {/* Activity row */}
         <div className="glass-card p-5">
           <Skeleton className="h-6 w-36 mb-4" />
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="p-3 rounded-xl border border-slate-100 space-y-2">
                 <div className="flex justify-between">

@@ -17,17 +17,17 @@ export default function MyTeamLoading() {
 
       <div className="p-6">
         {/* Budget bar */}
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex flex-wrap items-center gap-3 mb-6">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="glass-card px-4 py-3 flex items-center gap-3">
-              <Skeleton className="w-4 h-4 rounded" />
+              <Skeleton className="w-4 h-4 rounded shrink-0" />
               <div className="space-y-1">
                 <Skeleton className="h-3 w-20" />
                 <Skeleton className="h-4 w-16" />
               </div>
             </div>
           ))}
-          <div className="ml-auto">
+          <div className="sm:ml-auto">
             <Skeleton className="h-11 w-28 rounded-xl" />
           </div>
         </div>

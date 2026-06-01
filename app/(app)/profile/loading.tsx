@@ -13,23 +13,23 @@ export default function ProfileLoading() {
       <div className="p-6 space-y-5">
         {/* Profile hero */}
         <div className="glass-card p-6">
-          <div className="flex items-start gap-6">
-            <div className="relative shrink-0">
+          <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
+            <div className="relative shrink-0 self-center sm:self-auto">
               <Skeleton className="w-24 h-24 rounded-2xl" />
               <Skeleton className="absolute -bottom-2 -right-2 w-7 h-7 rounded-xl" />
             </div>
-            <div className="flex-1 space-y-3">
-              <div className="flex items-start justify-between">
-                <div className="space-y-2">
-                  <Skeleton className="h-7 w-44" />
+            <div className="flex-1 w-full space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-2 min-w-0">
+                  <Skeleton className="h-7 w-44 max-w-full" />
                   <Skeleton className="h-4 w-28" />
-                  <div className="flex gap-4 mt-1">
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
                     <Skeleton className="h-3 w-36" />
                     <Skeleton className="h-3 w-28" />
                   </div>
-                  <Skeleton className="h-3 w-80" />
+                  <Skeleton className="h-3 w-full sm:w-80" />
                 </div>
-                <Skeleton className="h-9 w-28 rounded-xl" />
+                <Skeleton className="h-9 w-28 rounded-xl shrink-0" />
               </div>
               {/* XP bar */}
               <div className="flex items-center gap-3">

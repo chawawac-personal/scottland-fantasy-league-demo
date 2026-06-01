@@ -87,7 +87,7 @@ export function SkeletonPitchSlot() {
 
 export function SkeletonStat() {
   return (
-    <div className="glass-card p-5 space-y-3">
+    <div className="glass-card p-5 space-y-3 flex flex-col items-center sm:items-start">
       <Skeleton className="w-10 h-10 rounded-xl" />
       <Skeleton className="h-9 w-20" />
       <Skeleton className="h-4 w-28" />
@@ -98,9 +98,9 @@ export function SkeletonStat() {
 
 export function SkeletonNavTabs({ count = 4 }: { count?: number }) {
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
       {Array.from({ length: count }).map((_, i) => (
-        <Skeleton key={i} className="h-10 w-32 rounded-xl" />
+        <Skeleton key={i} className="h-10 w-32 rounded-xl shrink-0" />
       ))}
     </div>
   );

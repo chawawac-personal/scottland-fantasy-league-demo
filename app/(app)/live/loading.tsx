@@ -19,7 +19,7 @@ export default function LiveLoading() {
               <Skeleton className="h-3 w-12 mx-auto" />
               <Skeleton className="h-7 w-36 mx-auto" />
             </div>
-            <div className="text-center px-8 space-y-2">
+            <div className="text-center px-4 sm:px-8 space-y-2">
               <div className="flex items-center gap-4 justify-center">
                 <Skeleton className="h-16 w-12" />
                 <Skeleton className="h-8 w-6" />
