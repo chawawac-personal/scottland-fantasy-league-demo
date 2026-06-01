@@ -60,7 +60,11 @@ export default function ManagerPage() {
         supabase.from("matches").select("*").order("matchday", { ascending: false }),
         supabase.from("players").select("id, name, position, total_points, is_injured").order("position").order("total_points", { ascending: false }),
       ]);
-      if (m) setMatches(m as AdminMatch[]);
+      if (m) {
+        setMatches(m as AdminMatch[]);
+        const currentSeason = (m as AdminMatch[])[0]?.season ?? "2025/26";
+        setFixtureForm(prev => ({ ...prev, season: currentSeason }));
+      }
       if (p) setPlayers(p as typeof players);
     }
     load();

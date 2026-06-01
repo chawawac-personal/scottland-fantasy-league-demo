@@ -61,15 +61,33 @@ export default function LeaguesPage() {
             .select("rank, points, leagues(id, name, type, invite_code, owner_id, description, max_members, prizes)")
             .eq("user_id", user.id);
           if (data && data.length > 0) {
+            const leagueIds = (data as any[]).map((m: any) => m.leagues.id);
+
+            // Fetch actual member counts and leaders in one query
+            const { data: allMembers } = await (supabase as any)
+              .from("league_members")
+              .select("league_id, points, profiles(username)")
+              .in("league_id", leagueIds)
+              .order("points", { ascending: false });
+
+            const memberCountMap: Record<string, number> = {};
+            const leaderMap: Record<string, string> = {};
+            if (allMembers) {
+              (allMembers as any[]).forEach((lm: any) => {
+                memberCountMap[lm.league_id] = (memberCountMap[lm.league_id] ?? 0) + 1;
+                if (!leaderMap[lm.league_id]) leaderMap[lm.league_id] = lm.profiles?.username ?? "—";
+              });
+            }
+
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setLocalLeagues((data as any[]).map((m: any) => ({
               id: m.leagues.id,
               name: m.leagues.name,
               type: m.leagues.type,
-              members: m.leagues.max_members ?? 0,
+              members: memberCountMap[m.leagues.id] ?? 0,
               myRank: m.rank ?? 0,
               myPoints: m.points ?? 0,
-              leader: "—",
+              leader: leaderMap[m.leagues.id] ?? "—",
               inviteCode: m.leagues.invite_code ?? null,
               isOwner: m.leagues.owner_id === user.id,
               prizes: m.leagues.prizes ?? undefined,
@@ -83,7 +101,7 @@ export default function LeaguesPage() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: profiles } = await (supabase as any)
           .from("profiles")
-          .select("id, username, fantasy_points")
+          .select("id, username, fantasy_points, fantasy_teams(weekly_points)")
           .order("fantasy_points", { ascending: false })
           .limit(20);
         if (profiles && profiles.length > 0) {
@@ -93,8 +111,8 @@ export default function LeaguesPage() {
             username: user && p.id === user.id ? "YourTeam" : p.username,
             team: `${p.username}'s XI`,
             total: p.fantasy_points,
-            weekly: 0,
-            monthly: 0,
+            weekly: p.fantasy_teams?.[0]?.weekly_points ?? 0,
+            monthly: p.fantasy_teams?.[0]?.weekly_points ?? 0,
             prev: i + 1,
           }));
           setGlobalBoard(board);
@@ -157,13 +175,14 @@ export default function LeaguesPage() {
 
         if (!error && league) {
           await sb.from("league_members").insert({ league_id: league.id, user_id: user.id });
+          const { data: myProfile } = await sb.from("profiles").select("fantasy_points").eq("id", user.id).single();
           setLocalLeagues((prev) => [...prev, {
             id: league.id,
             name: league.name,
             type: "private",
             members: 1,
             myRank: 1,
-            myPoints: 2847,
+            myPoints: myProfile?.fantasy_points ?? 0,
             leader: "YourTeam",
             inviteCode,
             isOwner: true,

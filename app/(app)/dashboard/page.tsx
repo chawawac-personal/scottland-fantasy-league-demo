@@ -28,7 +28,7 @@ export default function DashboardPage() {
   const [currentMatchday, setCurrentMatchday] = useState(12);
   const [season, setSeason] = useState("2025/26");
   const [leaderboard, setLeaderboard] = useState<{ rank: number; username: string; team: string; points: number; weekly: number; change: number }[]>([]);
-  const [displayMatches, setDisplayMatches] = useState<{ home: string; away: string; date: string; time: string; matchday: number; isLive: boolean }[]>([]);
+  const [displayMatches, setDisplayMatches] = useState<{ home: string; away: string; date: string; time: string; matchday: number; isLive: boolean; homeScore: number | null; awayScore: number | null }[]>([]);
   const [recentActivity, setRecentActivity] = useState<{ type: string; title: string; text: string; pts: string; time: string }[]>([]);
   const [profile, setProfile] = useState<{ username: string; level: number; xp: number; avatarUrl: string | null; fantasyPoints: number } | null>(null);
   const [weeklyPoints, setWeeklyPoints]     = useState(0);
@@ -98,7 +98,7 @@ export default function DashboardPage() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: profiles } = await (supabase as any)
           .from("profiles")
-          .select("id, username, fantasy_points")
+          .select("id, username, fantasy_points, fantasy_teams(weekly_points)")
           .order("fantasy_points", { ascending: false })
           .limit(10);
         if (profiles && profiles.length > 0) {
@@ -108,7 +108,7 @@ export default function DashboardPage() {
             username: user && p.id === user.id ? "YourTeam" : p.username,
             team: `${p.username}'s XI`,
             points: p.fantasy_points,
-            weekly: 0,
+            weekly: p.fantasy_teams?.[0]?.weekly_points ?? 0,
             change: 0,
           })));
         }
@@ -132,6 +132,8 @@ export default function DashboardPage() {
               time: new Date(m.kickoff_time).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
               matchday: m.matchday,
               isLive: m.status === "live",
+              homeScore: m.home_score,
+              awayScore: m.away_score,
             }))
           );
         }
@@ -288,7 +290,7 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between text-sm">
                       <span className={cn("font-semibold", m.home === "Scottland FC" ? "text-sfc-blue" : "text-sfc-black")}>{m.home}</span>
                       <span className={cn("font-bold px-2", m.isLive ? "text-red-500" : "text-muted-foreground")}>
-                        {m.isLive ? "2 — 0" : "VS"}
+                        {m.isLive && m.homeScore !== null ? `${m.homeScore} — ${m.awayScore}` : "VS"}
                       </span>
                       <span className={cn("font-semibold", m.away === "Scottland FC" ? "text-sfc-blue" : "text-sfc-black")}>{m.away}</span>
                     </div>

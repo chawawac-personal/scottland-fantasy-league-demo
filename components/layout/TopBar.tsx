@@ -34,7 +34,7 @@ const MOCK_NOTIFS = [
 export function TopBar({ title, subtitle, rightContent }: TopBarProps) {
   const { toggle } = useSidebar();
   const [notifOpen, setNotifOpen] = useState(false);
-  const [notifs, setNotifs] = useState(MOCK_NOTIFS);
+  const [notifs, setNotifs] = useState<typeof MOCK_NOTIFS>([]);
   const [userPoints, setUserPoints] = useState<number | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const unread = notifs.filter((n) => !n.read).length;

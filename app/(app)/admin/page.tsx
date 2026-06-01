@@ -58,6 +58,8 @@ export default function AdminPage() {
   const [users, setUsers]     = useState<{ id: string; username: string; email: string; level: string; points: number; status: string; joined: string }[]>([]);
   const [userCount, setUserCount] = useState("—");
   const [platformStats, setPlatformStats] = useState({ leagues: 0, liveMatches: 0, notifications: 0 });
+  const [healthStats, setHealthStats] = useState({ teams: 0, playersPicked: 0, messages: 0, finishedMatches: 0 });
+  const [recentResults, setRecentResults] = useState<{ home: string; away: string; homeScore: number; awayScore: number; matchday: number; kickoff_time: string }[]>([]);
 
   // Load real players and users from Supabase
   useEffect(() => {
@@ -116,6 +118,24 @@ export default function AdminPage() {
           supabase.from("notifications").select("*", { count: "exact", head: true }),
         ]);
         setPlatformStats({ leagues: leagueCount ?? 0, liveMatches: liveCount ?? 0, notifications: notifCount ?? 0 });
+
+        // Platform health counts
+        const [{ count: teamsCount }, { count: pickedCount }, { count: msgCount }, { count: finishedCount }] = await Promise.all([
+          supabase.from("fantasy_teams").select("*", { count: "exact", head: true }),
+          supabase.from("fantasy_team_players").select("*", { count: "exact", head: true }),
+          supabase.from("chat_messages").select("*", { count: "exact", head: true }),
+          supabase.from("matches").select("*", { count: "exact", head: true }).eq("status", "finished"),
+        ]);
+        setHealthStats({ teams: teamsCount ?? 0, playersPicked: pickedCount ?? 0, messages: msgCount ?? 0, finishedMatches: finishedCount ?? 0 });
+
+        // Recent match results for alerts panel
+        const { data: results } = await supabase
+          .from("matches")
+          .select("home_team, away_team, home_score, away_score, matchday, kickoff_time")
+          .eq("status", "finished")
+          .order("kickoff_time", { ascending: false })
+          .limit(4);
+        if (results) setRecentResults(results as typeof recentResults);
       } catch { /* show zeros */ }
     }
     loadData();
@@ -394,10 +414,10 @@ export default function AdminPage() {
                   </h2>
                   <div className="space-y-3">
                     {[
-                      { label: "Daily Active Users", value: 847, max: 2847, color: "bg-sfc-blue" },
-                      { label: "Team Submissions", value: 2340, max: 2847, color: "bg-blue-500" },
-                      { label: "Transfers Made Today", value: 156, max: 500, color: "bg-amber-500" },
-                      { label: "Chat Messages Today", value: 1240, max: 2000, color: "bg-purple-500" },
+                      { label: "Registered Managers", value: parseInt(userCount.replace(/,/g, "")) || 0, max: Math.max(parseInt(userCount.replace(/,/g, "")) || 1, 1), color: "bg-sfc-blue" },
+                      { label: "Active Fantasy Teams", value: healthStats.teams, max: Math.max(healthStats.teams, 1), color: "bg-blue-500" },
+                      { label: "Player Picks (Total)", value: healthStats.playersPicked, max: Math.max(healthStats.playersPicked, 1), color: "bg-amber-500" },
+                      { label: "Matches Completed", value: healthStats.finishedMatches, max: Math.max(healthStats.finishedMatches, 1), color: "bg-purple-500" },
                     ].map((metric) => (
                       <div key={metric.label}>
                         <div className="flex justify-between text-xs mb-1.5">
@@ -417,23 +437,27 @@ export default function AdminPage() {
                     <AlertTriangle className="w-4 h-4 text-amber-400" /> Recent Alerts
                   </h2>
                   <div className="space-y-2">
-                    {[
-                      { msg: "Tawanda Chimwemwe marked as injured", time: "2h ago", type: "warning" },
-                      { msg: "User 'BanTest' reported 3 times", time: "4h ago", type: "error" },
-                      { msg: "MD12 fixture confirmed vs Dynamos", time: "1d ago", type: "info" },
-                      { msg: "Transfer window closes in 2 days", time: "1d ago", type: "warning" },
-                    ].map((alert, i) => (
-                      <div key={i} className={cn(
-                        "flex items-center gap-3 p-4 rounded-xl border text-xs",
-                        alert.type === "error" ? "bg-red-500/10 border-red-500/20 text-red-300" :
-                        alert.type === "warning" ? "bg-amber-500/10 border-amber-500/20 text-amber-300" :
-                        "bg-blue-500/10 border-blue-500/20 text-blue-300"
-                      )}>
-                        <AlertTriangle className="w-3 h-3 flex-shrink-0" />
-                        <span className="flex-1">{alert.msg}</span>
-                        <span className="text-muted-foreground">{alert.time}</span>
-                      </div>
-                    ))}
+                    {recentResults.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-4">No recent results</p>
+                    ) : recentResults.map((r, i) => {
+                      const sfcGoals = r.home_team === "Scottland FC" ? r.homeScore : r.awayScore;
+                      const oppGoals = r.home_team === "Scottland FC" ? r.awayScore : r.homeScore;
+                      const result = sfcGoals > oppGoals ? "W" : sfcGoals < oppGoals ? "L" : "D";
+                      const type = result === "W" ? "info" : result === "L" ? "error" : "warning";
+                      const opp = r.home_team === "Scottland FC" ? r.away_team : r.home_team;
+                      return (
+                        <div key={i} className={cn(
+                          "flex items-center gap-3 p-4 rounded-xl border text-xs",
+                          type === "error" ? "bg-red-500/10 border-red-500/20 text-red-300" :
+                          type === "warning" ? "bg-amber-500/10 border-amber-500/20 text-amber-300" :
+                          "bg-blue-500/10 border-blue-500/20 text-blue-300"
+                        )}>
+                          <AlertTriangle className="w-3 h-3 flex-shrink-0" />
+                          <span className="flex-1">MD{r.matchday}: SFC {result} vs {opp} ({r.homeScore}–{r.awayScore})</span>
+                          <span className="text-muted-foreground">{new Date(r.kickoff_time).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>

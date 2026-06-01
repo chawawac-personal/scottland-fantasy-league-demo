@@ -14,7 +14,7 @@ import { useSidebar } from "@/lib/sidebar-store";
 import { createClient } from "@/lib/supabase/client";
 
 function useHasLiveMatch() {
-  const [isLive, setIsLive] = useState(true); // default true to match mock data
+  const [isLive, setIsLive] = useState(false);
   useEffect(() => {
     async function check() {
       try {
