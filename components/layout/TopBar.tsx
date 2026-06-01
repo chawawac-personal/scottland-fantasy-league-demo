@@ -35,6 +35,7 @@ export function TopBar({ title, subtitle, rightContent }: TopBarProps) {
   const { toggle } = useSidebar();
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifs, setNotifs] = useState(MOCK_NOTIFS);
+  const [userPoints, setUserPoints] = useState<number | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const unread = notifs.filter((n) => !n.read).length;
 
@@ -61,6 +62,8 @@ export function TopBar({ title, subtitle, rightContent }: TopBarProps) {
           .order("created_at", { ascending: false })
           .limit(10);
         if (data && data.length > 0) setNotifs(data);
+        const { data: profile } = await (supabase as any).from("profiles").select("fantasy_points").eq("id", user.id).single();
+        if (profile) setUserPoints(profile.fantasy_points ?? 0);
       } catch { /* keep mock data */ }
     }
     load();
@@ -182,7 +185,7 @@ export function TopBar({ title, subtitle, rightContent }: TopBarProps) {
           style={{ backgroundColor: "rgba(29,78,216,0.06)" }}
         >
           <Zap className="w-4 h-4 text-sfc-blue" />
-          <span className="text-sm font-bold text-sfc-blue hidden sm:inline">2,847 pts</span>
+          <span className="text-sm font-bold text-sfc-blue hidden sm:inline">{userPoints !== null ? `${userPoints.toLocaleString()} pts` : "— pts"}</span>
         </div>
       </div>
     </motion.header>

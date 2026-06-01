@@ -30,7 +30,11 @@ export default function DashboardPage() {
   const [leaderboard, setLeaderboard] = useState<{ rank: number; username: string; team: string; points: number; weekly: number; change: number }[]>([]);
   const [displayMatches, setDisplayMatches] = useState<{ home: string; away: string; date: string; time: string; matchday: number; isLive: boolean }[]>([]);
   const [recentActivity, setRecentActivity] = useState<{ type: string; title: string; text: string; pts: string; time: string }[]>([]);
-  const [profile, setProfile] = useState<{ username: string; level: number; xp: number; avatarUrl: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ username: string; level: number; xp: number; avatarUrl: string | null; fantasyPoints: number } | null>(null);
+  const [weeklyPoints, setWeeklyPoints]     = useState(0);
+  const [globalRank, setGlobalRank]         = useState<number | null>(null);
+  const [totalManagers, setTotalManagers]   = useState(0);
+  const [teamValue, setTeamValue]           = useState(0);
 
   useEffect(() => {
     async function fetchAll() {
@@ -44,7 +48,7 @@ export default function DashboardPage() {
         if (user) {
           const { data: profileData } = await sb
             .from("profiles")
-            .select("username, avatar_url, level, xp")
+            .select("username, avatar_url, level, xp, fantasy_points")
             .eq("id", user.id)
             .single();
           if (profileData) {
@@ -53,7 +57,27 @@ export default function DashboardPage() {
               level: profileData.level ?? 1,
               xp: profileData.xp ?? 0,
               avatarUrl: profileData.avatar_url ?? null,
+              fantasyPoints: profileData.fantasy_points ?? 0,
             });
+
+            // Global rank — how many profiles have more points
+            const { count: above } = await sb.from("profiles").select("id", { count: "exact", head: true }).gt("fantasy_points", profileData.fantasy_points ?? 0);
+            const { count: total } = await sb.from("profiles").select("id", { count: "exact", head: true });
+            setGlobalRank((above ?? 0) + 1);
+            setTotalManagers(total ?? 0);
+          }
+
+          // Team weekly points + total value
+          const { data: teamData } = await sb
+            .from("fantasy_teams")
+            .select("weekly_points, fantasy_team_players(players(price))")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          if (teamData) {
+            setWeeklyPoints(teamData.weekly_points ?? 0);
+            const val = (teamData.fantasy_team_players ?? [])
+              .reduce((s: number, ftp: any) => s + (ftp.players?.price ?? 0), 0);
+            setTeamValue(val);
           }
         }
 
@@ -174,10 +198,10 @@ export default function DashboardPage() {
           </div>
         )}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
-          <StatsCard title="Total Points"  value="2,847"  subtitle="Season total"       icon={Zap}        trend={8}  accentColor="blue" delay={0}    />
-          <StatsCard title="Global Rank"   value="#247"   subtitle="of 2,400 managers"  icon={Trophy}     trend={12} accentColor="gold" delay={0.05} />
-          <StatsCard title="Weekly Points" value="71"     subtitle={`Matchday ${currentMatchday - 1}`}  icon={TrendingUp} trend={-5} accentColor="blue" delay={0.1}  />
-          <StatsCard title="Team Value"    value="$98.3M" subtitle="Budget: $1.7M left"  icon={Star}                  accentColor="blue" delay={0.15} />
+          <StatsCard title="Total Points"  value={profile ? profile.fantasyPoints.toLocaleString() : "—"} subtitle="Season total"                                                           icon={Zap}        accentColor="blue" delay={0}    />
+          <StatsCard title="Global Rank"   value={globalRank ? `#${globalRank}` : "—"}                  subtitle={`of ${totalManagers} managers`}                                              icon={Trophy}     accentColor="gold" delay={0.05} />
+          <StatsCard title="Weekly Points" value={weeklyPoints.toLocaleString()}                         subtitle={`Matchday ${currentMatchday - 1}`}                                            icon={TrendingUp} accentColor="blue" delay={0.1}  />
+          <StatsCard title="Team Value"    value={teamValue > 0 ? `$${(teamValue/1_000_000).toFixed(1)}M` : "—"} subtitle={teamValue > 0 ? `Budget: $${((100_000_000-teamValue)/1_000_000).toFixed(1)}M left` : "No team yet"} icon={Star} accentColor="blue" delay={0.15} />
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
