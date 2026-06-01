@@ -458,11 +458,11 @@ export default function MyTeamPage() {
               className="rounded-2xl overflow-hidden border border-sfc-blue/10"
               style={{ background: "linear-gradient(180deg, #0a1f0a 0%, #0d2a0d 50%, #0a1f0a 100%)" }}
             >
-              <div className="relative p-3 sm:p-6 pitch-bg">
+              <div className="relative p-2 sm:p-6 pitch-bg">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full border border-sfc-blue/10 opacity-40" />
                 <div className="absolute top-1/2 left-0 right-0 h-px bg-sfc-blue/10" />
 
-                <div className="space-y-6">
+                <div className="space-y-2 sm:space-y-6">
                   <PitchSlot position="FWD" count={FORMATIONS[formation].FWD} />
                   <PitchSlot position="MID" count={FORMATIONS[formation].MID} />
                   <PitchSlot position="DEF" count={FORMATIONS[formation].DEF} />
