@@ -315,13 +315,13 @@ export default function LeaguesPage() {
                 <table className="w-full">
                   <thead className="bg-slate-100/20">
                     <tr>
-                      <th className="text-left px-5 py-4 text-xs font-semibold text-muted-foreground">Rank</th>
-                      <th className="text-left px-5 py-4 text-xs font-semibold text-muted-foreground">Manager</th>
-                      <th className="hidden md:table-cell text-left px-5 py-4 text-xs font-semibold text-muted-foreground">Team</th>
-                      <th className="text-right px-5 py-4 text-xs font-semibold text-muted-foreground">Total Pts</th>
-                      <th className="hidden sm:table-cell text-right px-5 py-4 text-xs font-semibold text-muted-foreground">Weekly</th>
-                      <th className="hidden md:table-cell text-right px-5 py-4 text-xs font-semibold text-muted-foreground">Monthly</th>
-                      <th className="hidden sm:table-cell text-right px-5 py-4 text-xs font-semibold text-muted-foreground">Change</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Rank</th>
+                      <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground">Manager</th>
+                      <th className="hidden md:table-cell text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Team</th>
+                      <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Total Pts</th>
+                      <th className="hidden sm:table-cell text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Weekly</th>
+                      <th className="hidden md:table-cell text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Monthly</th>
+                      <th className="hidden sm:table-cell text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Change</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -333,7 +333,7 @@ export default function LeaguesPage() {
                         transition={{ delay: i * 0.03 }}
                         className={cn("data-table-row", entry.username === "YourTeam" && "bg-sfc-blue/5")}
                       >
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-3.5">
                           <div className={cn(
                             "rank-badge text-xs",
                             entry.rank === 1 ? "rank-1" : entry.rank === 2 ? "rank-2" : entry.rank === 3 ? "rank-3" : "text-muted-foreground border border-slate-200"
@@ -341,7 +341,7 @@ export default function LeaguesPage() {
                             {entry.rank <= 3 ? ["🥇", "🥈", "🥉"][entry.rank - 1] : entry.rank}
                           </div>
                         </td>
-                        <td className="px-5 py-4">
+                        <td className="px-5 py-3.5">
                           <div className="flex items-center gap-2">
                             <div className="w-7 h-7 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-xs text-sfc-blue font-bold">
                               {entry.username[0]}
@@ -629,16 +629,16 @@ export default function LeaguesPage() {
                     <table className="w-full">
                       <thead className="bg-slate-50 border-b border-slate-200">
                         <tr>
-                          <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground">Rank</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Rank</th>
                           <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground">Manager</th>
-                          <th className="text-right px-5 py-3 text-xs font-semibold text-muted-foreground">Total Pts</th>
-                          <th className="text-right px-5 py-3 text-xs font-semibold text-muted-foreground">Weekly</th>
+                          <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Total Pts</th>
+                          <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Weekly</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {leagueMembers.map((m, i) => (
                           <tr key={m.username} className={cn("transition-colors hover:bg-slate-50", m.username === viewingLeague.leader && "bg-amber-50/50")}>
-                            <td className="px-5 py-3.5">
+                            <td className="px-4 py-3.5">
                               <div className={cn("rank-badge text-xs", i === 0 ? "rank-1" : i === 1 ? "rank-2" : i === 2 ? "rank-3" : "text-muted-foreground border border-slate-200")}>
                                 {i < 3 ? ["🥇","🥈","🥉"][i] : m.rank}
                               </div>
@@ -652,8 +652,8 @@ export default function LeaguesPage() {
                                 {i === 0 && <Crown className="w-3 h-3 text-amber-400" />}
                               </div>
                             </td>
-                            <td className="px-5 py-3.5 text-right text-sm font-bold text-sfc-blue">{m.points.toLocaleString()}</td>
-                            <td className="px-5 py-3.5 text-right text-sm text-sfc-black">{m.weekly}</td>
+                            <td className="px-4 py-3.5 text-right text-sm font-bold text-sfc-blue">{m.points.toLocaleString()}</td>
+                            <td className="px-4 py-3.5 text-right text-sm text-sfc-black">{m.weekly}</td>
                           </tr>
                         ))}
                       </tbody>

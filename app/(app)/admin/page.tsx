@@ -426,19 +426,19 @@ export default function AdminPage() {
                 <table className="w-full">
                   <thead className="bg-slate-100/20">
                     <tr>
-                      <th className="text-left px-5 py-4 text-xs font-semibold text-muted-foreground">Player</th>
-                      <th className="text-center px-5 py-4 text-xs font-semibold text-muted-foreground">Pos</th>
-                      <th className="text-right px-5 py-4 text-xs font-semibold text-muted-foreground">Price</th>
-                      <th className="text-right px-5 py-4 text-xs font-semibold text-muted-foreground">Points</th>
-                      <th className="text-right px-5 py-4 text-xs font-semibold text-muted-foreground">Goals</th>
-                      <th className="text-center px-5 py-4 text-xs font-semibold text-muted-foreground">Injured</th>
-                      <th className="text-center px-5 py-4 text-xs font-semibold text-muted-foreground">Actions</th>
+                      <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground">Player</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Pos</th>
+                      <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Price</th>
+                      <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Points</th>
+                      <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Goals</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Injured</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {players.map((player) => (
                       <tr key={player.id} className="data-table-row">
-                        <td className="px-5 py-4">
+                        <td className="px-5 py-3.5">
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-display text-sfc-blue/70">
                               {player.name.split(" ").map(n => n[0]).join("")}
@@ -462,7 +462,7 @@ export default function AdminPage() {
                             }
                           </button>
                         </td>
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-3.5">
                           <div className="flex items-center justify-center gap-2">
                             <button onClick={() => setEditingPlayer(player.id)} className="p-1.5 rounded-lg border border-slate-200 hover:border-sfc-blue/30 text-muted-foreground hover:text-sfc-blue transition-colors">
                               <Edit className="w-3.5 h-3.5" />
@@ -489,19 +489,19 @@ export default function AdminPage() {
                 <table className="w-full">
                   <thead className="bg-slate-100/20">
                     <tr>
-                      <th className="text-left px-5 py-4 text-xs font-semibold text-muted-foreground">User</th>
-                      <th className="text-left px-5 py-4 text-xs font-semibold text-muted-foreground">Email</th>
-                      <th className="text-center px-5 py-4 text-xs font-semibold text-muted-foreground">Role</th>
-                      <th className="text-right px-5 py-4 text-xs font-semibold text-muted-foreground">Points</th>
-                      <th className="text-center px-5 py-4 text-xs font-semibold text-muted-foreground">Joined</th>
-                      <th className="text-center px-5 py-4 text-xs font-semibold text-muted-foreground">Status</th>
-                      <th className="text-center px-5 py-4 text-xs font-semibold text-muted-foreground">Actions</th>
+                      <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground">User</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground">Email</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Role</th>
+                      <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Points</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Joined</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Status</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {users.map((user) => (
                       <tr key={user.id} className="data-table-row">
-                        <td className="px-5 py-4">
+                        <td className="px-5 py-3.5">
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-lg bg-sfc-blue/10 border border-sfc-blue/20 flex items-center justify-center text-xs font-bold text-sfc-blue">
                               {user.username[0]}
@@ -509,7 +509,7 @@ export default function AdminPage() {
                             <span className="text-sm text-sfc-black">@{user.username}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3.5 text-sm text-muted-foreground">{user.email}</td>
+                        <td className="px-4 py-3.5 text-left text-sm text-muted-foreground">{user.email}</td>
                         <td className="px-4 py-3.5 text-center">
                           <span className={cn(
                             "text-xs font-bold px-2 py-0.5 rounded-full border",
@@ -534,7 +534,7 @@ export default function AdminPage() {
                             {user.status}
                           </span>
                         </td>
-                        <td className="px-5 py-4">
+                        <td className="px-4 py-3.5">
                           <div className="flex items-center justify-center gap-2">
                             <select
                               defaultValue={user.level === "Admin" ? "admin" : user.level === "Manager" ? "manager" : user.level === "Mod" ? "moderator" : "user"}
@@ -949,27 +949,27 @@ export default function AdminPage() {
                                   <td className="px-4 py-2.5">
                                     <p className="text-sm font-medium text-sfc-black">{row.name}</p>
                                   </td>
-                                  <td className="px-2 py-2">
+                                  <td className="px-3 py-2.5">
                                     <input type="number" min={0} max={120} value={row.minutes}
                                       onChange={e => updateStat(row.player_id, "minutes", Math.max(0, Math.min(120, parseInt(e.target.value) || 0)))}
                                       className="w-16 text-center border border-slate-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-sfc-blue/50 bg-white" />
                                   </td>
                                   {(["goals","assists","yellow_cards","red_cards"] as const).map(field => (
-                                    <td key={field} className="px-2 py-2">
+                                    <td key={field} className="px-3 py-2.5">
                                       <input type="number" min={0} max={field === "yellow_cards" || field === "red_cards" ? 2 : 10}
                                         value={row[field] as number}
                                         onChange={e => updateStat(row.player_id, field, Math.max(0, parseInt(e.target.value) || 0))}
                                         className="w-12 text-center border border-slate-200 rounded-lg px-1 py-1 text-sm focus:outline-none focus:border-sfc-blue/50 bg-white mx-auto block" />
                                     </td>
                                   ))}
-                                  <td className="px-2 py-2 text-center">
+                                  <td className="px-3 py-2.5 text-center">
                                     {(pos === "GK" || pos === "DEF" || pos === "MID") ? (
                                       <input type="checkbox" checked={row.clean_sheet}
                                         onChange={e => updateStat(row.player_id, "clean_sheet", e.target.checked)}
                                         className="w-4 h-4 accent-sfc-blue cursor-pointer" />
                                     ) : <span className="text-muted-foreground text-xs">—</span>}
                                   </td>
-                                  <td className="px-4 py-2 text-right">
+                                  <td className="px-4 py-2.5 text-right">
                                     <span className={cn("text-sm font-bold", row.minutes > 0 ? "text-sfc-blue" : "text-slate-300")}>
                                       {row.fantasy_points}
                                     </span>

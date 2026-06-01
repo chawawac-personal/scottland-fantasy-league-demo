@@ -313,7 +313,7 @@ export default function ManagerPage() {
                       <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground">Player</th>
                       <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Position</th>
                       <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Total Pts</th>
-                      <th className="text-center px-5 py-3 text-xs font-semibold text-muted-foreground">Availability</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Availability</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -332,7 +332,7 @@ export default function ManagerPage() {
                           <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", getPositionColor(p.position))}>{p.position}</span>
                         </td>
                         <td className="px-4 py-3.5 text-right text-sm font-bold text-sfc-blue">{p.total_points}</td>
-                        <td className="px-5 py-3.5 text-center">
+                        <td className="px-4 py-3.5 text-center">
                           <button onClick={() => toggleInjury(p.id, p.is_injured)} disabled={togglingInjury === p.id}
                             className="transition-opacity disabled:opacity-50">
                             {togglingInjury === p.id
@@ -403,26 +403,26 @@ export default function ManagerPage() {
                               {rows.map(row => (
                                 <tr key={row.player_id} className={cn("hover:bg-slate-50/50 transition-colors", row.minutes > 0 && "bg-sfc-blue/[0.02]")}>
                                   <td className="px-4 py-2.5"><p className="text-sm font-medium text-sfc-black">{row.name}</p></td>
-                                  <td className="px-2 py-2">
+                                  <td className="px-3 py-2.5">
                                     <input type="number" min={0} max={120} value={row.minutes}
                                       onChange={e => updateStat(row.player_id, "minutes", Math.max(0, Math.min(120, parseInt(e.target.value)||0)))}
                                       className="w-16 text-center border border-slate-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:border-sfc-blue/50 bg-white" />
                                   </td>
                                   {(["goals","assists","yellow_cards","red_cards"] as const).map(field => (
-                                    <td key={field} className="px-2 py-2">
+                                    <td key={field} className="px-3 py-2.5">
                                       <input type="number" min={0} max={field.includes("cards") ? 2 : 10} value={row[field] as number}
                                         onChange={e => updateStat(row.player_id, field, Math.max(0, parseInt(e.target.value)||0))}
                                         className="w-12 text-center border border-slate-200 rounded-lg px-1 py-1 text-sm focus:outline-none focus:border-sfc-blue/50 bg-white mx-auto block" />
                                     </td>
                                   ))}
-                                  <td className="px-2 py-2 text-center">
+                                  <td className="px-3 py-2.5 text-center">
                                     {pos !== "FWD" ? (
                                       <input type="checkbox" checked={row.clean_sheet}
                                         onChange={e => updateStat(row.player_id, "clean_sheet", e.target.checked)}
                                         className="w-4 h-4 accent-sfc-blue cursor-pointer" />
                                     ) : <span className="text-muted-foreground text-xs">—</span>}
                                   </td>
-                                  <td className="px-4 py-2 text-right">
+                                  <td className="px-4 py-2.5 text-right">
                                     <span className={cn("text-sm font-bold", row.minutes > 0 ? "text-sfc-blue" : "text-slate-300")}>{row.fantasy_points}</span>
                                   </td>
                                 </tr>

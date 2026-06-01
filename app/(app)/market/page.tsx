@@ -312,13 +312,13 @@ export default function MarketPage() {
                 <SortHeader k="goals"             label="Goals" />
                 <SortHeader k="assists"           label="Assists" />
                 <SortHeader k="ownership_percent" label="Own%"  className="hidden md:table-cell" />
-                <th className="text-right px-5 py-4 text-xs font-semibold text-muted-foreground">Action</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Action</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((player, i) => (
                 <motion.tr key={player.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }} className="data-table-row">
-                  <td className="px-4 py-3.5 text-sm text-muted-foreground">{i + 1}</td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground">{i + 1}</td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-11 rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center border border-slate-200 flex-shrink-0">

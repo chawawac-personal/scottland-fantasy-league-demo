@@ -239,7 +239,7 @@ export default function MatchStatsPage() {
                     transition={{ delay: i * 0.02 }}
                     className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors"
                   >
-                    <td className="px-3 sm:px-5 py-2.5 sm:py-3">
+                    <td className="px-3 sm:px-5 py-3">
                       <div className="flex items-center gap-1.5 sm:gap-2">
                         <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-sfc-blue/10 flex items-center justify-center text-[10px] font-bold text-sfc-blue flex-shrink-0">
                           {i + 1}
@@ -247,14 +247,14 @@ export default function MatchStatsPage() {
                         <span className="text-xs sm:text-sm font-medium text-sfc-black truncate">{p.name}</span>
                       </div>
                     </td>
-                    <td className="px-2 sm:px-3 py-2.5 sm:py-3 text-center">
+                    <td className="px-2 sm:px-3 py-3 text-center">
                       <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full", getPositionColor(p.position))}>
                         {p.position}
                       </span>
                     </td>
-                    <td className="px-2 sm:px-4 py-2.5 sm:py-3 text-right text-xs sm:text-sm font-bold text-sfc-blue">{p.total_points}</td>
-                    <td className="px-2 sm:px-4 py-2.5 sm:py-3 text-right text-xs sm:text-sm text-sfc-black">{p.goals}</td>
-                    <td className="px-2 sm:px-4 py-2.5 sm:py-3 text-right text-xs sm:text-sm text-sfc-black">{p.assists}</td>
+                    <td className="px-2 sm:px-4 py-3 text-right text-xs sm:text-sm font-bold text-sfc-blue">{p.total_points}</td>
+                    <td className="px-2 sm:px-4 py-3 text-right text-xs sm:text-sm text-sfc-black">{p.goals}</td>
+                    <td className="px-2 sm:px-4 py-3 text-right text-xs sm:text-sm text-sfc-black">{p.assists}</td>
                     <td className="hidden sm:table-cell px-4 py-3 text-right text-sm text-sfc-black">{p.clean_sheets}</td>
                     <td className="hidden sm:table-cell px-4 py-3 text-right text-sm text-muted-foreground">{p.minutes_played}</td>
                   </motion.tr>
