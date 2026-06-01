@@ -7,7 +7,7 @@ import { Trophy, Zap, Users, ChevronRight, Star, Shield } from "lucide-react";
 const features = [
   { icon: Trophy, title: "Fantasy Leagues", desc: "Build your perfect squad and compete with fans across Zimbabwe" },
   { icon: Zap, title: "Live Matchday", desc: "Real-time points, live match events, and dynamic leaderboards" },
-  { icon: Users, title: "Fan Community", desc: "Chat, polls, predictions and man of the match voting" },
+  { icon: Users, title: "Fan Community", desc: "Vote in fan polls and have your say" },
   { icon: Star, title: "Gamification", desc: "Earn XP, unlock badges, and climb the levels from Rookie to Legend" },
 ];
 
