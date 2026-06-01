@@ -66,7 +66,7 @@ export default function ProfilePage() {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           setAchievements((achData as any[]).map((a: any) => ({ key: a.badge_key, name: a.badge_name, desc: a.badge_description, icon: a.badge_icon, unlocked: true, color: "text-sfc-blue" })));
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setTrophies((achData as any[]).filter((a: any) => a.badge_key.startsWith("md_") || a.badge_key.startsWith("trophy_")).map((a: any) => ({ name: a.badge_name, desc: a.badge_description, icon: a.badge_icon, date: new Date(a.unlocked_at).toLocaleDateString("en-GB", { month: "short", year: "numeric" }) })));
+          setTrophies((achData as any[]).map((a: any) => ({ name: a.badge_name, desc: a.badge_description, icon: a.badge_icon, date: new Date(a.unlocked_at).toLocaleDateString("en-GB", { month: "short", year: "numeric" }) })));
         }
 
         // Points history per matchday via player_match_stats for this team's starters
