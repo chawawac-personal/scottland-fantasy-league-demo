@@ -109,7 +109,7 @@ export default function LeaguesPage() {
           const board = (profiles as any[]).map((p: any, i: number) => ({
             rank: i + 1,
             username: user && p.id === user.id ? "YourTeam" : p.username,
-            team: `${p.username}'s XI`,
+            team: user && p.id === user.id ? "Your Team" : `${p.username}'s XI`,
             total: p.fantasy_points,
             weekly: p.fantasy_teams?.[0]?.weekly_points ?? 0,
             monthly: p.fantasy_teams?.[0]?.weekly_points ?? 0,
@@ -326,6 +326,11 @@ export default function LeaguesPage() {
           {/* ── Global Rankings ── */}
           {activeTab === "global" && (
             <motion.div key="global" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              {(() => {
+                const sortedBoard = [...globalBoard]
+                  .sort((a, b) => period === "weekly" ? b.weekly - a.weekly : period === "monthly" ? b.monthly - a.monthly : b.total - a.total)
+                  .map((e, i) => ({ ...e, rank: i + 1 }));
+                return (
               <div className="glass-card overflow-x-auto">
                 <div className="flex items-center justify-between p-4 border-b border-slate-200">
                   <h2 className="font-bold text-sfc-black">Zimbabwe Leaderboard</h2>
@@ -359,7 +364,7 @@ export default function LeaguesPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {globalBoard.map((entry, i) => (
+                    {sortedBoard.map((entry, i) => (
                       <motion.tr
                         key={entry.rank}
                         initial={{ opacity: 0 }}
@@ -399,6 +404,7 @@ export default function LeaguesPage() {
                   </tbody>
                 </table>
               </div>
+                ); })()}
             </motion.div>
           )}
 
