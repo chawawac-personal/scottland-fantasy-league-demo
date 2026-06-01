@@ -207,7 +207,7 @@ export default function MarketPage() {
                 { label: "Best Value",    value: bestValue?.name   ?? "—", sub: `${(bestValue ? bestValue.total_points/(bestValue.price/1_000_000) : 0).toFixed(1)} pts/M`, icon: "💰" },
                 { label: "Highest Owned", value: mostOwned?.name   ?? "—", sub: `${mostOwned?.ownership_percent.toFixed(1) ?? 0}% owned`,                icon: "👑" },
               ].map((s) => (
-                <div key={s.label} className="glass-card p-5">
+                <div key={s.label} className="glass-card p-5 flex flex-col items-center sm:items-start text-center sm:text-left">
                   <span className="text-2xl">{s.icon}</span>
                   <p className="text-xs text-muted-foreground mt-2">{s.label}</p>
                   <p className="text-sm font-bold text-sfc-black">{s.value}</p>
