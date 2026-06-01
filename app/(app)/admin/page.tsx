@@ -59,7 +59,7 @@ export default function AdminPage() {
   const [userCount, setUserCount] = useState("—");
   const [platformStats, setPlatformStats] = useState({ leagues: 0, liveMatches: 0, notifications: 0 });
   const [healthStats, setHealthStats] = useState({ teams: 0, playersPicked: 0, messages: 0, finishedMatches: 0 });
-  const [recentResults, setRecentResults] = useState<{ home: string; away: string; homeScore: number; awayScore: number; matchday: number; kickoff_time: string }[]>([]);
+  const [recentResults, setRecentResults] = useState<{ home_team: string; away_team: string; home_score: number; away_score: number; matchday: number; kickoff_time: string }[]>([]);
 
   // Load real players and users from Supabase
   useEffect(() => {
