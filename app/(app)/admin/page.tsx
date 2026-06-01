@@ -440,8 +440,8 @@ export default function AdminPage() {
                     {recentResults.length === 0 ? (
                       <p className="text-xs text-muted-foreground text-center py-4">No recent results</p>
                     ) : recentResults.map((r, i) => {
-                      const sfcGoals = r.home_team === "Scottland FC" ? r.homeScore : r.awayScore;
-                      const oppGoals = r.home_team === "Scottland FC" ? r.awayScore : r.homeScore;
+                      const sfcGoals = r.home_team === "Scottland FC" ? r.home_score : r.away_score;
+                      const oppGoals = r.home_team === "Scottland FC" ? r.away_score : r.home_score;
                       const result = sfcGoals > oppGoals ? "W" : sfcGoals < oppGoals ? "L" : "D";
                       const type = result === "W" ? "info" : result === "L" ? "error" : "warning";
                       const opp = r.home_team === "Scottland FC" ? r.away_team : r.home_team;
@@ -453,7 +453,7 @@ export default function AdminPage() {
                           "bg-blue-500/10 border-blue-500/20 text-blue-300"
                         )}>
                           <AlertTriangle className="w-3 h-3 flex-shrink-0" />
-                          <span className="flex-1">MD{r.matchday}: SFC {result} vs {opp} ({r.homeScore}–{r.awayScore})</span>
+                          <span className="flex-1">MD{r.matchday}: SFC {result} vs {opp} ({r.home_score}–{r.away_score})</span>
                           <span className="text-muted-foreground">{new Date(r.kickoff_time).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
                         </div>
                       );
