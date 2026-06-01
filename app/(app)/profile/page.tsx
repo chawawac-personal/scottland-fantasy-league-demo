@@ -289,7 +289,7 @@ export default function ProfilePage() {
                     <label className="label">Supporter Branch</label>
                     <select value={editForm.supporter_branch}
                       onChange={(e) => setEditForm({ ...editForm, supporter_branch: e.target.value })}
-                      className="input">
+                      className="select">
                       {["Harare Central Branch","Bulawayo Branch","Mutare Branch","Gweru Branch","Masvingo Branch","Diaspora Branch","Online Supporter"].map(b => (
                         <option key={b} value={b}>{b}</option>
                       ))}

@@ -549,7 +549,7 @@ export default function AdminPage() {
                           await updateUserRoleAction(user.userId, e.target.value);
                           setUsers(prev => prev.map(u => u.id === user.id ? { ...u, level: e.target.value === "admin" ? "Admin" : e.target.value === "manager" ? "Manager" : e.target.value === "moderator" ? "Mod" : "User" } : u));
                         }}
-                        className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:border-sfc-blue/50 text-sfc-black shrink-0"
+                        className="select-sm shrink-0"
                       >
                         <option value="user">User</option>
                         <option value="manager">Manager</option>
@@ -609,7 +609,7 @@ export default function AdminPage() {
                                   await updateUserRoleAction(user.userId, e.target.value);
                                   setUsers(prev => prev.map(u => u.id === user.id ? { ...u, level: e.target.value === "admin" ? "Admin" : e.target.value === "manager" ? "Manager" : e.target.value === "moderator" ? "Mod" : "User" } : u));
                                 }}
-                                className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:border-sfc-blue/50 text-sfc-black"
+                                className="select-sm"
                               >
                                 <option value="user">User</option>
                                 <option value="manager">Manager</option>
@@ -639,7 +639,7 @@ export default function AdminPage() {
                       <select
                         value={notifForm.type}
                         onChange={(e) => setNotifForm({ ...notifForm, type: e.target.value })}
-                        className="w-full px-4 py-3 bg-slate-100/50 border border-slate-200 rounded-xl text-sfc-black focus:outline-none focus:border-sfc-blue/50 text-sm"
+                        className="select"
                       >
                         {["system","match","transfer","goal","league","reward"].map(t => (
                           <option key={t} value={t} className="bg-slate-50">{t.charAt(0).toUpperCase() + t.slice(1)}</option>
