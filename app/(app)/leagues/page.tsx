@@ -99,20 +99,25 @@ export default function LeaguesPage() {
       // Global leaderboard + weekly top 3
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: profiles } = await (supabase as any)
-          .from("profiles")
-          .select("id, username, fantasy_points, fantasy_teams(weekly_points)")
-          .order("fantasy_points", { ascending: false })
-          .limit(20);
+        const [{ data: profiles }, { data: teamsData }] = await Promise.all([
+          (supabase as any).from("profiles").select("id, username, fantasy_points").order("fantasy_points", { ascending: false }).limit(50),
+          (supabase as any).from("fantasy_teams").select("user_id, weekly_points"),
+        ]);
         if (profiles && profiles.length > 0) {
+          // Build user_id → weekly_points map from the separate teams query
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const weeklyMap: Record<string, number> = {};
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (teamsData ?? []).forEach((t: any) => { weeklyMap[t.user_id] = t.weekly_points ?? 0; });
+
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const board = (profiles as any[]).map((p: any, i: number) => ({
             rank: i + 1,
             username: user && p.id === user.id ? "YourTeam" : p.username,
             team: user && p.id === user.id ? "Your Team" : `${p.username}'s XI`,
             total: p.fantasy_points,
-            weekly: p.fantasy_teams?.[0]?.weekly_points ?? 0,
-            monthly: p.fantasy_teams?.[0]?.weekly_points ?? 0,
+            weekly: weeklyMap[p.id] ?? 0,
+            monthly: weeklyMap[p.id] ?? 0,
             prev: i + 1,
           }));
           setGlobalBoard(board);

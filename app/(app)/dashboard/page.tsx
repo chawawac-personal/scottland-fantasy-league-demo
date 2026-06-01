@@ -96,19 +96,22 @@ export default function DashboardPage() {
 
         // Leaderboard from profiles
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: profiles } = await (supabase as any)
-          .from("profiles")
-          .select("id, username, fantasy_points, fantasy_teams(weekly_points)")
-          .order("fantasy_points", { ascending: false })
-          .limit(10);
+        const [{ data: profiles }, { data: teamsWeekly }] = await Promise.all([
+          (supabase as any).from("profiles").select("id, username, fantasy_points").order("fantasy_points", { ascending: false }).limit(10),
+          (supabase as any).from("fantasy_teams").select("user_id, weekly_points"),
+        ]);
         if (profiles && profiles.length > 0) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const wkMap: Record<string, number> = {};
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (teamsWeekly ?? []).forEach((t: any) => { wkMap[t.user_id] = t.weekly_points ?? 0; });
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           setLeaderboard((profiles as any[]).map((p: any, i: number) => ({
             rank: i + 1,
             username: user && p.id === user.id ? "YourTeam" : p.username,
             team: `${p.username}'s XI`,
             points: p.fantasy_points,
-            weekly: p.fantasy_teams?.[0]?.weekly_points ?? 0,
+            weekly: wkMap[p.id] ?? 0,
             change: 0,
           })));
         }
