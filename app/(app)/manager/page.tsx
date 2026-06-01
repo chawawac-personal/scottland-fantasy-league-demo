@@ -302,50 +302,81 @@ export default function ManagerPage() {
           {/* ── Players tab ── */}
           {activeTab === "players" && (
             <motion.div key="players" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <div className="glass-card overflow-x-auto">
-                <div className="p-5 border-b border-slate-200">
+              <div className="glass-card">
+                <div className="p-4 sm:p-5 border-b border-slate-200">
                   <h2 className="font-bold text-sfc-black">Player Availability</h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">Toggle injury status — affects market visibility and fantasy selection</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">Toggle injury status — affects market visibility and fantasy selection</p>
                 </div>
-                <table className="w-full">
-                  <thead className="bg-slate-50 border-b border-slate-200">
-                    <tr>
-                      <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground">Player</th>
-                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Position</th>
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Total Pts</th>
-                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Availability</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {players.map(p => (
-                      <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-5 py-3.5">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-display text-sfc-blue/70">
-                              {p.name.split(" ").map(n => n[0]).join("")}
-                            </div>
-                            <span className="text-sm font-medium text-sfc-black">{p.name}</span>
-                            {p.is_injured && <span className="text-[9px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded font-bold">INJ</span>}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3.5 text-center">
+
+                {/* Mobile: card list */}
+                <div className="sm:hidden divide-y divide-slate-100">
+                  {players.map(p => (
+                    <div key={p.id} className="flex items-center gap-3 px-4 py-3">
+                      <div className="w-8 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-display text-sfc-blue/70 shrink-0">
+                        {p.name.split(" ").map(n => n[0]).join("")}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-sfc-black truncate">{p.name}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
                           <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", getPositionColor(p.position))}>{p.position}</span>
-                        </td>
-                        <td className="px-4 py-3.5 text-right text-sm font-bold text-sfc-blue">{p.total_points}</td>
-                        <td className="px-4 py-3.5 text-center">
-                          <button onClick={() => toggleInjury(p.id, p.is_injured)} disabled={togglingInjury === p.id}
-                            className="transition-opacity disabled:opacity-50">
-                            {togglingInjury === p.id
-                              ? <span className="w-5 h-5 border-2 border-slate-300 border-t-sfc-blue rounded-full animate-spin inline-block" />
-                              : p.is_injured
-                                ? <XCircle className="w-5 h-5 text-red-400 mx-auto" />
-                                : <CheckCircle className="w-5 h-5 text-sfc-blue mx-auto" />}
-                          </button>
-                        </td>
+                          <span className="text-xs font-bold text-sfc-blue">{p.total_points}pts</span>
+                          {p.is_injured && <span className="text-[9px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded font-bold">INJ</span>}
+                        </div>
+                      </div>
+                      <button onClick={() => toggleInjury(p.id, p.is_injured)} disabled={togglingInjury === p.id}
+                        className="transition-opacity disabled:opacity-50 shrink-0">
+                        {togglingInjury === p.id
+                          ? <span className="w-5 h-5 border-2 border-slate-300 border-t-sfc-blue rounded-full animate-spin inline-block" />
+                          : p.is_injured
+                            ? <XCircle className="w-5 h-5 text-red-400" />
+                            : <CheckCircle className="w-5 h-5 text-sfc-blue" />}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop: table */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-slate-50 border-b border-slate-200">
+                      <tr>
+                        <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground">Player</th>
+                        <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Position</th>
+                        <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Total Pts</th>
+                        <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground">Availability</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {players.map(p => (
+                        <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="px-5 py-3.5">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-display text-sfc-blue/70">
+                                {p.name.split(" ").map(n => n[0]).join("")}
+                              </div>
+                              <span className="text-sm font-medium text-sfc-black">{p.name}</span>
+                              {p.is_injured && <span className="text-[9px] bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded font-bold">INJ</span>}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3.5 text-center">
+                            <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", getPositionColor(p.position))}>{p.position}</span>
+                          </td>
+                          <td className="px-4 py-3.5 text-right text-sm font-bold text-sfc-blue">{p.total_points}</td>
+                          <td className="px-4 py-3.5 text-center">
+                            <button onClick={() => toggleInjury(p.id, p.is_injured)} disabled={togglingInjury === p.id}
+                              className="transition-opacity disabled:opacity-50">
+                              {togglingInjury === p.id
+                                ? <span className="w-5 h-5 border-2 border-slate-300 border-t-sfc-blue rounded-full animate-spin inline-block" />
+                                : p.is_injured
+                                  ? <XCircle className="w-5 h-5 text-red-400 mx-auto" />
+                                  : <CheckCircle className="w-5 h-5 text-sfc-blue mx-auto" />}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </motion.div>
           )}
