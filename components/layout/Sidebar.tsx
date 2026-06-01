@@ -122,13 +122,17 @@ function SidebarContent({ username, level, xp, avatarUrl, isAdmin, isManager, on
 
       {/* Sign out */}
       <div className="p-4 border-t border-slate-200">
-        <form action="/api/auth/signout" method="post">
-          <button type="submit"
-            className="sidebar-link w-full text-red-500 hover:bg-red-50 hover:text-red-600">
-            <LogOut className="w-4 h-4" />
-            <span>Sign Out</span>
-          </button>
-        </form>
+        <button
+          onClick={async () => {
+            const supabase = createClient();
+            await supabase.auth.signOut();
+            window.location.href = "/";
+          }}
+          className="sidebar-link w-full text-red-500 hover:bg-red-50 hover:text-red-600"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>Sign Out</span>
+        </button>
       </div>
 
       <div className="px-6 pb-5 text-center">
