@@ -21,7 +21,7 @@ interface ChatMsg {
 const emojis = ["🔥", "⚽", "💚", "💪", "👑", "🎯", "😂", "❤️", "✅", "🏆"];
 
 export default function CommunityPage() {
-  const [activeTab, setActiveTab] = useState<"chat" | "polls" | "discussions">("chat");
+  const [activeTab, setActiveTab] = useState<"chat" | "polls" | "discussions">("polls");
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [pollData, setPollData] = useState<{ id: string; question: string; options: { label: string; votes: number }[]; totalVotes: number; voted: string | null }[]>([]);
@@ -253,9 +253,7 @@ export default function CommunityPage() {
       <div className="p-4 sm:p-6 lg:p-8">
         <div className="flex gap-2 mb-5 flex-wrap">
           {[
-            { id: "chat",        label: "Matchday Chat", icon: MessageSquare },
-            { id: "polls",       label: "Fan Polls",     icon: BarChart2 },
-            { id: "discussions", label: "Discussions",   icon: Flame },
+            { id: "polls", label: "Fan Polls", icon: BarChart2 },
           ].map((tab) => (
             <button
               key={tab.id}
