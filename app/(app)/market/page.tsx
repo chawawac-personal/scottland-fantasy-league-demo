@@ -3,8 +3,8 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TopBar } from "@/components/layout/TopBar";
-import { Search, SlidersHorizontal, Star, TrendingUp, TrendingDown, ShoppingCart, Check, Info, X } from "lucide-react";
-import { cn, formatPrice, getPositionColor, getFormColor } from "@/lib/utils";
+import { Search, SlidersHorizontal, TrendingUp, TrendingDown, ShoppingCart, Check, Info, X } from "lucide-react";
+import { cn, formatPrice, getPositionColor } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import type { Player } from "@/lib/supabase/types";
 
@@ -308,10 +308,8 @@ export default function MarketPage() {
                 <th className="text-center px-4 py-4 text-xs font-semibold text-muted-foreground">Pos</th>
                 <SortHeader k="total_points"      label="Pts"   />
                 <SortHeader k="price"             label="Price" />
-                <SortHeader k="form"              label="Form"  className="hidden lg:table-cell" />
                 <SortHeader k="goals"             label="Goals" className="hidden md:table-cell" />
                 <SortHeader k="assists"           label="Assists" className="hidden md:table-cell" />
-                <SortHeader k="ownership_percent" label="Own%"  className="hidden lg:table-cell" />
                 <th className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground">Action</th>
               </tr>
             </thead>
@@ -339,22 +337,8 @@ export default function MarketPage() {
                   </td>
                   <td className="px-4 py-3.5 text-right"><span className="text-sm font-bold text-sfc-blue">{player.total_points}</span></td>
                   <td className="px-4 py-3.5 text-right"><span className="text-sm text-amber-400 font-medium">{formatPrice(player.price)}</span></td>
-                  <td className="hidden lg:table-cell px-4 py-3.5 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <Star className="w-3 h-3 text-amber-400" />
-                      <span className={cn("text-sm font-bold", getFormColor(player.form))}>{player.form.toFixed(1)}</span>
-                    </div>
-                  </td>
                   <td className="hidden md:table-cell px-4 py-3.5 text-right text-sm text-sfc-black">{player.goals}</td>
                   <td className="hidden md:table-cell px-4 py-3.5 text-right text-sm text-sfc-black">{player.assists}</td>
-                  <td className="hidden lg:table-cell px-4 py-3.5 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-sfc-blue rounded-full" style={{ width: `${player.ownership_percent}%` }} />
-                      </div>
-                      <span className="text-xs text-muted-foreground w-10">{player.ownership_percent.toFixed(1)}%</span>
-                    </div>
-                  </td>
                   <td className="px-4 py-3.5 text-right">
                     <button
                       onClick={() => handleBuySell(player)}
