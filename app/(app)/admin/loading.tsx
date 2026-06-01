@@ -20,7 +20,7 @@ export default function AdminLoading() {
         <SkeletonNavTabs count={5} />
 
         {/* Overview stat cards — centred on mobile */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="glass-card p-5 flex flex-col items-center sm:items-start space-y-3">
               <Skeleton className="w-9 h-9 rounded-lg" />

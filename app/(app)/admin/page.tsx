@@ -331,7 +331,7 @@ export default function AdminPage() {
         <AnimatePresence mode="wait">
           {activeTab === "overview" && (
             <motion.div key="overview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 {/* Real user count from Supabase */}
                 <div className="glass-card p-7 flex flex-col items-center sm:items-start text-center sm:text-left">
                   <div className="p-2 rounded-lg bg-slate-100/50 mb-3">

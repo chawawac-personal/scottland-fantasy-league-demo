@@ -13,9 +13,9 @@ export default function CommunityLoading() {
       <div className="p-6 space-y-5">
         <SkeletonNavTabs count={3} />
 
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
           {/* Chat area */}
-          <div className="col-span-1 xl:col-span-3 glass-card overflow-hidden flex flex-col" style={{ height: "600px" }}>
+          <div className="col-span-1 lg:col-span-3 glass-card overflow-hidden flex flex-col" style={{ height: "600px" }}>
             <div className="p-4 border-b border-slate-200 flex items-center gap-2">
               <Skeleton className="w-2 h-2 rounded-full" />
               <Skeleton className="h-4 w-40" />

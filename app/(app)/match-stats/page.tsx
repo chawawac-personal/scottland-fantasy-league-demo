@@ -108,7 +108,7 @@ export default function MatchStatsPage() {
 
         {/* Season summary */}
         {results.length > 0 && (
-          <div className="grid grid-cols-5 gap-2">
+          <div className="grid grid-cols-5 gap-2 sm:gap-3">
             {[
               { label: "Played",        short: "P",  value: results.length, cls: "text-sfc-black" },
               { label: "Won",           short: "W",  value: wins,           cls: "text-green-600" },

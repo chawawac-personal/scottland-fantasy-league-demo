@@ -47,13 +47,13 @@ export default function ProfileLoading() {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => <SkeletonStat key={i} />)}
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {/* Chart */}
-          <div className="col-span-1 xl:col-span-2 glass-card p-5 space-y-4">
+          <div className="col-span-1 lg:col-span-2 glass-card p-5 space-y-4">
             <div className="space-y-1">
               <Skeleton className="h-6 w-36" />
               <Skeleton className="h-3 w-52" />

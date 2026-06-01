@@ -202,15 +202,15 @@ export default function DashboardPage() {
             <Bell className="w-5 h-5 text-slate-400 hover:text-sfc-black cursor-pointer transition-colors shrink-0" />
           </div>
         )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
           <StatsCard title="Total Points"  value={profile ? profile.fantasyPoints.toLocaleString() : "—"} subtitle="Season total"                                                           icon={Zap}        accentColor="blue" delay={0}    />
           <StatsCard title="Global Rank"   value={globalRank ? `#${globalRank}` : "—"}                  subtitle={`of ${totalManagers} managers`}                                              icon={Trophy}     accentColor="gold" delay={0.05} />
           <StatsCard title="Weekly Points" value={weeklyPoints.toLocaleString()}                         subtitle={`Matchday ${currentMatchday - 1}`}                                            icon={TrendingUp} accentColor="blue" delay={0.1}  />
           <StatsCard title="Team Value"    value={teamValue > 0 ? `$${(teamValue/1_000_000).toFixed(1)}M` : "—"} subtitle={teamValue > 0 ? `Budget: $${((100_000_000-teamValue)/1_000_000).toFixed(1)}M left` : "No team yet"} icon={Star} accentColor="blue" delay={0.15} />
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="col-span-1 xl:col-span-2 glass-card p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="col-span-1 lg:col-span-2 glass-card p-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
               <div>
                 <h2 className="section-header">Zimbabwe Rankings</h2>
@@ -336,7 +336,7 @@ export default function DashboardPage() {
         {recentActivity.length > 0 && (
           <div className="glass-card p-6">
             <h2 className="section-header mb-5">Recent Activity</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               {recentActivity.map((activity, i) => {
                 const cfg = ACTIVITY_CONFIG[activity.type] ?? ACTIVITY_CONFIG.system;
                 const Icon = cfg.icon;

@@ -238,7 +238,7 @@ export default function LeaguesPage() {
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-5 lg:space-y-7">
         {/* Weekly top 3 */}
-        {weeklyTop.length > 0 && <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        {weeklyTop.length > 0 && <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {weeklyTop.map((w) => (
             <div
               key={w.rank}

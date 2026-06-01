@@ -265,9 +265,9 @@ export default function CommunityPage() {
         <AnimatePresence mode="wait">
           {activeTab === "chat" && (
             <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <div className="grid grid-cols-1 xl:grid-cols-4 gap-5">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
                 <div
-                  className="col-span-1 xl:col-span-3 glass-card overflow-hidden flex flex-col"
+                  className="col-span-1 lg:col-span-3 glass-card overflow-hidden flex flex-col"
                   style={{ height: "min(600px, calc(100vh - 220px))" }}
                 >
                   <div className="p-4 border-b border-slate-200 flex items-center gap-2">

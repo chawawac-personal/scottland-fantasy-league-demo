@@ -18,14 +18,14 @@ export default function DashboardLoading() {
 
       <div className="p-6 space-y-6">
         {/* Stats row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => <SkeletonStat key={i} />)}
         </div>
 
         {/* Main content grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {/* Leaderboard */}
-          <div className="col-span-1 xl:col-span-2 glass-card p-5">
+          <div className="col-span-1 lg:col-span-2 glass-card p-5">
             <div className="flex items-center justify-between mb-5">
               <div className="space-y-2">
                 <Skeleton className="h-6 w-44" />

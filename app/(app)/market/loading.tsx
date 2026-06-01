@@ -17,7 +17,7 @@ export default function MarketLoading() {
 
       <div className="p-4 sm:p-6 space-y-4">
         {/* Top stat cards — centred on mobile */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="glass-card p-5 flex flex-col items-center sm:items-start space-y-2">
               <Skeleton className="h-7 w-7 rounded-lg" />

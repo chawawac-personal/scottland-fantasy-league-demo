@@ -191,16 +191,16 @@ export default function ProfilePage() {
         </div>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <StatsCard title="Total Points" value={profile.fantasy_points.toLocaleString()} icon={Zap} accentColor="green" />
           <StatsCard title="Level" value={`${profile.level}`} icon={Trophy} accentColor="gold" />
           <StatsCard title="XP Earned" value={profile.xp.toLocaleString()} icon={Star} accentColor="blue" />
           <StatsCard title="Achievements" value={`${achievements.length}`} icon={Award} accentColor="green" />
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {/* Points History Chart */}
-          <div className="col-span-1 xl:col-span-2 glass-card p-5">
+          <div className="col-span-1 lg:col-span-2 glass-card p-5">
             <h2 className="section-header mb-1">Points History</h2>
             <p className="section-subtitle mb-4">Your performance across all matchdays</p>
             {pointsHistory.length === 0 ? (

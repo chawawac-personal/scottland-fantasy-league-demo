@@ -200,7 +200,7 @@ export default function MarketPage() {
           const bestValue   = [...players].sort((a,b) => (b.total_points/(b.price/1_000_000)) - (a.total_points/(a.price/1_000_000)))[0];
           const mostOwned   = [...players].sort((a,b) => b.ownership_percent - a.ownership_percent)[0];
           return (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               {[
                 { label: "Top Scorer",    value: topScorer?.name   ?? "—", sub: `${topScorer?.goals ?? 0} goals`,                                        icon: "⚽" },
                 { label: "Top Assister",  value: topAssister?.name ?? "—", sub: `${topAssister?.assists ?? 0} assists`,                                   icon: "🎯" },

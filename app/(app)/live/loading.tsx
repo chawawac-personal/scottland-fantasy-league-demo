@@ -35,7 +35,7 @@ export default function LiveLoading() {
         </div>
 
         {/* 3-column layout */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {/* Events feed */}
           <div className="glass-card overflow-x-auto">
             <div className="p-4 border-b border-slate-200 flex items-center gap-2">
