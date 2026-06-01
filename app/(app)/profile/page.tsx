@@ -256,35 +256,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Achievements */}
-        {achievements.length > 0 && (
-        <div className="glass-card p-6">
-          <h2 className="section-header mb-4">Achievements &amp; Badges</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {achievements.map((ach) => (
-              <motion.div
-                key={ach.key}
-                whileHover={{ scale: 1.05 }}
-                className={cn(
-                  "p-5 rounded-xl border text-center transition-all",
-                  ach.unlocked
-                    ? "border-sfc-blue/20 bg-sfc-blue/5"
-                    : "border-slate-200 bg-slate-100/20 opacity-40 grayscale"
-                )}
-              >
-                <div className="text-3xl mb-2">{ach.icon}</div>
-                <p className={cn("text-xs font-bold mb-1", ach.unlocked ? ach.color : "text-muted-foreground")}>{ach.name}</p>
-                <p className="text-[10px] text-muted-foreground leading-tight">{ach.desc}</p>
-                {ach.unlocked && (
-                  <div className="mt-2 flex items-center justify-center gap-1 text-[10px] text-sfc-blue">
-                    <Flame className="w-2.5 h-2.5" /> Unlocked
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </div>
-        )}
       </div>
 
       {/* Edit Profile Modal */}
