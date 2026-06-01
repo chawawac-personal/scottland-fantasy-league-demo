@@ -1,6 +1,6 @@
 "use client";
 export const dynamic = "force-dynamic";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Star, AtSign, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
@@ -13,7 +13,7 @@ function safeRedirect(next: string | null): string {
   return "/dashboard";
 }
 
-export default function LoginPage() {
+function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +31,6 @@ export default function LoginPage() {
 
     let email = form.identifier.trim();
 
-    // Resolve username or phone → email via secure RPC
     if (!email.includes("@")) {
       const { data, error: rpcError } = await (supabase as any).rpc("resolve_login_identifier", { identifier: email });
       if (rpcError || !data) {
@@ -97,5 +96,13 @@ export default function LoginPage() {
       </form>
       <p className="text-center text-sm text-muted-foreground mt-8">No account?{" "}<Link href="/register" className="text-sfc-blue hover:text-sfc-blue-dark font-semibold">Create one free</Link></p>
     </motion.div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

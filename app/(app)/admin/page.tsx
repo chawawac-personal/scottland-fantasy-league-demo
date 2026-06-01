@@ -193,13 +193,13 @@ export default function AdminPage() {
       ]);
       const statsMap: Record<string, Partial<PlayerStatRow>> = {};
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (existingStats ?? []).forEach((s: any) => { statsMap[s.player_id] = s; });
+      (existingStats ?? []).forEach((s: any) => { statsMap[s.player_id] = { ...s, minutes: s.minutes_played }; });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setPlayerStatRows((allPlayers ?? []).map((p: any) => ({
         player_id: p.id,
         name: p.name,
         position: p.position,
-        minutes: statsMap[p.id]?.minutes_played ?? 0,
+        minutes: statsMap[p.id]?.minutes ?? 0,
         goals: statsMap[p.id]?.goals ?? 0,
         assists: statsMap[p.id]?.assists ?? 0,
         yellow_cards: statsMap[p.id]?.yellow_cards ?? 0,
