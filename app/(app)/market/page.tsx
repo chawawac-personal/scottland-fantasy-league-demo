@@ -256,76 +256,97 @@ export default function MarketPage() {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="glass-card overflow-x-auto">
+        {/* Mobile: vertical card list (no horizontal scroll) */}
+        <div className="glass-card sm:hidden divide-y divide-slate-100">
+          {filtered.length === 0 ? (
+            <div className="text-center py-16 text-muted-foreground">
+              <Search className="w-8 h-8 mx-auto mb-3 opacity-40" />
+              <p>No players found</p>
+            </div>
+          ) : filtered.map((player) => (
+            <div key={player.id} className="flex items-center gap-3 px-4 py-3">
+              <div className="w-9 h-11 rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center border border-slate-200 shrink-0">
+                <span className="text-sm font-display text-sfc-blue/60">
+                  {player.name.split(" ").map(n => n[0]).join("")}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <p className="text-sm font-semibold text-sfc-black truncate">{player.name}</p>
+                  {player.is_injured && <span className="text-[9px] bg-red-500/20 text-red-400 border border-red-500/30 px-1 py-px rounded font-bold shrink-0">INJ</span>}
+                  {inMyTeam.has(player.id) && <span className="text-[9px] bg-sfc-blue text-white px-1.5 py-px rounded font-bold shrink-0">IN TEAM</span>}
+                </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border shrink-0", getPositionColor(player.position))}>{player.position}</span>
+                  <span className="text-xs font-bold text-sfc-blue">{player.total_points}pts</span>
+                  <span className="text-xs font-medium text-amber-400">{formatPrice(player.price)}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => handleBuySell(player)}
+                disabled={busy === player.id}
+                className={cn(
+                  "text-xs font-bold px-3 py-2 rounded-xl transition-all flex items-center gap-1 disabled:opacity-60 shrink-0",
+                  inMyTeam.has(player.id) ? "bg-red-500 text-white" : "bg-sfc-blue text-white"
+                )}
+              >
+                {busy === player.id
+                  ? <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  : inMyTeam.has(player.id) ? "Sell" : "Buy"}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop: sortable table */}
+        <div className="glass-card hidden sm:block overflow-x-auto">
           <table className="w-full">
             <thead className="border-b border-slate-200 bg-slate-100/20">
               <tr>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground w-8 hidden sm:table-cell">#</th>
-                <th className="text-left px-3 sm:px-5 py-3 sm:py-4 text-xs font-semibold text-muted-foreground">Player</th>
-                <th className="text-center px-2 sm:px-4 py-3 sm:py-4 text-xs font-semibold text-muted-foreground">Pos</th>
-                <SortHeader k="total_points"      label="Pts"    />
-                <SortHeader k="price"             label="Price"  />
-                <SortHeader k="form"              label="Form"   className="hidden md:table-cell" />
-                <SortHeader k="goals"             label="Goals"  className="hidden sm:table-cell" />
-                <SortHeader k="assists"           label="Assists" className="hidden sm:table-cell" />
-                <SortHeader k="ownership_percent" label="Own%"   className="hidden md:table-cell" />
+                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground w-8">#</th>
+                <th className="text-left px-5 py-4 text-xs font-semibold text-muted-foreground">Player</th>
+                <th className="text-center px-4 py-4 text-xs font-semibold text-muted-foreground">Pos</th>
+                <SortHeader k="total_points"      label="Pts"   />
+                <SortHeader k="price"             label="Price" />
+                <SortHeader k="form"              label="Form"  className="hidden md:table-cell" />
+                <SortHeader k="goals"             label="Goals" />
+                <SortHeader k="assists"           label="Assists" />
+                <SortHeader k="ownership_percent" label="Own%"  className="hidden md:table-cell" />
                 <th className="text-right px-5 py-4 text-xs font-semibold text-muted-foreground">Action</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((player, i) => (
-                <motion.tr
-                  key={player.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: i * 0.02 }}
-                  className="data-table-row"
-                >
-                  <td className="px-4 py-3.5 text-sm text-muted-foreground hidden sm:table-cell">{i + 1}</td>
-
-                  <td className="px-3 sm:px-5 py-3 sm:py-4">
-                    <div className="flex items-center gap-2 sm:gap-3">
+                <motion.tr key={player.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }} className="data-table-row">
+                  <td className="px-4 py-3.5 text-sm text-muted-foreground">{i + 1}</td>
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-3">
                       <div className="w-9 h-11 rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center border border-slate-200 flex-shrink-0">
-                        <span className="text-sm font-display text-sfc-blue/60">
-                          {player.name.split(" ").map(n => n[0]).join("")}
-                        </span>
+                        <span className="text-sm font-display text-sfc-blue/60">{player.name.split(" ").map(n => n[0]).join("")}</span>
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-sfc-black flex items-center gap-2">
                           {player.name}
-                          {player.is_injured && (
-                            <span className="text-[9px] bg-red-500/20 text-red-400 border border-red-500/30 px-1 py-px rounded font-bold">INJ</span>
-                          )}
-                          {inMyTeam.has(player.id) && (
-                            <span className="text-[9px] bg-sfc-blue text-white px-1.5 py-px rounded font-bold">IN TEAM</span>
-                          )}
+                          {player.is_injured && <span className="text-[9px] bg-red-500/20 text-red-400 border border-red-500/30 px-1 py-px rounded font-bold">INJ</span>}
+                          {inMyTeam.has(player.id) && <span className="text-[9px] bg-sfc-blue text-white px-1.5 py-px rounded font-bold">IN TEAM</span>}
                         </p>
                         <p className="text-xs text-muted-foreground">{player.club}</p>
                       </div>
                     </div>
                   </td>
-
-                  <td className="px-2 sm:px-4 py-3 sm:py-4 text-center">
-                    <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", getPositionColor(player.position))}>
-                      {player.position}
-                    </span>
+                  <td className="px-4 py-4 text-center">
+                    <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", getPositionColor(player.position))}>{player.position}</span>
                   </td>
-
-                  <td className="px-4 py-3.5 text-right">
-                    <span className="text-sm font-bold text-sfc-blue">{player.total_points}</span>
-                  </td>
-                  <td className="px-4 py-3.5 text-right">
-                    <span className="text-sm text-amber-400 font-medium">{formatPrice(player.price)}</span>
-                  </td>
+                  <td className="px-4 py-3.5 text-right"><span className="text-sm font-bold text-sfc-blue">{player.total_points}</span></td>
+                  <td className="px-4 py-3.5 text-right"><span className="text-sm text-amber-400 font-medium">{formatPrice(player.price)}</span></td>
                   <td className="hidden md:table-cell px-4 py-3.5 text-right">
                     <div className="flex items-center justify-end gap-1">
                       <Star className="w-3 h-3 text-amber-400" />
                       <span className={cn("text-sm font-bold", getFormColor(player.form))}>{player.form.toFixed(1)}</span>
                     </div>
                   </td>
-                  <td className="hidden sm:table-cell px-4 py-3.5 text-right text-sm text-sfc-black">{player.goals}</td>
-                  <td className="hidden sm:table-cell px-4 py-3.5 text-right text-sm text-sfc-black">{player.assists}</td>
+                  <td className="px-4 py-3.5 text-right text-sm text-sfc-black">{player.goals}</td>
+                  <td className="px-4 py-3.5 text-right text-sm text-sfc-black">{player.assists}</td>
                   <td className="hidden md:table-cell px-4 py-3.5 text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -334,33 +355,24 @@ export default function MarketPage() {
                       <span className="text-xs text-muted-foreground w-10">{player.ownership_percent.toFixed(1)}%</span>
                     </div>
                   </td>
-
-                  {/* ── Buy / Sell button ── */}
-                  <td className="px-2 sm:px-4 py-3 sm:py-3.5 text-right">
+                  <td className="px-4 py-3.5 text-right">
                     <button
                       onClick={() => handleBuySell(player)}
                       disabled={busy === player.id}
                       className={cn(
-                        "text-xs font-bold px-2 sm:px-4 py-1.5 sm:py-2 rounded-xl transition-all flex items-center gap-1 sm:gap-1.5 disabled:opacity-60 disabled:cursor-wait ml-auto",
-                        inMyTeam.has(player.id)
-                          ? "bg-red-500 hover:bg-red-600 text-white"
-                          : "bg-sfc-blue hover:bg-sfc-blue-dark text-white"
+                        "text-xs font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 disabled:opacity-60 disabled:cursor-wait ml-auto",
+                        inMyTeam.has(player.id) ? "bg-red-500 hover:bg-red-600 text-white" : "bg-sfc-blue hover:bg-sfc-blue-dark text-white"
                       )}
                     >
-                      {busy === player.id ? (
-                        <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                      ) : inMyTeam.has(player.id) ? (
-                        <>✕ Sell</>
-                      ) : (
-                        <><ShoppingCart className="w-3 h-3" /> Buy</>
-                      )}
+                      {busy === player.id
+                        ? <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                        : inMyTeam.has(player.id) ? <>✕ Sell</> : <><ShoppingCart className="w-3 h-3" /> Buy</>}
                     </button>
                   </td>
                 </motion.tr>
               ))}
             </tbody>
           </table>
-
           {filtered.length === 0 && (
             <div className="text-center py-16 text-muted-foreground">
               <Search className="w-8 h-8 mx-auto mb-3 opacity-40" />

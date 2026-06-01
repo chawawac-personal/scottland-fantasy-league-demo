@@ -24,7 +24,7 @@ export function PlayerCard({ player, isCaptain, isViceCaptain, isSelected, compa
         whileTap={{ scale: 0.97 }}
         onClick={onClick}
         className={cn(
-          "relative flex flex-col items-center p-2 rounded-xl border cursor-pointer transition-all duration-200",
+          "relative flex flex-col items-center p-1 sm:p-2 rounded-xl border cursor-pointer transition-all duration-200",
           isSelected
             ? "border-sfc-blue/40 bg-sfc-blue/5"
             : "border-slate-200 bg-white hover:border-sfc-blue/20"
@@ -43,26 +43,26 @@ export function PlayerCard({ player, isCaptain, isViceCaptain, isSelected, compa
         )}
 
         {/* Player avatar */}
-        <div className="w-12 h-14 rounded-lg overflow-hidden bg-slate-100 mb-1.5 flex items-center justify-center border border-slate-200">
+        <div className="w-9 h-11 sm:w-12 sm:h-14 rounded-lg overflow-hidden bg-slate-100 mb-1 sm:mb-1.5 flex items-center justify-center border border-slate-200">
           {player.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={player.image_url} alt={player.name} className="w-full h-full object-cover" />
           ) : (
             <div className="flex items-center justify-center w-full h-full">
-              <span className="text-2xl font-display text-sfc-blue/60">
+              <span className="text-lg sm:text-2xl font-display text-sfc-blue/60">
                 {player.name.split(" ").map(n => n[0]).join("")}
               </span>
             </div>
           )}
         </div>
 
-        <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded border mb-1", getPositionColor(player.position))}>
+        <span className={cn("text-[8px] sm:text-[9px] font-bold px-1 sm:px-1.5 py-0.5 rounded border mb-0.5 sm:mb-1", getPositionColor(player.position))}>
           {positionShort[player.position]}
         </span>
-        <p className="text-[10px] font-medium text-sfc-black text-center leading-tight max-w-full truncate w-full px-1">
+        <p className="text-[9px] sm:text-[10px] font-medium text-sfc-black text-center leading-tight max-w-full truncate w-full px-0.5 sm:px-1">
           {player.name.split(" ").pop()}
         </p>
-        <p className="text-[10px] text-sfc-blue font-bold">{player.total_points}pts</p>
+        <p className="text-[9px] sm:text-[10px] text-sfc-blue font-bold">{player.total_points}pts</p>
       </motion.div>
     );
   }
