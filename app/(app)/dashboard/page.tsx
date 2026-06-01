@@ -234,34 +234,34 @@ export default function DashboardPage() {
             </div>
             <div className="space-y-2">
               {filteredLeaderboard.length === 0 ? (
-                <p className="text-center text-sm text-muted-foreground py-8">No managers match &ldquo;{search}&rdquo;</p>
+                <p className="text-center text-sm text-muted-foreground py-8">No results for &ldquo;{search}&rdquo;</p>
               ) : filteredLeaderboard.map((entry, i) => (
                 <motion.div key={entry.rank} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-                  className={cn("flex items-center gap-4 px-4 py-4 rounded-xl transition-colors",
+                  className={cn("flex items-center gap-2 sm:gap-4 px-3 sm:px-4 py-3 sm:py-4 rounded-xl transition-colors",
                     entry.username === "YourTeam" ? "border border-sfc-blue/20" : "hover:bg-slate-50")}
                   style={entry.username === "YourTeam" ? { backgroundColor: "rgba(29,78,216,0.05)" } : {}}>
-                  <div className={cn("rank-badge text-xs",
+                  <div className={cn("rank-badge text-xs shrink-0",
                     entry.rank === 1 ? "rank-1" : entry.rank === 2 ? "rank-2" : entry.rank === 3 ? "rank-3" : "text-slate-500 border border-slate-200 bg-slate-50")}>
                     {entry.rank <= 3 ? ["🥇","🥈","🥉"][entry.rank - 1] : entry.rank}
                   </div>
-                  <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
-                    <Users className="w-4 h-4 text-slate-400" />
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
+                    <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={cn("text-sm font-semibold", entry.username === "YourTeam" ? "text-sfc-blue" : "text-sfc-black")}>
+                    <p className={cn("text-xs sm:text-sm font-semibold truncate", entry.username === "YourTeam" ? "text-sfc-blue" : "text-sfc-black")}>
                       {entry.username === "YourTeam" ? "You — " : ""}{entry.team}
                     </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">@{entry.username}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">@{entry.username}</p>
                   </div>
-                  <div className="text-right mr-3 hidden sm:block">
+                  <div className="text-right mr-1 sm:mr-3 hidden sm:block">
                     <p className="text-sm font-bold text-sfc-blue">{entry.weekly} pts</p>
                     <p className="text-xs text-muted-foreground mt-0.5">this week</p>
                   </div>
-                  <div className="text-right w-20">
-                    <p className="text-base font-bold text-sfc-black">{entry.points.toLocaleString()}</p>
+                  <div className="text-right w-14 sm:w-20 shrink-0">
+                    <p className="text-sm sm:text-base font-bold text-sfc-black">{entry.points.toLocaleString()}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">total pts</p>
                   </div>
-                  <div className={cn("text-xs font-bold w-8 text-right",
+                  <div className={cn("text-xs font-bold w-6 sm:w-8 text-right shrink-0",
                     entry.change > 0 ? "text-emerald-600" : entry.change < 0 ? "text-red-500" : "text-slate-400")}>
                     {entry.change > 0 ? `↑${entry.change}` : entry.change < 0 ? `↓${Math.abs(entry.change)}` : "–"}
                   </div>
