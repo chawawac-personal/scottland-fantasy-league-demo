@@ -333,11 +333,9 @@ export default function AdminPage() {
             <motion.div key="overview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 {/* Real user count from Supabase */}
-                <div className="glass-card p-7">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="p-2 rounded-lg bg-slate-100/50">
-                      <Users className="w-5 h-5 text-sfc-blue" />
-                    </div>
+                <div className="glass-card p-7 flex flex-col items-center sm:items-start text-center sm:text-left">
+                  <div className="p-2 rounded-lg bg-slate-100/50 mb-3">
+                    <Users className="w-5 h-5 text-sfc-blue" />
                   </div>
                   <p className="text-3xl font-display mb-1 text-sfc-blue">{userCount}</p>
                   <p className="text-sm text-white font-medium">Total Users</p>
@@ -348,11 +346,9 @@ export default function AdminPage() {
                   { label: "Live Now",           value: platformStats.liveMatches.toLocaleString(),  icon: Radio,  color: "text-red-400",   change: "Matches with live status" },
                   { label: "Notifications Sent", value: platformStats.notifications.toLocaleString(), icon: Bell,   color: "text-blue-400",  change: "All time" },
                 ].map((s) => (
-                  <div key={s.label} className="glass-card p-7">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 rounded-lg bg-slate-100/50">
-                        <s.icon className={cn("w-5 h-5", s.color)} />
-                      </div>
+                  <div key={s.label} className="glass-card p-7 flex flex-col items-center sm:items-start text-center sm:text-left">
+                    <div className="p-2 rounded-lg bg-slate-100/50 mb-3">
+                      <s.icon className={cn("w-5 h-5", s.color)} />
                     </div>
                     <p className={cn("text-3xl font-display mb-1", s.color)}>{s.value}</p>
                     <p className="text-sm text-white font-medium">{s.label}</p>
