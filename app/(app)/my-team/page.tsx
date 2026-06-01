@@ -362,9 +362,17 @@ export default function MyTeamPage() {
             <p className="font-semibold mb-1">How to build your team</p>
             <div className="text-xs text-muted-foreground space-y-0.5">
               <p>• <strong>Pick 11 players</strong> from the list on the right — tap to add or remove.</p>
-              <p>• <strong>Set your Captain</strong> (2x points) using the button above, then click a player on the pitch.</p>
+              <p>• <strong>Set your Captain</strong> (2× points) using the button above, then click a player on the pitch. Your Vice-Captain scores 1.5×.</p>
               <p>• <strong>Drag &amp; drop</strong> players on the pitch to reorder positions, or swap starters with bench players.</p>
               <p>• <strong>Change formation</strong> using the dropdown, then hit <strong>Save Team</strong> to lock in your selection.</p>
+            </div>
+            <p className="font-semibold mt-2 mb-1">How points work</p>
+            <div className="text-xs text-muted-foreground space-y-0.5">
+              <p>• <strong>Playing time</strong> — +1 pt for appearing, +1 bonus for 60+ mins.</p>
+              <p>• <strong>Goals</strong> — GK +10 · DEF +6 · MID +5 · FWD +4 per goal.</p>
+              <p>• <strong>Assists</strong> — +3 pts for any position.</p>
+              <p>• <strong>Clean sheet</strong> (≥60 min, no goals conceded) — GK/DEF +4 · MID +1.</p>
+              <p>• <strong>Cards</strong> — Yellow −1 · Red −3.</p>
             </div>
           </div>
           <button onClick={() => setShowHelp(false)} className="text-muted-foreground hover:text-sfc-black">
