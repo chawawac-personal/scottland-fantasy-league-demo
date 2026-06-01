@@ -6,7 +6,7 @@ import { saveFlagsAction, updateMatchStatusAction, saveFixtureAction, saveMatchS
 import { motion, AnimatePresence } from "framer-motion";
 import { TopBar } from "@/components/layout/TopBar";
 import {
-  Shield, Users, Trophy, Radio, Bell, BarChart2,
+  Users, Trophy, Radio, Bell, BarChart2,
   Plus, Edit, Trash2, CheckCircle, XCircle, Send,
   TrendingUp, AlertTriangle, Database, Eye, ToggleLeft,
   Gift, Globe, Save, Zap, X, Clock,
@@ -292,12 +292,6 @@ export default function AdminPage() {
       <TopBar
         title="Admin Panel"
         subtitle="Scottland Fantasy League Management"
-        rightContent={
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-xl">
-            <Shield className="w-4 h-4 text-red-400" />
-            <span className="text-xs font-bold text-red-400">Admin Access</span>
-          </div>
-        }
       />
 
       <div className="p-4 sm:p-6 lg:p-8 space-y-5 lg:space-y-7">
