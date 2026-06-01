@@ -207,18 +207,19 @@ export default function MatchStatsPage() {
                   <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground">Player</th>
                   <th className="text-center px-3 py-3 text-xs font-semibold text-muted-foreground">Pos</th>
                   {([
-                    { k: "total_points" as StatSort,   label: "Pts"  },
-                    { k: "goals" as StatSort,          label: "G"    },
-                    { k: "assists" as StatSort,        label: "A"    },
-                    { k: "clean_sheets" as StatSort,   label: "CS"   },
-                    { k: "minutes_played" as StatSort, label: "Mins" },
-                  ]).map(({ k, label }) => (
+                    { k: "total_points" as StatSort,   label: "Pts",  hide: "" },
+                    { k: "goals" as StatSort,          label: "G",    hide: "" },
+                    { k: "assists" as StatSort,        label: "A",    hide: "" },
+                    { k: "clean_sheets" as StatSort,   label: "CS",   hide: "hidden sm:table-cell" },
+                    { k: "minutes_played" as StatSort, label: "Mins", hide: "hidden sm:table-cell" },
+                  ]).map(({ k, label, hide }) => (
                     <th
                       key={k}
                       onClick={() => toggleSort(k)}
                       className={cn(
                         "text-right px-4 py-3 text-xs font-semibold cursor-pointer select-none hover:text-sfc-black transition-colors",
-                        statSort === k ? "text-sfc-blue" : "text-muted-foreground"
+                        statSort === k ? "text-sfc-blue" : "text-muted-foreground",
+                        hide
                       )}
                     >
                       {label}<SortIcon k={k} />
@@ -251,8 +252,8 @@ export default function MatchStatsPage() {
                     <td className="px-4 py-3 text-right text-sm font-bold text-sfc-blue">{p.total_points}</td>
                     <td className="px-4 py-3 text-right text-sm text-sfc-black">{p.goals}</td>
                     <td className="px-4 py-3 text-right text-sm text-sfc-black">{p.assists}</td>
-                    <td className="px-4 py-3 text-right text-sm text-sfc-black">{p.clean_sheets}</td>
-                    <td className="px-4 py-3 text-right text-sm text-muted-foreground">{p.minutes_played}</td>
+                    <td className="hidden sm:table-cell px-4 py-3 text-right text-sm text-sfc-black">{p.clean_sheets}</td>
+                    <td className="hidden sm:table-cell px-4 py-3 text-right text-sm text-muted-foreground">{p.minutes_played}</td>
                   </motion.tr>
                 ))}
               </tbody>

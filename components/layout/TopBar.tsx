@@ -122,7 +122,7 @@ export function TopBar({ title, subtitle, rightContent }: TopBarProps) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -8, scale: 0.95 }}
                 transition={{ duration: 0.15 }}
-                className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 overflow-hidden"
+                className="absolute right-0 top-full mt-2 w-[min(384px,calc(100vw-1rem))] bg-white rounded-2xl border border-slate-200 shadow-xl z-50 overflow-hidden"
               >
                 <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
                   <span className="font-bold text-sfc-black text-sm flex items-center gap-2">

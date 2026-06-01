@@ -74,7 +74,7 @@
 
   /* ── Pitch slots ── */
   .formation-slot {
-    @apply relative flex flex-col items-center justify-center w-20 h-24 rounded-xl
+    @apply relative flex flex-col items-center justify-center w-16 h-20 sm:w-20 sm:h-24 rounded-xl
            border-2 border-dashed cursor-pointer transition-all duration-200;
   }
   .formation-slot-empty {

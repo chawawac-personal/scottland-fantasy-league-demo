@@ -218,7 +218,7 @@ export default function LivePage() {
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {/* Match Events Feed */}
           <div className="glass-card overflow-x-auto">
             <div className="p-5 border-b border-slate-200 flex items-center gap-2.5">

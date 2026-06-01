@@ -17,7 +17,7 @@ export default function HomePage() {
       {/* Background */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute inset-0 pitch-bg opacity-20" />
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-sfc-blue/4 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[min(800px,100vw)] h-[min(800px,100vw)] bg-sfc-blue/4 rounded-full blur-3xl" />
       </div>
 
       {/* Nav */}

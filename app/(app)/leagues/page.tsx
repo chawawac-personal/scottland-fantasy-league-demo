@@ -361,11 +361,11 @@ export default function LeaguesPage() {
                     <tr>
                       <th className="text-left px-5 py-4 text-xs font-semibold text-muted-foreground">Rank</th>
                       <th className="text-left px-5 py-4 text-xs font-semibold text-muted-foreground">Manager</th>
-                      <th className="text-left px-5 py-4 text-xs font-semibold text-muted-foreground">Team</th>
+                      <th className="hidden md:table-cell text-left px-5 py-4 text-xs font-semibold text-muted-foreground">Team</th>
                       <th className="text-right px-5 py-4 text-xs font-semibold text-muted-foreground">Total Pts</th>
-                      <th className="text-right px-5 py-4 text-xs font-semibold text-muted-foreground">Weekly</th>
-                      <th className="text-right px-5 py-4 text-xs font-semibold text-muted-foreground">Monthly</th>
-                      <th className="text-right px-5 py-4 text-xs font-semibold text-muted-foreground">Change</th>
+                      <th className="hidden sm:table-cell text-right px-5 py-4 text-xs font-semibold text-muted-foreground">Weekly</th>
+                      <th className="hidden md:table-cell text-right px-5 py-4 text-xs font-semibold text-muted-foreground">Monthly</th>
+                      <th className="hidden sm:table-cell text-right px-5 py-4 text-xs font-semibold text-muted-foreground">Change</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -395,13 +395,13 @@ export default function LeaguesPage() {
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-3.5 text-sm text-muted-foreground">{entry.team}</td>
+                        <td className="hidden md:table-cell px-4 py-3.5 text-sm text-muted-foreground">{entry.team}</td>
                         <td className="px-4 py-3.5 text-right text-sm font-bold text-sfc-blue">
                           {period === "overall" ? entry.total.toLocaleString() : period === "weekly" ? entry.weekly : entry.monthly}
                         </td>
-                        <td className="px-4 py-3.5 text-right text-sm text-sfc-black">{entry.weekly}</td>
-                        <td className="px-4 py-3.5 text-right text-sm text-sfc-black">{entry.monthly}</td>
-                        <td className="px-4 py-3.5 text-right">
+                        <td className="hidden sm:table-cell px-4 py-3.5 text-right text-sm text-sfc-black">{entry.weekly}</td>
+                        <td className="hidden md:table-cell px-4 py-3.5 text-right text-sm text-sfc-black">{entry.monthly}</td>
+                        <td className="hidden sm:table-cell px-4 py-3.5 text-right">
                           <RankChange curr={entry.rank} prev={entry.prev} />
                         </td>
                       </motion.tr>
@@ -647,7 +647,7 @@ export default function LeaguesPage() {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
             >
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-3xl max-h-[88vh] flex flex-col">
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-full sm:max-w-3xl max-h-[88vh] flex flex-col">
                 {/* Header */}
                 <div className="flex items-center justify-between p-5 border-b border-slate-200 shrink-0">
                   <div>

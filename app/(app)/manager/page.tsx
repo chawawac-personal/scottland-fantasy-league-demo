@@ -361,7 +361,7 @@ export default function ManagerPage() {
               className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
             <motion.div key="modal" initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col">
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-full sm:max-w-4xl max-h-[92vh] flex flex-col">
                 <div className="flex items-center justify-between p-5 border-b border-slate-200 shrink-0">
                   <div>
                     <h2 className="font-bold text-sfc-black text-lg">{scoringMatch.home_team} vs {scoringMatch.away_team}</h2>

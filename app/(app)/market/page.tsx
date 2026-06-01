@@ -132,10 +132,10 @@ export default function MarketPage() {
     return list;
   }, [players, search, posFilter, sortBy, sortDir]);
 
-  const SortHeader = ({ k, label }: { k: SortKey; label: string }) => (
+  const SortHeader = ({ k, label, className }: { k: SortKey; label: string; className?: string }) => (
     <th
       onClick={() => toggleSort(k)}
-      className="text-right px-4 py-3 text-xs font-semibold text-muted-foreground cursor-pointer hover:text-sfc-black select-none"
+      className={cn("text-right px-4 py-3 text-xs font-semibold text-muted-foreground cursor-pointer hover:text-sfc-black select-none", className)}
     >
       <div className="flex items-center justify-end gap-1">
         {label}
@@ -264,12 +264,12 @@ export default function MarketPage() {
                 <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground w-8">#</th>
                 <th className="text-left px-5 py-4 text-xs font-semibold text-muted-foreground">Player</th>
                 <th className="text-center px-4 py-4 text-xs font-semibold text-muted-foreground">Pos</th>
-                <SortHeader k="total_points"      label="Pts"   />
-                <SortHeader k="price"             label="Price" />
-                <SortHeader k="form"              label="Form"  />
-                <SortHeader k="goals"             label="Goals" />
-                <SortHeader k="assists"           label="Assists" />
-                <SortHeader k="ownership_percent" label="Own%"  />
+                <SortHeader k="total_points"      label="Pts"    />
+                <SortHeader k="price"             label="Price"  />
+                <SortHeader k="form"              label="Form"   className="hidden md:table-cell" />
+                <SortHeader k="goals"             label="Goals"  className="hidden sm:table-cell" />
+                <SortHeader k="assists"           label="Assists" className="hidden sm:table-cell" />
+                <SortHeader k="ownership_percent" label="Own%"   className="hidden md:table-cell" />
                 <th className="text-right px-5 py-4 text-xs font-semibold text-muted-foreground">Action</th>
               </tr>
             </thead>
@@ -318,15 +318,15 @@ export default function MarketPage() {
                   <td className="px-4 py-3.5 text-right">
                     <span className="text-sm text-amber-400 font-medium">{formatPrice(player.price)}</span>
                   </td>
-                  <td className="px-4 py-3.5 text-right">
+                  <td className="hidden md:table-cell px-4 py-3.5 text-right">
                     <div className="flex items-center justify-end gap-1">
                       <Star className="w-3 h-3 text-amber-400" />
                       <span className={cn("text-sm font-bold", getFormColor(player.form))}>{player.form.toFixed(1)}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3.5 text-right text-sm text-sfc-black">{player.goals}</td>
-                  <td className="px-4 py-3.5 text-right text-sm text-sfc-black">{player.assists}</td>
-                  <td className="px-4 py-3.5 text-right">
+                  <td className="hidden sm:table-cell px-4 py-3.5 text-right text-sm text-sfc-black">{player.goals}</td>
+                  <td className="hidden sm:table-cell px-4 py-3.5 text-right text-sm text-sfc-black">{player.assists}</td>
+                  <td className="hidden md:table-cell px-4 py-3.5 text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                         <div className="h-full bg-sfc-blue rounded-full" style={{ width: `${player.ownership_percent}%` }} />

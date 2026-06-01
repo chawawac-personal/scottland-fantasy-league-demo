@@ -128,7 +128,7 @@ export default function ProfilePage() {
       <div className="p-4 sm:p-6 lg:p-8 space-y-5 lg:space-y-7">
         {/* Profile Hero */}
         <div className="glass-card p-7">
-          <div className="flex items-start gap-6">
+          <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
             {/* Avatar */}
             <div className="relative flex-shrink-0">
               <div className="w-24 h-24 rounded-2xl border-2 border-sfc-blue/30 bg-slate-100 flex items-center justify-center overflow-hidden shadow-blue-glow">
