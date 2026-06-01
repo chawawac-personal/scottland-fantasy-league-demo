@@ -325,7 +325,6 @@ export default function MarketPage() {
                         <p className="text-sm font-semibold text-sfc-black flex items-center gap-2">
                           {player.name}
                           {player.is_injured && <span className="text-[9px] bg-red-500/20 text-red-400 border border-red-500/30 px-1 py-px rounded font-bold">INJ</span>}
-                          {inMyTeam.has(player.id) && <span className="text-[10px] bg-sfc-blue text-white px-2 py-0.5 rounded-md font-bold leading-none inline-flex items-center">IN TEAM</span>}
                         </p>
                         <p className="text-xs text-muted-foreground">{player.club}</p>
                       </div>
