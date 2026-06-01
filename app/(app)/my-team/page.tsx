@@ -262,7 +262,7 @@ export default function MyTeamPage() {
   function PitchSlot({ position, count }: { position: string; count: number }) {
     const players = byPosition[position as keyof typeof byPosition] ?? [];
     return (
-      <div className="flex justify-center gap-3">
+      <div className="flex justify-center gap-1 sm:gap-3">
         {Array.from({ length: count }).map((_, i) => {
           const player = players[i];
           if (player) {
@@ -298,7 +298,6 @@ export default function MyTeamPage() {
               onDrop={(e) => {
                 e.preventDefault();
                 if (dragId) {
-                  // Place dragged player into this empty slot
                   setSelectedIds((prev) => {
                     if (prev.includes(dragId)) return prev;
                     return [...prev, dragId];
@@ -306,9 +305,9 @@ export default function MyTeamPage() {
                   setDragId(null);
                 }
               }}
-              className="formation-slot formation-slot-empty w-20 h-24"
+              className="formation-slot formation-slot-empty w-14 h-[72px] sm:w-20 sm:h-24"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
               <span className="text-[9px] mt-1">{position}</span>
             </div>
           );
@@ -381,32 +380,32 @@ export default function MyTeamPage() {
         </div>
 
         {/* ── Budget & Formation bar ── */}
-        <div className="flex flex-wrap items-center gap-4 mb-6">
-          <div className="glass-card px-5 py-4 flex items-center gap-3">
-            <DollarSign className="w-4 h-4 text-sfc-blue" />
-            <div>
-              <p className="text-xs text-muted-foreground">Budget Remaining</p>
-              <p className={cn("text-sm font-bold", budgetLeft < 0 ? "text-red-400" : "text-sfc-blue")}>
+        <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-4 mb-6">
+          <div className="glass-card px-2 sm:px-5 py-3 sm:py-4 flex items-center gap-1.5 sm:gap-3">
+            <DollarSign className="w-4 h-4 text-sfc-blue shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Budget</p>
+              <p className={cn("text-xs sm:text-sm font-bold truncate", budgetLeft < 0 ? "text-red-400" : "text-sfc-blue")}>
                 {formatPrice(budgetLeft)}
               </p>
             </div>
           </div>
-          <div className="glass-card px-5 py-4 flex items-center gap-3">
-            <Users className="w-4 h-4 text-blue-400" />
+          <div className="glass-card px-2 sm:px-5 py-3 sm:py-4 flex items-center gap-1.5 sm:gap-3">
+            <Users className="w-4 h-4 text-blue-400 shrink-0" />
             <div>
-              <p className="text-xs text-muted-foreground">Players</p>
-              <p className="text-sm font-bold text-sfc-black">{selectedIds.length}/11</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Players</p>
+              <p className="text-xs sm:text-sm font-bold text-sfc-black">{selectedIds.length}/11</p>
             </div>
           </div>
-          <div className="glass-card px-5 py-4 flex items-center gap-3">
-            <Zap className="w-4 h-4 text-amber-400" />
+          <div className="glass-card px-2 sm:px-5 py-3 sm:py-4 flex items-center gap-1.5 sm:gap-3">
+            <Zap className="w-4 h-4 text-amber-400 shrink-0" />
             <div>
-              <p className="text-xs text-muted-foreground">Total Points</p>
-              <p className="text-sm font-bold text-amber-400">{totalPoints}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Pts</p>
+              <p className="text-xs sm:text-sm font-bold text-amber-400">{totalPoints}</p>
             </div>
           </div>
 
-          <div className="ml-auto relative">
+          <div className="col-span-3 flex justify-end sm:ml-auto sm:col-span-auto relative">
             <button
               onClick={() => setShowFormationPicker(!showFormationPicker)}
               className="glass-card px-4 py-3 flex items-center gap-2 hover:border-sfc-blue/20 transition-colors"
@@ -459,7 +458,7 @@ export default function MyTeamPage() {
               className="rounded-2xl overflow-hidden border border-sfc-blue/10"
               style={{ background: "linear-gradient(180deg, #0a1f0a 0%, #0d2a0d 50%, #0a1f0a 100%)" }}
             >
-              <div className="relative p-6 pitch-bg">
+              <div className="relative p-3 sm:p-6 pitch-bg">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full border border-sfc-blue/10 opacity-40" />
                 <div className="absolute top-1/2 left-0 right-0 h-px bg-sfc-blue/10" />
 
@@ -472,9 +471,9 @@ export default function MyTeamPage() {
               </div>
 
               {/* Bench */}
-              <div className="border-t border-sfc-blue/10 p-4 bg-black/40">
+              <div className="border-t border-sfc-blue/10 p-3 sm:p-4 bg-black/40">
                 <p className="text-xs text-muted-foreground text-center mb-3">BENCH — drag players here to sub out</p>
-                <div className="flex justify-center gap-3">
+                <div className="flex justify-center gap-1 sm:gap-3">
                   {benchPlayers.map((p) => (
                     <div
                       key={p.id}
@@ -501,7 +500,7 @@ export default function MyTeamPage() {
                           setDragId(null);
                         }
                       }}
-                      className="formation-slot formation-slot-empty w-20 h-24 opacity-40"
+                      className="formation-slot formation-slot-empty w-14 h-[72px] sm:w-20 sm:h-24 opacity-40"
                     >
                       <Plus className="w-4 h-4" />
                     </div>

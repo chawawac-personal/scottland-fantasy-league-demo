@@ -108,17 +108,20 @@ export default function MatchStatsPage() {
 
         {/* Season summary */}
         {results.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <div className="grid grid-cols-5 gap-2">
             {[
-              { label: "Played",        value: results.length, cls: "text-sfc-black" },
-              { label: "Won",           value: wins,           cls: "text-green-600" },
-              { label: "Lost",          value: losses,         cls: "text-red-500"   },
-              { label: "Goals For",     value: goalsFor,       cls: "text-sfc-blue"  },
-              { label: "Goals Against", value: goalsAgainst,   cls: "text-slate-500" },
+              { label: "Played",        short: "P",  value: results.length, cls: "text-sfc-black" },
+              { label: "Won",           short: "W",  value: wins,           cls: "text-green-600" },
+              { label: "Lost",          short: "L",  value: losses,         cls: "text-red-500"   },
+              { label: "Goals For",     short: "GF", value: goalsFor,       cls: "text-sfc-blue"  },
+              { label: "Goals Against", short: "GA", value: goalsAgainst,   cls: "text-slate-500" },
             ].map(s => (
-              <div key={s.label} className="glass-card p-4 text-center">
-                <p className={cn("text-2xl font-bold", s.cls)}>{s.value}</p>
-                <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
+              <div key={s.label} className="glass-card p-2 sm:p-4 text-center">
+                <p className={cn("text-xl sm:text-2xl font-bold", s.cls)}>{s.value}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+                  <span className="sm:hidden">{s.short}</span>
+                  <span className="hidden sm:inline">{s.label}</span>
+                </p>
               </div>
             ))}
           </div>
@@ -156,7 +159,7 @@ export default function MatchStatsPage() {
               const result   = getResult(m);
               const hasScore = m.home_score !== null && m.away_score !== null;
               const date     = new Date(m.kickoff_time);
-              const dateStr  = date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+              const dateStr  = date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
               const timeStr  = date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
               return (
                 <motion.div
@@ -178,12 +181,12 @@ export default function MatchStatsPage() {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className={cn("font-semibold flex-1", m.home_team === SFC ? "text-sfc-blue" : "text-sfc-black")}>{m.home_team}</span>
-                    <span className={cn("font-bold px-4 tabular-nums", hasScore ? "text-sfc-black" : "text-muted-foreground")}>
+                  <div className="flex items-center justify-between text-sm gap-1">
+                    <span className={cn("font-semibold flex-1 truncate", m.home_team === SFC ? "text-sfc-blue" : "text-sfc-black")}>{m.home_team}</span>
+                    <span className={cn("font-bold px-2 sm:px-4 tabular-nums shrink-0", hasScore ? "text-sfc-black" : "text-muted-foreground")}>
                       {hasScore ? `${m.home_score} — ${m.away_score}` : "VS"}
                     </span>
-                    <span className={cn("font-semibold flex-1 text-right", m.away_team === SFC ? "text-sfc-blue" : "text-sfc-black")}>{m.away_team}</span>
+                    <span className={cn("font-semibold flex-1 text-right truncate", m.away_team === SFC ? "text-sfc-blue" : "text-sfc-black")}>{m.away_team}</span>
                   </div>
                   {!hasScore && <p className="text-center text-xs text-muted-foreground mt-2">{timeStr} CAT</p>}
                 </motion.div>
@@ -204,7 +207,7 @@ export default function MatchStatsPage() {
             <table className="w-full">
               <thead className="bg-slate-100/20 border-b border-slate-200">
                 <tr>
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground">Player</th>
+                  <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-muted-foreground">Player</th>
                   <th className="text-center px-3 py-3 text-xs font-semibold text-muted-foreground">Pos</th>
                   {([
                     { k: "total_points" as StatSort,   label: "Pts",  hide: "" },
@@ -236,22 +239,22 @@ export default function MatchStatsPage() {
                     transition={{ delay: i * 0.02 }}
                     className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors"
                   >
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-lg bg-sfc-blue/10 flex items-center justify-center text-[10px] font-bold text-sfc-blue flex-shrink-0">
+                    <td className="px-3 sm:px-5 py-2.5 sm:py-3">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-sfc-blue/10 flex items-center justify-center text-[10px] font-bold text-sfc-blue flex-shrink-0">
                           {i + 1}
                         </div>
-                        <span className="text-sm font-medium text-sfc-black">{p.name}</span>
+                        <span className="text-xs sm:text-sm font-medium text-sfc-black truncate">{p.name}</span>
                       </div>
                     </td>
-                    <td className="px-3 py-3 text-center">
-                      <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full", getPositionColor(p.position))}>
+                    <td className="px-2 sm:px-3 py-2.5 sm:py-3 text-center">
+                      <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full", getPositionColor(p.position))}>
                         {p.position}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right text-sm font-bold text-sfc-blue">{p.total_points}</td>
-                    <td className="px-4 py-3 text-right text-sm text-sfc-black">{p.goals}</td>
-                    <td className="px-4 py-3 text-right text-sm text-sfc-black">{p.assists}</td>
+                    <td className="px-2 sm:px-4 py-2.5 sm:py-3 text-right text-xs sm:text-sm font-bold text-sfc-blue">{p.total_points}</td>
+                    <td className="px-2 sm:px-4 py-2.5 sm:py-3 text-right text-xs sm:text-sm text-sfc-black">{p.goals}</td>
+                    <td className="px-2 sm:px-4 py-2.5 sm:py-3 text-right text-xs sm:text-sm text-sfc-black">{p.assists}</td>
                     <td className="hidden sm:table-cell px-4 py-3 text-right text-sm text-sfc-black">{p.clean_sheets}</td>
                     <td className="hidden sm:table-cell px-4 py-3 text-right text-sm text-muted-foreground">{p.minutes_played}</td>
                   </motion.tr>

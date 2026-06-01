@@ -261,9 +261,9 @@ export default function MarketPage() {
           <table className="w-full">
             <thead className="border-b border-slate-200 bg-slate-100/20">
               <tr>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground w-8">#</th>
-                <th className="text-left px-5 py-4 text-xs font-semibold text-muted-foreground">Player</th>
-                <th className="text-center px-4 py-4 text-xs font-semibold text-muted-foreground">Pos</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground w-8 hidden sm:table-cell">#</th>
+                <th className="text-left px-3 sm:px-5 py-3 sm:py-4 text-xs font-semibold text-muted-foreground">Player</th>
+                <th className="text-center px-2 sm:px-4 py-3 sm:py-4 text-xs font-semibold text-muted-foreground">Pos</th>
                 <SortHeader k="total_points"      label="Pts"    />
                 <SortHeader k="price"             label="Price"  />
                 <SortHeader k="form"              label="Form"   className="hidden md:table-cell" />
@@ -282,10 +282,10 @@ export default function MarketPage() {
                   transition={{ delay: i * 0.02 }}
                   className="data-table-row"
                 >
-                  <td className="px-4 py-3.5 text-sm text-muted-foreground">{i + 1}</td>
+                  <td className="px-4 py-3.5 text-sm text-muted-foreground hidden sm:table-cell">{i + 1}</td>
 
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
+                  <td className="px-3 sm:px-5 py-3 sm:py-4">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       <div className="w-9 h-11 rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center border border-slate-200 flex-shrink-0">
                         <span className="text-sm font-display text-sfc-blue/60">
                           {player.name.split(" ").map(n => n[0]).join("")}
@@ -306,7 +306,7 @@ export default function MarketPage() {
                     </div>
                   </td>
 
-                  <td className="px-4 py-4 text-center">
+                  <td className="px-2 sm:px-4 py-3 sm:py-4 text-center">
                     <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded border", getPositionColor(player.position))}>
                       {player.position}
                     </span>
@@ -336,12 +336,12 @@ export default function MarketPage() {
                   </td>
 
                   {/* ── Buy / Sell button ── */}
-                  <td className="px-4 py-3.5 text-right">
+                  <td className="px-2 sm:px-4 py-3 sm:py-3.5 text-right">
                     <button
                       onClick={() => handleBuySell(player)}
                       disabled={busy === player.id}
                       className={cn(
-                        "text-xs font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-1.5 disabled:opacity-60 disabled:cursor-wait",
+                        "text-xs font-bold px-2 sm:px-4 py-1.5 sm:py-2 rounded-xl transition-all flex items-center gap-1 sm:gap-1.5 disabled:opacity-60 disabled:cursor-wait ml-auto",
                         inMyTeam.has(player.id)
                           ? "bg-red-500 hover:bg-red-600 text-white"
                           : "bg-sfc-blue hover:bg-sfc-blue-dark text-white"
