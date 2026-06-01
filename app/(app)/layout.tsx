@@ -1,5 +1,6 @@
 import { Sidebar } from "@/components/layout/Sidebar";
 import { redirect } from "next/navigation";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { createClient } = require("@/lib/supabase/server");
 
@@ -25,7 +26,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     profile = profileData;
   } catch (err: unknown) {
     // Re-throw redirect signals — Next.js uses them internally
-    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    if (isRedirectError(err)) throw err;
     redirect("/login");
   }
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { saveFlagsAction, updateMatchStatusAction, saveFixtureAction, saveMatchStatsAction, savePrizesAction, updateUserRoleAction } from "@/lib/actions/admin";
 import { motion, AnimatePresence } from "framer-motion";
 import { TopBar } from "@/components/layout/TopBar";
 import {
@@ -55,7 +56,7 @@ export default function AdminPage() {
   const [notifForm, setNotifForm] = useState({ title: "", body: "", type: "system" });
   const [sending, setSending] = useState(false);
   const [players, setPlayers] = useState<{ id: string; name: string; position: string; price: number; total_points: number; goals: number; is_injured: boolean }[]>([]);
-  const [users, setUsers]     = useState<{ id: string; username: string; email: string; level: string; points: number; status: string; joined: string }[]>([]);
+  const [users, setUsers]     = useState<{ id: string; userId: string; username: string; email: string; level: string; points: number; status: string; joined: string }[]>([]);
   const [userCount, setUserCount] = useState("—");
   const [platformStats, setPlatformStats] = useState({ leagues: 0, liveMatches: 0, notifications: 0 });
   const [healthStats, setHealthStats] = useState({ teams: 0, playersPicked: 0, messages: 0, finishedMatches: 0 });
@@ -77,6 +78,7 @@ export default function AdminPage() {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           setUsers((profilesData as any[]).map((p: any, i: number) => ({
             id: String(i + 1),
+            userId: p.id,
             username: p.username,
             email: `${p.username.toLowerCase()}@sfc.zw`,
             level: p.role === "admin" ? "Admin" : p.role === "manager" ? "Manager" : p.role === "moderator" ? "Mod" : "User",
@@ -181,12 +183,7 @@ export default function AdminPage() {
   async function saveFlags() {
     setFlagSaving(true);
     try {
-      const supabase = createClient();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any)
-        .from("app_config")
-        .update({ value: flags, updated_at: new Date().toISOString() })
-        .eq("key", "feature_flags");
+      await saveFlagsAction(flags);
       setFlagSaved(true);
       setTimeout(() => setFlagSaved(false), 2000);
     } catch { /* silently fail */ }
@@ -239,42 +236,15 @@ export default function AdminPage() {
     if (!scoringMatch) return;
     setSavingStats(true);
     try {
-      const supabase = createClient();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const sb = supabase as any;
-
-      // Upsert stats for players who actually played (minutes > 0)
-      const played = playerStatRows.filter(r => r.minutes > 0);
-      if (played.length > 0) {
-        await sb.from("player_match_stats").upsert(
-          played.map(r => ({
-            player_id: r.player_id,
-            match_id: scoringMatch.id,
-            goals: r.goals,
-            assists: r.assists,
-            yellow_cards: r.yellow_cards,
-            red_cards: r.red_cards,
-            clean_sheet: r.clean_sheet,
-            minutes_played: r.minutes,
-          })),
-          { onConflict: "player_id,match_id" }
-        );
-      }
-
-      // Update match score and status
-      const homeGoals = played.filter(r => scoringMatch.home_team.includes("Scottland")).reduce((s, r) => s + r.goals, 0);
-      const awayGoals = played.filter(r => !scoringMatch.home_team.includes("Scottland")).reduce((s, r) => s + r.goals, 0);
-      await sb.from("matches").update({
-        status: "finished",
-        home_score: homeGoals,
-        away_score: awayGoals,
-      }).eq("id", scoringMatch.id);
-
-      // Recalculate points
+      await saveMatchStatsAction(
+        scoringMatch.id,
+        playerStatRows,
+        scoringMatch.matchday,
+        scoringMatch.season,
+        scoringMatch.home_team,
+      );
       setCalculating(true);
-      await sb.rpc("recalculate_matchday_team_points", { p_matchday: scoringMatch.matchday, p_season: scoringMatch.season });
-
-      // Refresh matches list
+      const supabase = createClient();
       const { data: fresh } = await supabase.from("matches").select("*").order("matchday", { ascending: false });
       if (fresh) setDbMatches(fresh as AdminMatch[]);
       setScoringMatch(null);
@@ -285,9 +255,7 @@ export default function AdminPage() {
   async function updateMatchStatus(matchId: string, status: string) {
     setStatusUpdating(matchId);
     try {
-      const supabase = createClient();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any).from("matches").update({ status }).eq("id", matchId);
+      await updateMatchStatusAction(matchId, status);
       setDbMatches(prev => prev.map(m => m.id === matchId ? { ...m, status } : m));
     } catch { /* silently fail */ }
     finally { setStatusUpdating(null); }
@@ -297,17 +265,8 @@ export default function AdminPage() {
     if (!fixtureForm.away || !fixtureForm.matchday || !fixtureForm.kickoff) return;
     setSavingFixture(true);
     try {
-      const supabase = createClient();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (supabase as any).from("matches").insert({
-        home_team: fixtureForm.home,
-        away_team: fixtureForm.away,
-        matchday: parseInt(fixtureForm.matchday),
-        kickoff_time: fixtureForm.kickoff,
-        season: fixtureForm.season,
-        status: "scheduled",
-      }).select().single();
-      if (data) setDbMatches(prev => [data as AdminMatch, ...prev].sort((a, b) => b.matchday - a.matchday));
+      const result = await saveFixtureAction(fixtureForm);
+      if (result.data) setDbMatches(prev => [result.data as AdminMatch, ...prev].sort((a, b) => b.matchday - a.matchday));
       setAddFixtureOpen(false);
       setFixtureForm({ home: "Scottland FC", away: "", matchday: "", kickoff: "", season: "2025/26" });
     } catch { /* silently fail */ }
@@ -317,13 +276,8 @@ export default function AdminPage() {
   async function savePrizes(leagueId: string) {
     setSavingPrize(leagueId);
     try {
-      const supabase = createClient();
       const prizes = editingPrizes[leagueId];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any)
-        .from("leagues")
-        .update({ prizes: prizes.first || prizes.second || prizes.third ? prizes : null })
-        .eq("id", leagueId);
+      await savePrizesAction(leagueId, prizes);
       setPublicLeagues(prev => prev.map(l => l.id === leagueId ? { ...l, prizes } : l));
     } catch { /* silently fail */ }
     finally { setSavingPrize(null); }
@@ -589,10 +543,8 @@ export default function AdminPage() {
                             <select
                               defaultValue={user.level === "Admin" ? "admin" : user.level === "Manager" ? "manager" : user.level === "Mod" ? "moderator" : "user"}
                               onChange={async (e) => {
-                                const supabase = createClient();
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                await (supabase as any).from("profiles").update({ role: e.target.value }).eq("username", user.username);
-                                setUsers(prev => prev.map(u => u.id === user.id ? { ...u, level: e.target.value === "admin" ? "Admin" : e.target.value === "manager" ? "Mod" : "User" } : u));
+                                await updateUserRoleAction(user.userId, e.target.value);
+                                setUsers(prev => prev.map(u => u.id === user.id ? { ...u, level: e.target.value === "admin" ? "Admin" : e.target.value === "manager" ? "Manager" : e.target.value === "moderator" ? "Mod" : "User" } : u));
                               }}
                               className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:border-sfc-blue/50 text-sfc-black"
                             >

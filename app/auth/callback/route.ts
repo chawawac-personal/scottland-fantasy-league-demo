@@ -2,10 +2,16 @@
 const { createClient } = require("@/lib/supabase/server");
 import { NextResponse } from "next/server";
 
+function safeRedirect(next: string | null): string {
+  if (!next) return "/dashboard";
+  if (next.startsWith("/") && !next.startsWith("//")) return next;
+  return "/dashboard";
+}
+
 export async function GET(request: Request) {
   const url    = new URL(request.url);
   const code   = url.searchParams.get("code");
-  const next   = url.searchParams.get("next") ?? "/dashboard";
+  const next   = safeRedirect(url.searchParams.get("next"));
   const origin = new URL(process.env.NEXT_PUBLIC_SITE_URL ?? request.url).origin;
 
   if (!code) {

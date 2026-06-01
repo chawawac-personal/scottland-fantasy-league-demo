@@ -8,8 +8,9 @@ import {
   TrendingUp, TrendingDown, Minus, Copy, Check, Search,
   Gift, AlertCircle, CheckCircle2, X,
 } from "lucide-react";
-import { cn, generateInviteCode } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { createLeague, joinLeague } from "@/lib/actions/leagues";
 
 
 interface League {
@@ -152,54 +153,31 @@ export default function LeaguesPage() {
   async function handleCreateLeague() {
     if (!createForm.name.trim()) return;
     setCreating(true);
-    const inviteCode = generateInviteCode();
 
     try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const prizeText = [
-          createForm.prizes.first && `1st: ${createForm.prizes.first}`,
-          createForm.prizes.second && `2nd: ${createForm.prizes.second}`,
-          createForm.prizes.third && `3rd: ${createForm.prizes.third}`,
-        ].filter(Boolean).join(" | ");
-
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const sb = supabase as any;
-        const { data: league, error } = await sb
-          .from("leagues")
-          .insert({
-            name: createForm.name.trim(),
-            description: [createForm.description, prizeText].filter(Boolean).join("\n") || null,
-            type: "private",
-            invite_code: inviteCode,
-            owner_id: user.id,
-          })
-          .select()
-          .single();
-
-        if (!error && league) {
-          await sb.from("league_members").insert({ league_id: league.id, user_id: user.id });
-          const { data: myProfile } = await sb.from("profiles").select("fantasy_points").eq("id", user.id).single();
-          setLocalLeagues((prev) => [...prev, {
-            id: league.id,
-            name: league.name,
-            type: "private",
-            members: 1,
-            myRank: 1,
-            myPoints: myProfile?.fantasy_points ?? 0,
-            leader: "YourTeam",
-            inviteCode,
-            isOwner: true,
-            prizes: createForm.prizes,
-          }]);
-        }
+      const result = await createLeague(createForm.name, createForm.description, createForm.prizes);
+      if (result.error || !result.league) {
+        setCreating(false);
+        return;
       }
-    } catch { /* still show success with generated code */ }
+      const league = result.league;
+      setLocalLeagues((prev) => [...prev, {
+        id: league.id,
+        name: league.name,
+        type: "private",
+        members: 1,
+        myRank: 1,
+        myPoints: 0,
+        leader: "YourTeam",
+        inviteCode: league.invite_code,
+        isOwner: true,
+        prizes: createForm.prizes,
+      }]);
+      setCreatedLeague({ name: league.name, invite_code: league.invite_code });
+      setCreateForm({ name: "", description: "", prizes: { first: "", second: "", third: "" } });
+    } catch { /* silently fail */ }
 
-    setCreatedLeague({ name: createForm.name, invite_code: inviteCode });
     setCreating(false);
-    setCreateForm({ name: "", description: "", prizes: { first: "", second: "", third: "" } });
   }
 
   async function handleJoinLeague() {
@@ -208,33 +186,11 @@ export default function LeaguesPage() {
     setJoinResult(null);
 
     try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setJoinResult({ error: "You must be signed in to join a league." }); return; }
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const sb = supabase as any;
-      const { data: league, error } = await sb
-        .from("leagues")
-        .select("id, name")
-        .eq("invite_code", joinCode.toUpperCase())
-        .single();
-
-      if (error || !league) {
-        setJoinResult({ error: "Invalid invite code. Please check and try again." });
-        return;
-      }
-
-      const { error: memberError } = await sb
-        .from("league_members")
-        .insert({ league_id: league.id, user_id: user.id });
-
-      if (memberError?.code === "23505") {
-        setJoinResult({ error: "You're already a member of this league." });
-      } else if (memberError) {
-        setJoinResult({ error: "Failed to join league. Please try again." });
+      const result = await joinLeague(joinCode);
+      if (result.error) {
+        setJoinResult({ error: result.error });
       } else {
-        setJoinResult({ success: `You've joined "${league.name}"!` });
+        setJoinResult({ success: `You've joined "${result.league?.name}"!` });
         setJoinCode("");
       }
     } catch {

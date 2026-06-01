@@ -1,7 +1,6 @@
 # Security Audit — Scottland Fantasy League
 
-**Date:** 2026-05-29  
-**Auditor:** Claude Sonnet 4.6 (automated review)  
+**Last updated:** 2026-06-01  
 **Project:** Scottland FC Fantasy League — Next.js 15 + Supabase  
 **Scope:** Full codebase — all 13 OWASP-aligned security areas  
 
@@ -9,378 +8,409 @@
 
 ## Summary
 
-| Severity | Count | Status |
-|----------|-------|--------|
-| 🔴 Critical | 2 | Fixed |
-| 🟠 High | 2 | Fixed |
-| 🟡 Medium | 4 | Fixed |
-| 🟢 Low | 1 | Fixed |
-| **Total** | **9** | **All resolved** |
+| Severity | Audit 1 (2026-05-29) | Audit 2 (2026-06-01) | Status |
+|----------|---------------------|---------------------|--------|
+| 🔴 Critical | 2 fixed | 3 found · 2 fixed · 1 open | See CRIT-1 below |
+| 🟠 High | 2 fixed | 5 found · 3 fixed · 2 open | Rate limiting + notif stub |
+| 🟡 Medium | 4 fixed | 8 found · 8 fixed | All resolved |
+| 🟢 Low | 1 fixed | 6 found · 3 fixed · 3 low-risk | Accepted or intentional |
+| **Total** | **9 resolved** | **22 found · 16 fixed** | |
 
-Second pass after fixes found **no new issues**.
-
----
-
-## Findings & Fixes
+**One open critical action: rotate `SUPABASE_SERVICE_ROLE_KEY` in the Supabase dashboard immediately** — it was exposed in a chat conversation on 2026-06-01.
 
 ---
 
-### F1 — No `.gitignore` (Critical · Secrets)
-
-**File:** `(project root)` — file did not exist  
-
-**Issue:**  
-No `.gitignore` existed. Running `git add .` would have committed `.env.local`, exposing:
-- `SUPABASE_SERVICE_ROLE_KEY` — bypasses all Row Level Security, grants full database access
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — though public by design, rotation becomes harder once it is in git history
-- All future secrets added to `.env.local`
-
-Once a secret is in git history it must be treated as permanently compromised — rotating the key is not sufficient if the history is ever cloned.
-
-**Fix:** Created `.gitignore` excluding:
-```
-.env
-.env.local
-.env.*.local
-.env.development.local
-.env.test.local
-.env.production.local
-```
-
-Also created `.env.example` documenting every required variable without values, so new developers know what to set without copying real credentials.
+## Audit 1 — 2026-05-29 (all resolved)
 
 ---
 
-### F2 — Next.js Middleware Bypass Vulnerability (Critical · Dependencies)
+### F1 — No `.gitignore` · Critical · Secrets
 
-**File:** `package.json` — `next: 15.3.2`  
+**File:** `(project root)` — file did not exist
 
-**Issue:**  
-`npm audit` reported a **critical** CVE: *"Next.js has a Middleware / Proxy bypass in App Router applications via segment-prefetch routes."* A crafted prefetch request could bypass the middleware entirely, circumventing the entire authentication layer — meaning unauthenticated users could reach `/dashboard`, `/admin`, and all other protected pages despite the middleware redirect logic.
+**Issue:** No `.gitignore` existed. Running `git add .` would have committed `.env.local`, exposing `SUPABASE_SERVICE_ROLE_KEY` (bypasses all RLS, grants full database access) and all future secrets.
 
-**Fix:** Updated Next.js to the latest patched release:
-```
-npm install next@latest
-```
-
-**Remaining (accepted risk):** A **moderate** PostCSS advisory remains inside Next.js's own bundled build tooling. The "fix" would downgrade Next.js to version 9.3.3, which is not viable. This vulnerability is build-time only (CSS processing during `next build`) and is not exploitable at runtime in the browser.
+**Fix:** Created `.gitignore` excluding all `.env*` files. Created `.env.example` documenting required variables.
 
 ---
 
-### F3 — Form Data Spread Directly Into Database Insert (High · Permissions)
+### F2 — Next.js Middleware Bypass CVE · Critical · Dependencies
 
-**File:** `app/(auth)/onboarding/page.tsx:25`  
+**File:** `package.json` — `next: 15.3.2`
 
-**Issue:**  
-The onboarding profile creation used a JavaScript spread operator to pass all form state directly to the Supabase upsert:
+**Issue:** Critical CVE: *"Next.js Middleware / Proxy bypass via segment-prefetch routes."* Unauthenticated users could bypass the entire middleware auth layer.
 
-```ts
-// VULNERABLE
-await supabase.from("profiles").upsert({
-  id: user.id,
-  username: user.email?.split("@")[0] ?? "fan",
-  ...form,  // ← attacker controls every key and value
-});
-```
+**Fix:** Updated Next.js to the latest patched release via `npm install next@latest`.
 
-A user who opened DevTools and modified `form` to include `role: "admin"` before submitting would successfully insert that value. The Supabase RLS `with_check` policy for INSERT only verified that `auth.uid() = id`, not which columns were being written.
-
-**Fix (code):** Enumerate every allowed field explicitly with enforced length limits:
-
-```ts
-await supabase.from("profiles").upsert({
-  id:               user.id,
-  username:         (user.email?.split("@")[0] ?? "fan").slice(0, 30).replace(/[^a-z0-9_]/gi, "_"),
-  full_name:        form.full_name.slice(0, 100),
-  supporter_branch: form.supporter_branch.slice(0, 60),
-  favorite_player:  form.favorite_player.slice(0, 60),
-  bio:              form.bio.slice(0, 300),
-});
-```
-
-**Fix (database):** Also revoked INSERT privilege on all privileged columns at the PostgreSQL level as defence in depth:
-
-```sql
-REVOKE INSERT (role, level, xp, fantasy_points) ON public.profiles FROM authenticated;
-```
-
-This means even if the code-level fix were bypassed, the database would reject any attempt to insert values into those columns.
+**Accepted risk:** Moderate PostCSS advisory inside Next.js's own bundled build tooling. Build-time only, not exploitable at runtime. Fixing it would require downgrading Next.js to 9.3.3.
 
 ---
 
-### F4 — Wildcard Image Hostname Enables SSRF (High · Insecure Configuration)
+### F3 — Form Data Spread Directly Into Database Insert · High · Permissions
 
-**File:** `next.config.ts:6`  
+**File:** `app/(auth)/onboarding/page.tsx:25`
 
-**Issue:**  
-The Next.js image remote patterns were configured with a wildcard:
+**Issue:** `...form` spread into Supabase upsert — attacker could inject `role: "admin"` via DevTools before submit.
 
-```ts
-// VULNERABLE
-remotePatterns: [{ protocol: "https", hostname: "**" }],
-```
-
-The Next.js Image Optimizer accepts a URL, fetches it server-side, and returns the processed image. A wildcard hostname allows any `https://` URL to be proxied through the server, including:
-- Internal cloud metadata endpoints (e.g. `https://169.254.169.254/...` on AWS/GCP)
-- Internal Kubernetes service endpoints
-- Any external host the attacker wants to scan or exfiltrate through
-
-This is a Server-Side Request Forgery (SSRF) vector.
-
-**Fix:** Restricted to specific known origins:
-
-```ts
-remotePatterns: [
-  {
-    protocol: "https",
-    hostname: "hinnvqadajjmoouvsuad.supabase.co",  // Supabase Storage
-    pathname: "/storage/v1/object/public/**",
-  },
-  {
-    protocol: "https",
-    hostname: "lh3.googleusercontent.com",           // Google OAuth avatars
-  },
-],
-```
-
-Add additional hostnames here only when a specific use case requires it.
+**Fix:** Enumerated every allowed field explicitly with enforced length limits. Also applied `REVOKE INSERT (role, level, xp, fantasy_points) ON public.profiles FROM authenticated` at the database level.
 
 ---
 
-### F5 — Raw Supabase Error Messages Shown to Users (Medium · Error Messages)
+### F4 — Wildcard Image Hostname Enables SSRF · High · Insecure Configuration
 
-**Files:** `app/(auth)/login/page.tsx:21`, `app/(auth)/register/page.tsx:20`  
+**File:** `next.config.ts:6`
 
-**Issue:**  
-Both auth forms passed `error.message` from the Supabase SDK directly to the UI:
+**Issue:** `remotePatterns: [{ hostname: "**" }]` allowed the image optimizer to proxy any URL server-side — an SSRF vector.
 
-```ts
-// VULNERABLE
-if (error) { setError(error.message); ... }
-```
-
-Supabase error messages can expose implementation details such as:
-- Auth provider names and configuration
-- Rate-limiting thresholds and counts
-- Internal service names
-- Unexpected stack traces during outages
-
-**Fix — Login:** Single generic message regardless of actual error:
-
-```ts
-setError("Invalid email or password. Please try again.");
-```
-
-**Fix — Register:** Map known error types to safe messages, generic fallback for everything else:
-
-```ts
-const msg =
-  error.message.toLowerCase().includes("already registered")
-    ? "An account with this email already exists."
-    : error.message.toLowerCase().includes("password")
-      ? "Password must be at least 8 characters."
-      : "Unable to create account. Please try again.";
-setError(msg);
-```
+**Fix:** Restricted to specific known origins (Supabase Storage, Google OAuth avatars).
 
 ---
 
-### F6 — Development URL in `NEXT_PUBLIC_SITE_URL` (Medium · Insecure Configuration)
+### F5 — Raw Supabase Error Messages Shown to Users · Medium · Error Messages
 
-**File:** `.env.local:4`  
+**Files:** `app/(auth)/login/page.tsx:21`, `app/(auth)/register/page.tsx:20`
 
-**Issue:**  
-```
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-```
+**Issue:** `error.message` from Supabase SDK passed directly to UI, exposing auth provider internals.
 
-`NEXT_PUBLIC_` variables are baked into the browser-side JavaScript bundle at build time. If the app were deployed to production without updating this value:
-- The signout redirect would send users to `http://localhost:3000`
-- The OAuth callback URL would point to localhost
-- The value would be visible to every visitor in the browser bundle
-
-**Fix:** Created `.env.example` documenting the correct production value:
-
-```env
-# Set to your actual domain in production (no trailing slash)
-NEXT_PUBLIC_SITE_URL=https://your-app-domain.com
-```
-
-**Action required:** Update `.env.local` and any deployment environment variables to the real production domain before going live.
+**Fix:** Generic messages: "Invalid email or password" for login; mapped messages for register with generic fallback.
 
 ---
 
-### F7 — Auth Callback Ignores Exchange Failure (Medium · Authentication & Sessions)
+### F6 — Development URL in `NEXT_PUBLIC_SITE_URL` · Medium · Insecure Configuration
 
-**File:** `app/auth/callback/route.ts:13`  
+**File:** `.env.local:4`
 
-**Issue:**  
-The OAuth callback route called `exchangeCodeForSession(code)` but ignored the result:
+**Issue:** `NEXT_PUBLIC_SITE_URL=http://localhost:3000` baked into browser bundle. OAuth and signout redirects would break in production.
 
-```ts
-// VULNERABLE
-if (code) {
-  await supabase.auth.exchangeCodeForSession(code); // error discarded
-}
-return NextResponse.redirect(new URL("/dashboard", request.url)); // always redirects
-```
-
-If the exchange failed (expired code, replay attack, PKCE mismatch, network error), the user was silently redirected to `/dashboard` in an unauthenticated state. The middleware would catch this and redirect back to `/login`, but:
-- The error was completely invisible — no user feedback
-- A direct GET to `/auth/callback` with no code also redirected to `/dashboard`
-- The failure mode was opaque and undebuggable
-
-**Fix:**
-
-```ts
-if (code) {
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
-  if (error) return NextResponse.redirect(`${origin}/login?error=auth_failed`);
-} else {
-  return NextResponse.redirect(`${origin}/login?error=auth_failed`);
-}
-return NextResponse.redirect(`${origin}/dashboard`);
-```
-
-The login page now displays "Authentication failed. Please try signing in again." when `?error=auth_failed` is present.
+**Fix:** Documented correct production value in `.env.example`. Action required before go-live.
 
 ---
 
-### F8 — `role` Column INSERT Privilege Not Revoked (Medium · Permissions)
+### F7 — Auth Callback Ignores Exchange Failure · Medium · Authentication
 
-**Database:** `public.profiles` table  
+**File:** `app/auth/callback/route.ts:13`
 
-**Issue:**  
-An earlier fix revoked `UPDATE` on the `role` column to prevent privilege escalation:
+**Issue:** `exchangeCodeForSession(code)` result was discarded — users were silently redirected to `/dashboard` even on auth failure.
 
-```sql
-REVOKE UPDATE (role, level, xp, fantasy_points) ON profiles FROM authenticated;
-```
-
-However, `INSERT` was not revoked separately. A user scripting the profile creation endpoint directly (bypassing the UI) could send `role: 'admin'` during initial account setup and succeed, because:
-- The RLS `INSERT` policy only checked `auth.uid() = id`
-- The column check constraint `role IN ('user','moderator','admin')` accepts `'admin'` as a valid value
-- The code-level fix (F3) was not yet applied at the time this was discovered
-
-**Fix:**
-
-```sql
-REVOKE INSERT (role, level, xp, fantasy_points) ON public.profiles FROM authenticated;
-```
-
-The database now rejects any attempt by an authenticated user to write these columns on either INSERT or UPDATE. Only `service_role` (server-side only, never in browser code) can modify these fields.
+**Fix:** Checks error result; redirects to `/login?error=auth_failed` on failure.
 
 ---
 
-### F9 — `?next=` Redirect Param Set But Never Consumed (Low · Authentication & Sessions)
+### F8 — `role` Column INSERT Privilege Not Revoked · Medium · Permissions
 
-**Files:** `middleware.ts:52`, `app/(auth)/login/page.tsx:22`  
+**Database:** `public.profiles`
 
-**Issue:**  
-The middleware preserved the user's intended destination:
+**Issue:** `REVOKE UPDATE` was applied but not `REVOKE INSERT`. A user scripting the profile creation endpoint could send `role: 'admin'` during signup.
 
-```ts
-url.searchParams.set("next", pathname); // e.g. /settings
-return NextResponse.redirect(url);      // → /login?next=/settings
-```
-
-But the login page ignored it entirely:
-
-```ts
-router.push("/dashboard"); // always /dashboard regardless of ?next=
-```
-
-This had two consequences:
-1. Users who bookmark `/profile` or `/settings` can never return there directly after login — they always land on `/dashboard`
-2. The unread `?next=` parameter was latent open-redirect surface — if a developer later wired it up without validation, an attacker could craft `/login?next=https://evil.com` and redirect victims to an external phishing site after login
-
-**Fix:** Added a `safeRedirect()` validator that only permits relative paths, then consumed the param:
-
-```ts
-function safeRedirect(next: string | null): string {
-  if (!next) return "/dashboard";
-  // Must start with / and not contain // (protocol-relative URL)
-  if (next.startsWith("/") && !next.startsWith("//")) return next;
-  return "/dashboard";
-}
-
-// After successful login:
-router.push(safeRedirect(searchParams.get("next")));
-```
-
-Any attempt to pass an external URL (e.g. `?next=https://evil.com` or `?next=//evil.com`) is rejected and falls back to `/dashboard`.
+**Fix:** `REVOKE INSERT (role, level, xp, fantasy_points) ON public.profiles FROM authenticated`
 
 ---
 
-## Second Pass Results
+### F9 — `?next=` Redirect Param Unvalidated · Low · Authentication
 
-After all nine fixes were applied, the entire codebase was reviewed again. **No new issues were introduced.**
+**Files:** `middleware.ts:52`, `app/(auth)/login/page.tsx:22`
 
-Checks performed on the fixed code:
+**Issue:** Middleware set `?next=` but login page ignored it. Latent open-redirect surface if later wired up without validation.
+
+**Fix:** Added `safeRedirect()` validator — only permits relative paths, blocks `//evil.com` pattern. Login page now consumes the param.
+
+---
+
+## Audit 2 — 2026-06-01
+
+---
+
+### CRIT-1 — Live `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` · **OPEN — ACTION REQUIRED**
+
+**File:** `.env.local`
+
+**Issue:** The service role key is present in the working tree. It was shared in a chat conversation on 2026-06-01 and must be treated as compromised. This key bypasses every Supabase RLS policy — anyone with it has unrestricted read/write/delete access to all tables.
+
+**Fix required:**
+1. Rotate the key in the Supabase dashboard → Project Settings → API
+2. Update `.env.local` with the new key
+3. Confirm `.env.local` was never committed: `git log --all --full-history -- .env.local`
+4. The key is not used anywhere in the current codebase — remove it from `.env.local` entirely
+
+---
+
+### CRIT-2 — Admin Mutations Execute From Browser Client With No Server Auth Re-check · Fixed
+
+**File:** `app/(app)/admin/page.tsx` (multiple functions)
+
+**Issue:** All admin write operations — saving feature flags, entering match stats, updating match status, adding fixtures, saving league prizes — were performed directly from a `"use client"` component using the anon key. Authorization depended entirely on Supabase RLS. An attacker who bypassed the React layout check could call the same PostgREST endpoints directly from a browser console.
+
+**Fix:** Created `lib/actions/admin.ts` with six `"use server"` actions. Each calls `requireAdmin()` which independently verifies `supabase.auth.getUser()` and `profile.role === "admin"` server-side before executing any mutation. `admin/page.tsx` now calls these server actions instead of the browser client.
+
+---
+
+### CRIT-3 — User Role Escalation Performed From Browser Client · Fixed
+
+**File:** `app/(app)/admin/page.tsx:594`
+
+**Issue:** The role change dropdown called `supabase.from("profiles").update({ role })` directly from the browser. Authorization was RLS-only. Also queried by `username` string (mutable) instead of `user_id` (stable UUID).
+
+**Fix:** `updateUserRoleAction(userId, role)` server action added to `lib/actions/admin.ts`. Now uses the profile's real UUID. `VALID_ROLES` allowlist rejects any value outside `["user", "manager", "moderator", "admin"]`. The `users` state was updated to carry `userId` (real UUID) alongside the synthetic display `id`.
+
+---
+
+### HIGH-1 — Chat Delete Has No Server-Side Ownership Verification · Fixed
+
+**File:** `app/(app)/community/page.tsx:199`
+
+**Issue:** `deleteMessage()` called `supabase.from("chat_messages").delete().eq("id", msgId)` from the browser — no ownership check. The delete button was hidden for non-owners in the UI but nothing prevented a direct API call.
+
+**Fix:** `deleteChatMessageAction(msgId)` in `lib/actions/chat.ts`. Server-side: queries with both `.eq("id", msgId).eq("user_id", user.id)` — can only delete a message the caller owns.
+
+---
+
+### HIGH-2 — `getLeagueStandings` Returns Private League Data to Non-Members · Fixed
+
+**File:** `lib/actions/leagues.ts:52`
+
+**Issue:** Any authenticated user could call this server action with any `leagueId` and receive the full member list, usernames, and points — even for leagues they never joined.
+
+**Fix:** Added a membership check before returning data. If no row exists for `(leagueId, user.id)` in `league_members`, the function returns an empty array.
+
+---
+
+### HIGH-3 — No Rate Limiting on Login, Signup, or Username Lookup RPC · **OPEN**
+
+**Files:** `lib/actions/auth.ts`, `middleware.ts`
+
+**Issue:** No application-level rate limiting on login, signup, or the `resolve_login_identifier` RPC (which reveals whether a username exists). Brute-force and credential-stuffing attacks are unconstrained.
+
+**Recommended fix:** Add Upstash Redis rate limiting in the auth server actions, or configure Supabase Auth rate limits in the dashboard (Auth → Rate Limits). Return HTTP 429 with `Retry-After` header when limits are hit.
+
+---
+
+### HIGH-4 — `?next=` Redirect Param Unvalidated in Auth Callback · Fixed
+
+**File:** `app/auth/callback/route.ts:8`
+
+**Issue:** `const next = url.searchParams.get("next") ?? "/dashboard"` was appended directly to `${origin}` with no validation. A crafted OAuth link could redirect users to arbitrary paths after login.
+
+**Fix:** `safeRedirect()` helper (same validator used on the login page) applied to the `next` param before use. Only relative paths that start with `/` but not `//` are permitted.
+
+---
+
+### HIGH-5 — Broadcast Notification Is a Silent Stub · **OPEN**
+
+**File:** `app/(app)/admin/page.tsx:196`
+
+**Issue:** The "Send to All Users" button in the admin panel sleeps 1 second and clears the form — it sends nothing. Admins believe notifications are being sent when they are not.
+
+**Recommended fix:** Implement as a `"use server"` action (verified admin role required) that bulk-inserts into the `notifications` table for all user IDs, or integrate with a push notification provider.
+
+---
+
+### MED-1 — Profile Update Has No Server-Side Field Validation · Fixed
+
+**File:** `app/(app)/profile/page.tsx:105`
+
+**Issue:** `editForm` was passed directly to `supabase.from("profiles").update(editForm)` from the browser. No server-side type, length, or allowlist validation.
+
+**Fix:** `updateProfileAction` in `lib/actions/profile.ts`. Validates max lengths server-side (`full_name` ≤ 100, `bio` ≤ 300, etc.) before executing the update. `profile/page.tsx` now calls the server action.
+
+---
+
+### MED-2 — League Creation Generated Invite Code Client-Side, Bypassed Server Action · Fixed
+
+**File:** `app/(app)/leagues/page.tsx:155`
+
+**Issue:** `handleCreateLeague()` called `generateInviteCode()` in the browser using `Math.random()`, then inserted directly to `leagues` bypassing the existing `createLeague` server action.
+
+**Fix:** `handleCreateLeague()` now calls the `createLeague` server action exclusively. The invite code is generated server-side. The server action was updated to accept an optional `prizes` parameter and apply input length limits.
+
+---
+
+### MED-3 — Chat Messages Have No Server-Side Length Cap · Fixed
+
+**File:** `app/(app)/community/page.tsx:183`
+
+**Issue:** `maxLength={200}` on the HTML input is client-side only. A user bypassing the UI could insert arbitrarily long messages.
+
+**Fix:** `sendChatMessageAction` in `lib/actions/chat.ts` rejects any message where `trimmed.length > 200` or `trimmed.length === 0` server-side.
+
+---
+
+### MED-4 — Join Flow Reveals Whether Invite Code Is Valid · Fixed
+
+**File:** `lib/actions/leagues.ts` (previously in `leagues/page.tsx`)
+
+**Issue:** Distinct error messages ("Invalid invite code" vs "Already a member") allowed enumeration of valid invite codes without joining.
+
+**Fix:** Both cases now return the same message: "Unable to join league. Please check the invite code." The client-side join flow was also replaced with a call to the `joinLeague` server action (eliminating the separate client-side lookup that produced the distinct error).
+
+---
+
+### MED-5 — `select("*")` on `profiles` Sends Phone Number and Internal Fields to Browser · Fixed
+
+**File:** `app/(app)/profile/page.tsx:50`
+
+**Issue:** `select("*")` returned all columns including `phone`, `role`, and internal timestamps to the browser client.
+
+**Fix:** Replaced with explicit column list: `username, full_name, avatar_url, xp, level, fantasy_points, favorite_player, supporter_branch, bio`.
+
+---
+
+### MED-6 — `generateInviteCode` Uses `Math.random()` · Fixed
+
+**File:** `lib/utils.ts:54`
+
+**Issue:** `Math.random().toString(36).substring(2, 8)` — not cryptographically secure. The 6-character base36 output is brute-forceable.
+
+**Fix:** Replaced with `globalThis.crypto.randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase()` — 8 hex characters from a CSPRNG. Works in Node.js 18+ and modern browsers.
+
+---
+
+### MED-7 — Middleware Bypassed All `/api/` Routes · Fixed
+
+**File:** `middleware.ts:13`
+
+**Issue:** `pathname.startsWith("/api/")` was in the early-exit bypass list. Future API routes would not receive session-refresh middleware, potentially leading to developers incorrectly assuming auth is handled for them.
+
+**Fix:** Removed `/api/` from the bypass. The session refresh now runs on API routes. The only current API route (`/api/auth/signout`) performs its own auth check and is unaffected.
+
+---
+
+### LOW-1 — Fragile `NEXT_REDIRECT` Error Detection · Fixed
+
+**Files:** `app/(app)/layout.tsx:28`, `app/(app)/admin/layout.tsx:22`
+
+**Issue:** `err.message === "NEXT_REDIRECT"` relies on an undocumented internal string. If Next.js changes it, redirect protection silently breaks.
+
+**Fix:** Replaced with `import { isRedirectError } from "next/dist/client/components/redirect-error"` and `if (isRedirectError(err)) throw err`.
+
+---
+
+### LOW-2 — Phone-Only Signup Creates Synthetic `@sfc.internal` Email · Open (low priority)
+
+**File:** `app/(auth)/register/page.tsx:10`
+
+**Issue:** Phone-number users get a synthetic email `<digits>@sfc.internal`. Email verification silently fails; the phone number is also the account identifier and is predictable.
+
+**Recommended fix:** Use Supabase's native phone auth (`signInWithOtp`) for phone-based flows. Requires checking Supabase plan for phone auth availability.
+
+---
+
+### LOW-3 — Invite Code Visible in Plain Text in League Modal · Accepted
+
+**File:** `app/(app)/leagues/page.tsx:659`
+
+**Issue:** The invite code is displayed to all league members in the detail modal. Screenshots or recordings of the modal leak the code.
+
+**Assessment:** Intentional design — members need the code to invite others. Document this intentionally for the team. Consider adding a "Regenerate code" button for league owners to rotate after an unwanted join.
+
+---
+
+### LOW-4 — No Content Security Policy Headers · Fixed
+
+**File:** `next.config.ts`
+
+**Issue:** No CSP, `X-Frame-Options`, or other security headers configured.
+
+**Fix:** Added to `next.config.ts`:
+- `Content-Security-Policy` — restricts scripts, styles, images, and connections to known origins
+- `X-Frame-Options: DENY` — prevents clickjacking
+- `X-Content-Type-Options: nosniff`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+
+---
+
+### LOW-5 — "Mark All Read" Updates Local State Only · Open (UX bug)
+
+**File:** `components/layout/TopBar.tsx:72`
+
+**Issue:** Notifications re-appear as unread on next page load because the DB is never updated.
+
+**Recommended fix:** Add a `"use server"` action that sets `read = true` for all notifications where `user_id = auth.uid()`.
+
+---
+
+### LOW-6 — Admin Route Relies Solely on Layout Server Check · Accepted
+
+**File:** `app/(app)/admin/layout.tsx`
+
+**Issue:** `/admin` is protected by a server layout redirect, not by middleware. Defense-in-depth concern only — if the layout were bypassed (e.g. a nested route escapes it), the page would be exposed. Not an active vulnerability with current routing.
+
+**Assessment:** Acceptable for this project size. Consider adding `/admin` to the middleware's protected-path check as defense in depth.
+
+---
+
+## Second-Pass Verification (2026-06-01)
+
+After all fixes from Audit 2 were applied, the codebase was checked for regressions:
 
 | Check | Result |
 |---|---|
-| `SUPABASE_SERVICE_ROLE_KEY` in any TypeScript file | Not found — server-only |
-| `NEXT_PUBLIC_` prefix on service role key | Not found |
-| `console.log/error/warn` in app or component files | Not found |
-| `dangerouslySetInnerHTML` / `innerHTML` / `eval()` | Not found |
-| `window.location` usage | Only in OAuth redirect (correct browser-side usage) |
-| TypeScript compiler errors | None |
-| Hardcoded secrets or API keys | Not found |
+| Remaining direct browser-client mutations (`createClient().from().update/insert/delete`) in `app/` | **None found** |
+| TypeScript compiler errors after changes | **None** |
+| `Math.random()` in invite code generation | **Removed** |
+| `NEXT_REDIRECT` string comparison in layouts | **Removed** |
+| `/api/` bypass in middleware | **Removed** |
+| `select("*")` on profiles in profile page | **Replaced with explicit columns** |
+| Unvalidated `?next=` in auth callback | **Fixed** |
+
+---
+
+## All Files Changed Across Both Audits
+
+| File | Audit | Change |
+|---|---|---|
+| `.gitignore` | 1 | Created — excludes all `.env*` files |
+| `.env.example` | 1 | Created — documents required variables |
+| `package.json` | 1 | Next.js updated to patched version |
+| `app/(auth)/onboarding/page.tsx` | 1 | Explicit field enumeration, length limits |
+| `app/(auth)/login/page.tsx` | 1 | Generic error message, consumes `?next=` safely |
+| `app/(auth)/register/page.tsx` | 1 | Generic error messages, input length limits |
+| `app/auth/callback/route.ts` | 1 + 2 | Validates exchange result on failure; `?next=` now validated with `safeRedirect()` |
+| `next.config.ts` | 1 + 2 | Restricted image origins (audit 1); added CSP + security headers (audit 2) |
+| `middleware.ts` | 2 | Removed `/api/` blanket bypass |
+| `lib/utils.ts` | 2 | `generateInviteCode` uses `crypto.randomUUID()` |
+| `lib/actions/admin.ts` | 2 | **Created** — 6 server actions with `requireAdmin()` guard |
+| `lib/actions/chat.ts` | 2 | **Created** — send + delete with ownership check and length cap |
+| `lib/actions/profile.ts` | 2 | **Created** — profile update with server-side validation |
+| `lib/actions/leagues.ts` | 2 | `getLeagueStandings` membership check; `createLeague` prizes param + input limits; `joinLeague` unified error messages |
+| `app/(app)/admin/page.tsx` | 2 | All mutations replaced with server action calls; `userId` added to user state; role change uses UUID |
+| `app/(app)/community/page.tsx` | 2 | send + delete via server actions |
+| `app/(app)/profile/page.tsx` | 2 | `select("*")` → explicit columns; save via server action |
+| `app/(app)/leagues/page.tsx` | 2 | Create + join via server actions; removed client-side invite code generation |
+| `app/(app)/layout.tsx` | 2 | `isRedirectError()` replaces string comparison |
+| `app/(app)/admin/layout.tsx` | 2 | `isRedirectError()` replaces string comparison |
+| Supabase DB | 1 | `REVOKE INSERT (role, level, xp, fantasy_points)` applied |
+
+---
+
+## Open Items Requiring Action
+
+| Priority | Item | Owner |
+|---|---|---|
+| **Immediate** | Rotate `SUPABASE_SERVICE_ROLE_KEY` — exposed in chat 2026-06-01 | Developer |
+| High | Add rate limiting to login/signup/auth RPCs | Developer |
+| High | Implement or remove the broadcast notification stub | Developer |
+| Low | Switch phone signup to Supabase native phone auth | Developer |
+| Low | Implement "Mark all read" DB update | Developer |
+| Low | Add "Regenerate invite code" for league owners | Developer |
 
 ---
 
 ## Ongoing Security Recommendations
 
-These items are not vulnerabilities today but should be addressed before significant user growth:
+### HTTPS & Cookie Security
+Ensure the production deployment (Vercel) has HTTPS forced on all routes. Supabase SSR sets `Secure`, `HttpOnly`, and `SameSite=Lax` on session cookies automatically when served over HTTPS — verify this in production browser DevTools.
 
-### Rate Limiting on Auth Endpoints
-Supabase Auth has built-in rate limiting, but the specific thresholds should be reviewed in the Supabase dashboard:
-- **Login:** Limit failed attempts per IP and per email
-- **Register:** Limit signups per IP
-- **OAuth:** Already handled by Google/provider
+### HSTS
+Add `Strict-Transport-Security: max-age=31536000; includeSubDomains` to the headers in `next.config.ts` once the production domain is confirmed.
 
-### HTTPS Enforcement
-Ensure the production deployment (Vercel, Railway, etc.) has:
-- HTTPS forced on all routes
-- HSTS header with `max-age` of at least 1 year
-- No HTTP fallback
-
-### Cookie Security (Supabase SSR)
-Supabase SSR manages session cookies. Verify in production that cookies have:
-- `Secure` flag (HTTPS-only)
-- `HttpOnly` flag (no JavaScript access)
-- `SameSite=Lax` or `SameSite=Strict`
-
-These are set by the Supabase SSR library automatically when the app is served over HTTPS.
-
-### Data Retention & Privacy
-- User emails and profile data are stored in Supabase — ensure Supabase's data region (currently `eu-west-2`) complies with applicable privacy regulations
-- A "Delete Account" button exists in Settings but currently has no backend implementation — wire it up to `supabase.auth.admin.deleteUser()` via a server action before launch
-- Consider adding a privacy policy page before onboarding users
+### Data Privacy
+- User emails, phone numbers, and profile data are stored in Supabase — verify the data region complies with applicable regulations
+- A "Delete Account" button exists in Settings but has no backend implementation — wire to `supabase.auth.admin.deleteUser()` via a server action before launch
+- Add a privacy policy page before onboarding users
 
 ### Admin Role Assignment
-No UI exists for granting admin access. The only way to make a user an admin is via the Supabase SQL editor:
-
+No UI exists for granting initial admin access. The process remains:
 ```sql
 UPDATE profiles SET role = 'admin' WHERE username = 'your_username';
 ```
-
-This is intentional (no self-service escalation), but the process should be documented internally.
-
----
-
-## Files Changed During This Audit
-
-| File | Change |
-|---|---|
-| `.gitignore` | Created — excludes all `.env*` files |
-| `.env.example` | Created — documents required variables |
-| `next.config.ts` | Restricted image remote patterns |
-| `middleware.ts` | (Already correct — no changes needed) |
-| `app/auth/callback/route.ts` | Validates exchange result, redirects on failure |
-| `app/(auth)/login/page.tsx` | Generic error message, consumes `?next=` safely |
-| `app/(auth)/register/page.tsx` | Generic error messages, input length limits |
-| `app/(auth)/onboarding/page.tsx` | Explicit field enumeration, length limits |
-| `package.json` | Next.js updated to latest patched version |
-| Supabase DB | `REVOKE INSERT (role, level, xp, fantasy_points)` applied |
+This is intentional (no self-service escalation). Document internally.

@@ -1,6 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { createClient } = require("@/lib/supabase/server");
 import { redirect } from "next/navigation";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   try {
@@ -18,8 +19,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
     if (profile?.role !== "admin") redirect("/dashboard");
   } catch (err: unknown) {
-    // Redirect errors from `redirect()` must be re-thrown — Next.js uses them internally
-    if (err instanceof Error && err.message === "NEXT_REDIRECT") throw err;
+    if (isRedirectError(err)) throw err;
     redirect("/login");
   }
 

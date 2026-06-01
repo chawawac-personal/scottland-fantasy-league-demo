@@ -51,7 +51,7 @@ export function getXPForNextLevel(level: number): number {
 }
 
 export function generateInviteCode(): string {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
+  return globalThis.crypto.randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase();
 }
 
 export function timeAgo(date: string): string {

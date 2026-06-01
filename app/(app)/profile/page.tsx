@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { cn, getLevelTitle, getXPForNextLevel } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { updateProfileAction } from "@/lib/actions/profile";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 
@@ -47,7 +48,7 @@ export default function ProfilePage() {
         const sb = supabase as any;
 
         const [{ data }, { data: achData }, { data: teamData }] = await Promise.all([
-          sb.from("profiles").select("*").eq("id", user.id).single(),
+          sb.from("profiles").select("username, full_name, avatar_url, xp, level, fantasy_points, favorite_player, supporter_branch, bio").eq("id", user.id).single(),
           sb.from("achievements").select("*").eq("user_id", user.id),
           sb.from("fantasy_teams")
             .select("id, fantasy_team_players(player_id, is_starting, fantasy_team_id)")
@@ -98,21 +99,12 @@ export default function ProfilePage() {
   async function saveProfile() {
     setSaving(true);
     try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: rows } = await (supabase as any)
-          .from("profiles")
-          .update(editForm)
-          .eq("id", user.id)
-          .select("id");
-        if (!rows || rows.length === 0) {
-          alert("Save failed — your session may have expired. Please refresh and try again.");
-          setSaving(false);
-          return;
-        }
+      const result = await updateProfileAction(editForm);
+      if (result.error) {
+        alert(`Save failed — ${result.error}. Please try again.`);
+        return;
       }
+      setProfile(prev => ({ ...prev, ...editForm }));
       setEditOpen(false);
     } catch {
       alert("Save failed — please try again.");

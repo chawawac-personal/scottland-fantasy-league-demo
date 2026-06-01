@@ -6,6 +6,7 @@ import { TopBar } from "@/components/layout/TopBar";
 import { MessageSquare, Send, BarChart2, Star, Flame, Trophy, Trash2 } from "lucide-react";
 import { cn, timeAgo } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { sendChatMessageAction, deleteChatMessageAction } from "@/lib/actions/chat";
 
 interface ChatMsg {
   id: string;
@@ -176,15 +177,7 @@ export default function CommunityPage() {
     setMessage("");
 
     try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase as any).from("chat_messages").insert({
-          user_id: user.id,
-          message: newMsg.message,
-        });
-      }
+      await sendChatMessageAction(newMsg.message);
     } catch { /* optimistic message stays visible */ }
     finally {
       setSending(false);
@@ -194,9 +187,7 @@ export default function CommunityPage() {
   async function deleteMessage(msgId: string) {
     setMessages((prev) => prev.filter((m) => m.id !== msgId));
     try {
-      const supabase = createClient();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any).from("chat_messages").delete().eq("id", msgId);
+      await deleteChatMessageAction(msgId);
     } catch { /* optimistic removal already done */ }
   }
 

@@ -10,7 +10,6 @@ export async function middleware(request: NextRequest) {
   // Pass through Next.js internals and static files
   if (
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/api/") ||
     /\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js)$/.test(pathname)
   ) {
     return NextResponse.next({ request });
