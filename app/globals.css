@@ -1,0 +1,157 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Bebas+Neue&family=JetBrains+Mono:wght@400;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 224 76% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 224 76% 48%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 224 76% 48%;
+    --radius: 0.75rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-slate-50 text-sfc-black font-sans antialiased;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(29,78,216,0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(59,130,246,0.03) 0%, transparent 50%);
+  }
+
+  ::-webkit-scrollbar { @apply w-1.5 h-1.5; }
+  ::-webkit-scrollbar-track { @apply bg-slate-100; }
+  ::-webkit-scrollbar-thumb { @apply bg-slate-300 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-sfc-blue/50; }
+}
+
+@layer components {
+  /* ── Cards ── */
+  .glass-card {
+    @apply bg-white border border-sfc-black-border rounded-2xl shadow-glass;
+  }
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300 hover:border-sfc-blue/20 hover:shadow-card-hover;
+  }
+
+  /* ── Rank badges ── */
+  .rank-badge {
+    @apply inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold shrink-0;
+  }
+  .rank-1 { @apply bg-yellow-100 text-yellow-700 border border-yellow-300; }
+  .rank-2 { @apply bg-slate-100 text-slate-600 border border-slate-300; }
+  .rank-3 { @apply bg-amber-100 text-amber-700 border border-amber-300; }
+
+  /* ── Live badge ── */
+  .live-badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-100 text-red-600 text-xs font-bold
+           rounded-full border border-red-200 animate-live-pulse;
+  }
+
+  /* ── Pitch slots ── */
+  .formation-slot {
+    @apply relative flex flex-col items-center justify-center w-20 h-24 rounded-xl
+           border-2 border-dashed cursor-pointer transition-all duration-200;
+  }
+  .formation-slot-empty {
+    @apply border-slate-300 text-slate-400 hover:border-sfc-blue/50 hover:text-sfc-blue/60;
+  }
+  .formation-slot-filled {
+    @apply border-sfc-blue/40 bg-sfc-blue/5;
+  }
+
+  /* ── Sidebar links ── */
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-medium text-slate-500
+           transition-all duration-200 hover:text-sfc-black hover:bg-slate-100;
+  }
+  .sidebar-link-active {
+    @apply sidebar-link bg-sfc-blue/10 text-sfc-blue border border-sfc-blue/20 shadow-blue-glow;
+  }
+
+  /* ── Table rows ── */
+  .data-table-row {
+    @apply border-b border-sfc-black-border hover:bg-slate-50 transition-colors duration-150;
+  }
+
+  /* ── Standard table cell padding ── */
+  .td { @apply px-5 py-4; }
+  .th { @apply px-5 py-3.5 text-xs font-semibold text-muted-foreground; }
+
+  /* ── Buttons ── */
+  .btn-primary {
+    @apply bg-sfc-blue hover:bg-sfc-blue-dark text-white font-semibold px-6 py-2.5 rounded-xl
+           transition-all duration-200 shadow-blue-glow hover:shadow-blue-glow-lg active:scale-95;
+  }
+  .btn-outline {
+    @apply border border-sfc-blue/30 text-sfc-blue hover:bg-sfc-blue/10 font-medium px-6 py-2.5
+           rounded-xl transition-all duration-200;
+  }
+
+  /* ── Inputs ── */
+  .input {
+    @apply w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sfc-black
+           placeholder:text-slate-400 focus:outline-none focus:border-sfc-blue/50
+           focus:ring-2 focus:ring-sfc-blue/10 text-sm transition-colors;
+  }
+  .input-with-icon { @apply input pl-10; }
+
+  /* ── Form labels ── */
+  .label {
+    @apply block text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wide;
+  }
+
+  /* ── Page headers ── */
+  .section-header { @apply text-2xl font-bold text-sfc-black; }
+  .section-subtitle { @apply text-sm text-muted-foreground mt-0.5; }
+
+  /* ── Position badges ── */
+  .pos-badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded-lg border text-[10px] font-bold;
+  }
+
+  /* ── Stat pill ── */
+  .stat-chip {
+    @apply flex flex-col items-center gap-0.5;
+  }
+}
+
+@layer utilities {
+  .text-gradient-blue {
+    @apply bg-gradient-to-r from-sfc-blue to-sfc-blue-light bg-clip-text text-transparent;
+  }
+  .text-gradient-gold {
+    @apply bg-gradient-to-r from-yellow-500 to-amber-500 bg-clip-text text-transparent;
+  }
+  .pitch-bg {
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 40px,
+        rgba(29,78,216,0.03) 40px, rgba(29,78,216,0.03) 41px),
+      repeating-linear-gradient(90deg, transparent, transparent 40px,
+        rgba(29,78,216,0.02) 40px, rgba(29,78,216,0.02) 41px);
+  }
+}
