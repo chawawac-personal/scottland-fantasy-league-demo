@@ -546,7 +546,7 @@ export default function MyTeamPage() {
                 </Link>
               </div>
             ) : (
-            <div className="overflow-y-auto max-h-[600px] divide-y divide-sfc-black-border">
+            <div className="divide-y divide-sfc-black-border">
               {squadPlayers.map((player) => {
                 const inStartXI = selectedIds.includes(player.id);
                 return (
