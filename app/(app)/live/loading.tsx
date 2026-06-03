@@ -13,7 +13,7 @@ export default function LiveLoading() {
 
       <div className="p-4 sm:p-6 space-y-5">
         {/* Score banner */}
-        <div className="glass-card p-6">
+        <div className="glass-card p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div className="flex-1 text-center space-y-2">
               <Skeleton className="h-3 w-12 mx-auto" />
