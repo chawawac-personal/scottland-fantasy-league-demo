@@ -64,7 +64,10 @@ export default function LeaguesPage() {
         .eq("user_id", user.id);
       if (!data?.length) return;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const leagueIds = (data as any[]).map((m: any) => m.leagues.id);
+      const validRows = (data as any[]).filter((m: any) => m.leagues != null);
+      if (!validRows.length) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const leagueIds = validRows.map((m: any) => m.leagues.id);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: allMembers } = await (supabase as any)
         .from("league_members")
@@ -79,7 +82,7 @@ export default function LeaguesPage() {
         if (!leaderMap[lm.league_id]) leaderMap[lm.league_id] = lm.profiles?.username ?? "—";
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setLocalLeagues((data as any[]).map((m: any) => ({
+      setLocalLeagues(validRows.map((m: any) => ({
         id: m.leagues.id, name: m.leagues.name, type: m.leagues.type,
         members: memberCountMap[m.leagues.id] ?? 0,
         myRank: m.rank ?? 0, myPoints: m.points ?? 0,
@@ -593,7 +596,7 @@ export default function LeaguesPage() {
           {activeTab === "join" && (
             <motion.div key="join" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
               {/* Private league — invite code */}
-              <div className="glass-card p-6 max-w-lg">
+              <div className="glass-card p-6">
                 <h2 className="font-bold text-sfc-black text-lg mb-2">Join a Private League</h2>
                 <p className="text-sm text-muted-foreground mb-5">
                   Enter the invite code shared by your league manager
