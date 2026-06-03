@@ -63,6 +63,29 @@ export async function updateMatchStatusAction(matchId: string, status: string) {
   return { success: true };
 }
 
+export async function cancelMatchLiveAction(matchId: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase: any = await mkClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single() as { data: { role: string } | null };
+  if (!["admin", "manager"].includes(profile?.role ?? "")) return { error: "Not authorized" };
+
+  // Fetch matchday so we can target the exact notifications
+  const { data: match } = await supabase.from("matches").select("matchday").eq("id", matchId).single();
+  if (!match) return { error: "Match not found" };
+
+  // Revert status
+  await supabase.from("matches").update({ status: "scheduled" }).eq("id", matchId);
+
+  // Delete the "now LIVE!" notifications the trigger already sent
+  await supabase.from("notifications")
+    .delete()
+    .like("title", `MD${match.matchday} is now LIVE!%`);
+
+  return { success: true };
+}
+
 export async function saveFixtureAction(form: {
   home: string;
   away: string;

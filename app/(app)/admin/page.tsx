@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { saveFlagsAction, updateMatchStatusAction, saveFixtureAction, saveMatchStatsAction, savePrizesAction, updateUserRoleAction, broadcastNotificationAction, addPlayerAction, adminResetPasswordAction } from "@/lib/actions/admin";
+import { saveFlagsAction, updateMatchStatusAction, cancelMatchLiveAction, saveFixtureAction, saveMatchStatsAction, savePrizesAction, updateUserRoleAction, broadcastNotificationAction, addPlayerAction, adminResetPasswordAction } from "@/lib/actions/admin";
 import { motion, AnimatePresence } from "framer-motion";
 import { TopBar } from "@/components/layout/TopBar";
 import {
@@ -897,9 +897,15 @@ export default function AdminPage() {
                               className="text-[10px] font-bold px-2 sm:px-3 py-1.5 rounded-lg bg-sfc-blue/10 border border-sfc-blue/30 text-sfc-blue hover:bg-sfc-blue/20 transition-colors flex items-center gap-1 whitespace-nowrap">
                               <Zap className="w-3 h-3" /> Stats
                             </button>
-                            <button onClick={() => updateMatchStatus(m.id, "scheduled")} disabled={statusUpdating === m.id}
+                            <button
+                              onClick={async () => {
+                                setStatusUpdating(m.id);
+                                try { await cancelMatchLiveAction(m.id); setDbMatches(prev => prev.map(x => x.id === m.id ? { ...x, status: "scheduled" } : x)); }
+                                finally { setStatusUpdating(null); }
+                              }}
+                              disabled={statusUpdating === m.id}
                               className="text-[10px] font-bold px-2 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-muted-foreground hover:border-red-400/40 hover:text-red-400 transition-colors whitespace-nowrap disabled:opacity-50"
-                              title="Cancel — revert to Scheduled">
+                              title="Cancel live — reverts status and removes notifications">
                               ✕
                             </button>
                           </div>
