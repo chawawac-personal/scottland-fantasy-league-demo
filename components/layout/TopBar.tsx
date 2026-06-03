@@ -75,7 +75,8 @@ export function TopBar({ title, subtitle, rightContent }: TopBarProps) {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      await supabase.from("notifications").update({ read: true }).eq("user_id", user.id).eq("read", false);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from("notifications").update({ read: true }).eq("user_id", user.id).eq("read", false);
     } catch { /* optimistic update already applied */ }
   }
 

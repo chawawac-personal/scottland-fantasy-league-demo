@@ -30,8 +30,8 @@ export default function CommunityLoading() {
               <div className="space-y-2.5">
                 {Array.from({ length: optionCount }).map((_, j) => (
                   <div key={j} className="relative rounded-xl border border-slate-200 overflow-hidden">
-                    <Skeleton
-                      className="absolute inset-y-0 left-0 rounded-none rounded-l-xl opacity-40"
+                    <div
+                      className="absolute inset-y-0 left-0 rounded-none rounded-l-xl animate-pulse bg-slate-200 opacity-40"
                       style={{ width: `${25 + j * 15}%` }}
                     />
                     <div className="relative flex items-center justify-between gap-3 px-4 py-3">
