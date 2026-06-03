@@ -28,7 +28,7 @@ Fantasy football platform for Zimbabwean club football. Players build squads, co
 | masvingofc@scottland.demo | MasvingoFC | user | 633 |
 | mutarefc@scottland.demo | MutareFC | user | 594 |
 | qa_test_74133@scottland.demo | VictoriaFalls | user | 536 |
-| sfcmaster@scottland.demo | SFCMaster99 | manager | 649 |
+| manager@scottland.demo | SFCMaster99 | manager | 649 |
 | tendaifc@scottland.demo | TendaiFC | user | 549 |
 | zimbabwestar@scottland.demo | ZimbabweStar | user | 578 |
 | zimwarrior@scottland.demo | ZimWarrior | user | 702 |
