@@ -200,18 +200,18 @@ export default function ManagerPage() {
   }
 
   async function submitEvent() {
-    if (!liveScoreMatch || !eventForm.minute || !eventForm.player_name) return;
+    const needsPlayer = eventForm.event_type !== "opponent_own_goal";
+    if (!liveScoreMatch || !eventForm.minute || (needsPlayer && !eventForm.player_name)) return;
     setLoggingEvent(true);
     try {
       const result = await logMatchEventAction({
         match_id: liveScoreMatch.id,
-        player_id: eventForm.player_id || null,
-        player_name: eventForm.player_name,
-        event_type: eventForm.event_type as "goal" | "own_goal" | "assist" | "yellow_card" | "red_card",
+        player_id: needsPlayer ? (eventForm.player_id || null) : null,
+        player_name: needsPlayer ? eventForm.player_name : "Opponent OG",
+        event_type: eventForm.event_type as "goal" | "own_goal" | "assist" | "yellow_card" | "red_card" | "opponent_own_goal",
         minute: parseInt(eventForm.minute),
         home_team: liveScoreMatch.home_team,
         away_team: liveScoreMatch.away_team,
-        is_sfc_player: players.some(p => p.name === eventForm.player_name),
       });
       if (result.success && result.event) {
         setLiveEvents(prev => [...prev, result.event].sort((a, b) => a.minute - b.minute));
@@ -511,15 +511,17 @@ export default function ManagerPage() {
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Log Event</p>
 
                   {/* Event type buttons */}
-                  <div className="grid grid-cols-5 gap-1.5">
+                  <div className="grid grid-cols-3 gap-1.5">
                     {[
-                      { type: "goal",        label: "⚽ Goal",   color: "bg-sfc-blue/10 border-sfc-blue/30 text-sfc-blue" },
-                      { type: "own_goal",    label: "🔴 OG",     color: "bg-orange-500/10 border-orange-500/30 text-orange-500" },
-                      { type: "assist",      label: "🎯 Assist", color: "bg-purple-500/10 border-purple-500/30 text-purple-500" },
-                      { type: "yellow_card", label: "🟨 Yellow", color: "bg-amber-500/10 border-amber-500/30 text-amber-500" },
-                      { type: "red_card",    label: "🟥 Red",    color: "bg-red-500/10 border-red-500/30 text-red-500" },
+                      { type: "goal",              label: "⚽ Goal",     color: "bg-sfc-blue/10 border-sfc-blue/30 text-sfc-blue" },
+                      { type: "own_goal",          label: "🔴 Own Goal", color: "bg-orange-500/10 border-orange-500/30 text-orange-500" },
+                      { type: "opponent_own_goal", label: "🔵 Opp. OG",  color: "bg-teal-500/10 border-teal-500/30 text-teal-600" },
+                      { type: "assist",            label: "🎯 Assist",   color: "bg-purple-500/10 border-purple-500/30 text-purple-500" },
+                      { type: "yellow_card",       label: "🟨 Yellow",   color: "bg-amber-500/10 border-amber-500/30 text-amber-500" },
+                      { type: "red_card",          label: "🟥 Red",      color: "bg-red-500/10 border-red-500/30 text-red-500" },
                     ].map(({ type, label, color }) => (
-                      <button key={type} onClick={() => setEventForm(p => ({ ...p, event_type: type }))}
+                      <button key={type}
+                        onClick={() => setEventForm(p => ({ ...p, event_type: type, player_id: "", player_name: "" }))}
                         className={cn("text-[10px] font-bold py-2 rounded-xl border transition-all", eventForm.event_type === type ? color : "border-slate-200 text-muted-foreground hover:border-slate-300")}>
                         {label}
                       </button>
@@ -527,26 +529,32 @@ export default function ManagerPage() {
                   </div>
 
                   <div className="flex gap-2">
-                    {/* Player select */}
-                    <select className="select text-sm py-2 flex-1" value={eventForm.player_id}
-                      onChange={e => {
-                        const p = players.find(pl => pl.id === e.target.value);
-                        setEventForm(prev => ({ ...prev, player_id: e.target.value, player_name: p?.name ?? "" }));
-                      }}>
-                      <option value="">Select player…</option>
-                      {["GK","DEF","MID","FWD"].map(pos => (
-                        <optgroup key={pos} label={pos}>
-                          {players.filter(p => p.position === pos).map(p => (
-                            <option key={p.id} value={p.id}>{p.name}</option>
-                          ))}
-                        </optgroup>
-                      ))}
-                    </select>
+                    {/* Player select — hidden for opponent own goals */}
+                    {eventForm.event_type !== "opponent_own_goal" && (
+                      <select className="select text-sm py-2 flex-1" value={eventForm.player_id}
+                        onChange={e => {
+                          const p = players.find(pl => pl.id === e.target.value);
+                          setEventForm(prev => ({ ...prev, player_id: e.target.value, player_name: p?.name ?? "" }));
+                        }}>
+                        <option value="">Select player…</option>
+                        {["GK","DEF","MID","FWD"].map(pos => (
+                          <optgroup key={pos} label={pos}>
+                            {players.filter(p => p.position === pos).map(p => (
+                              <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </select>
+                    )}
+                    {eventForm.event_type === "opponent_own_goal" && (
+                      <p className="flex-1 text-xs text-muted-foreground self-center">No player needed — opponent scored against themselves</p>
+                    )}
                     {/* Minute */}
                     <input type="number" min={0} max={120} placeholder="Min" value={eventForm.minute}
                       onChange={e => setEventForm(p => ({ ...p, minute: e.target.value }))}
                       className="input text-sm py-2 w-20 shrink-0" />
-                    <button onClick={submitEvent} disabled={loggingEvent || !eventForm.player_name || !eventForm.minute}
+                    <button onClick={submitEvent}
+                      disabled={loggingEvent || !eventForm.minute || (eventForm.event_type !== "opponent_own_goal" && !eventForm.player_name)}
                       className="btn-primary text-sm py-2 px-4 shrink-0 disabled:opacity-60">
                       {loggingEvent ? "…" : "Log"}
                     </button>
@@ -560,7 +568,7 @@ export default function ManagerPage() {
                   ) : (
                     <div className="divide-y divide-slate-100">
                       {[...liveEvents].reverse().map(ev => {
-                        const icons: Record<string, string> = { goal:"⚽", own_goal:"🔴", assist:"🎯", yellow_card:"🟨", red_card:"🟥" };
+                        const icons: Record<string, string> = { goal:"⚽", own_goal:"🔴", opponent_own_goal:"🔵", assist:"🎯", yellow_card:"🟨", red_card:"🟥" };
                         return (
                           <div key={ev.id} className="flex items-center gap-3 px-5 py-3">
                             <span className="text-xs font-bold text-sfc-blue w-8 shrink-0">{ev.minute}&apos;</span>

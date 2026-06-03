@@ -317,18 +317,18 @@ export default function AdminPage() {
   }
 
   async function submitEvent() {
-    if (!liveScoreMatch || !eventForm.minute || !eventForm.player_name) return;
+    const needsPlayer = eventForm.event_type !== "opponent_own_goal";
+    if (!liveScoreMatch || !eventForm.minute || (needsPlayer && !eventForm.player_name)) return;
     setLoggingEvent(true);
     try {
       const result = await logMatchEventAction({
         match_id: liveScoreMatch.id,
-        player_id: eventForm.player_id || null,
-        player_name: eventForm.player_name,
-        event_type: eventForm.event_type as "goal" | "own_goal" | "assist" | "yellow_card" | "red_card",
+        player_id: needsPlayer ? (eventForm.player_id || null) : null,
+        player_name: needsPlayer ? eventForm.player_name : "Opponent OG",
+        event_type: eventForm.event_type as "goal" | "own_goal" | "assist" | "yellow_card" | "red_card" | "opponent_own_goal",
         minute: parseInt(eventForm.minute),
         home_team: liveScoreMatch.home_team,
         away_team: liveScoreMatch.away_team,
-        is_sfc_player: players.some(p => p.name === eventForm.player_name),
       });
       if (result.success && result.event) {
         setLiveEvents(prev => [...prev, result.event].sort((a, b) => a.minute - b.minute));
@@ -1478,30 +1478,42 @@ export default function AdminPage() {
                     </div>
                     <div>
                       <label className="text-[10px] text-muted-foreground font-medium block mb-1">Event</label>
-                      <select value={eventForm.event_type} onChange={e => setEventForm(p => ({ ...p, event_type: e.target.value }))}
+                      <select value={eventForm.event_type}
+                        onChange={e => setEventForm(p => ({ ...p, event_type: e.target.value, player_id: "", player_name: "" }))}
                         className="input-field text-sm w-full">
                         <option value="goal">⚽ Goal</option>
-                        <option value="own_goal">🔴 Own Goal</option>
+                        <option value="own_goal">🔴 Own Goal (by SFC)</option>
+                        <option value="opponent_own_goal">🔵 Opp. OG (for us)</option>
                         <option value="assist">🎯 Assist</option>
                         <option value="yellow_card">🟨 Yellow Card</option>
                         <option value="red_card">🟥 Red Card</option>
                       </select>
                     </div>
                   </div>
-                  <div>
-                    <label className="text-[10px] text-muted-foreground font-medium block mb-1">Player</label>
-                    <input list="admin-live-players" value={eventForm.player_name}
-                      onChange={e => {
-                        const val = e.target.value;
-                        const match = players.find(p => p.name === val);
-                        setEventForm(p => ({ ...p, player_name: val, player_id: match?.id ?? "" }));
-                      }}
-                      placeholder="Type player name…" className="input-field text-sm w-full" />
-                    <datalist id="admin-live-players">
-                      {players.map(p => <option key={p.id} value={p.name} />)}
-                    </datalist>
-                  </div>
-                  <button onClick={submitEvent} disabled={loggingEvent || !eventForm.minute || !eventForm.player_name}
+                  {eventForm.event_type !== "opponent_own_goal" ? (
+                    <div>
+                      <label className="text-[10px] text-muted-foreground font-medium block mb-1">Player</label>
+                      <select value={eventForm.player_id}
+                        onChange={e => {
+                          const p = players.find(pl => pl.id === e.target.value);
+                          setEventForm(prev => ({ ...prev, player_id: e.target.value, player_name: p?.name ?? "" }));
+                        }}
+                        className="input-field text-sm w-full">
+                        <option value="">Select player…</option>
+                        {["GK","DEF","MID","FWD"].map(pos => (
+                          <optgroup key={pos} label={pos}>
+                            {players.filter(p => p.position === pos).map(p => (
+                              <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">No player needed — opponent scored against themselves, counts for SFC.</p>
+                  )}
+                  <button onClick={submitEvent}
+                    disabled={loggingEvent || !eventForm.minute || (eventForm.event_type !== "opponent_own_goal" && !eventForm.player_name)}
                     className="btn-primary text-sm w-full py-2.5 flex items-center justify-center gap-2 disabled:opacity-50">
                     {loggingEvent ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <Zap className="w-4 h-4" />}
                     Log Event
@@ -1514,7 +1526,7 @@ export default function AdminPage() {
                     <p className="text-xs text-muted-foreground text-center py-8">No events logged yet</p>
                   ) : (
                     [...liveEvents].reverse().map(ev => {
-                      const icons: Record<string, string> = { goal: "⚽", own_goal: "🔴", assist: "🎯", yellow_card: "🟨", red_card: "🟥" };
+                      const icons: Record<string, string> = { goal: "⚽", own_goal: "🔴", opponent_own_goal: "🔵", assist: "🎯", yellow_card: "🟨", red_card: "🟥" };
                       return (
                         <div key={ev.id} className="flex items-center gap-3 px-5 py-2.5">
                           <span className="text-xs font-bold text-muted-foreground shrink-0 w-8 text-right">{ev.minute}&apos;</span>
