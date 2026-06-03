@@ -188,7 +188,7 @@ Accepts any of: email address, phone number (`+263 77…`), or `@username`
 | Step | Status |
 |---|---|
 | GitHub repo | `chawawac-personal/scottland-fantasy-league` (private) ✅ |
-| Vercel project | `scottland-fantasy-league` in `jonathan-chawawas-projects` ✅ |
+| Vercel project | `scottland-fantasy-league` ✅ |
 | Auto-deploy on push to `main` | ✅ |
 | Supabase `site_url` | `https://scottland-fantasy-league.vercel.app` ✅ |
 | Email confirmation | Disabled ✅ |
