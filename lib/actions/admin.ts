@@ -153,3 +153,51 @@ export async function updateUserRoleAction(userId: string, role: string) {
   await supabase.from("profiles").update({ role }).eq("id", userId);
   return { success: true };
 }
+
+export async function broadcastNotificationAction(title: string, body: string, type: string) {
+  const VALID_TYPES = ["system", "match", "transfer", "goal", "league", "reward"];
+  if (!title.trim() || !body.trim()) return { error: "Title and body are required" };
+  if (!VALID_TYPES.includes(type)) return { error: "Invalid type" };
+
+  const { error, supabase } = await requireAdmin();
+  if (error || !supabase) return { error: error ?? "Unknown error" };
+
+  const { data: profiles } = await supabase.from("profiles").select("id");
+  if (!profiles?.length) return { success: true, count: 0 };
+
+  await supabase.from("notifications").insert(
+    profiles.map((p: { id: string }) => ({
+      user_id: p.id,
+      title: title.trim().slice(0, 100),
+      body: body.trim().slice(0, 500),
+      type,
+      read: false,
+    }))
+  );
+
+  revalidatePath("/admin");
+  return { success: true, count: profiles.length };
+}
+
+export async function addPlayerAction(player: { name: string; position: string; price: number }) {
+  const VALID_POSITIONS = ["GK", "DEF", "MID", "FWD"];
+  if (!player.name?.trim()) return { error: "Name is required", data: null };
+  if (!VALID_POSITIONS.includes(player.position)) return { error: "Invalid position", data: null };
+  if (isNaN(player.price) || player.price < 0.1 || player.price > 100) return { error: "Price must be between 0.1 and 100", data: null };
+
+  const { error, supabase } = await requireAdmin();
+  if (error || !supabase) return { error: error ?? "Unknown error", data: null };
+
+  const { data, error: dbError } = await supabase.from("players").insert({
+    name: player.name.trim().slice(0, 100),
+    position: player.position,
+    price: Math.round(player.price * 10) / 10,
+    total_points: 0,
+    goals: 0,
+    is_injured: false,
+  }).select().single();
+
+  if (dbError) return { error: dbError.message, data: null };
+  revalidatePath("/admin");
+  return { error: null, data };
+}

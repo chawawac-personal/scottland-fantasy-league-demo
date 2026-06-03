@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { saveFlagsAction, updateMatchStatusAction, saveFixtureAction, saveMatchStatsAction, savePrizesAction, updateUserRoleAction } from "@/lib/actions/admin";
+import { saveFlagsAction, updateMatchStatusAction, saveFixtureAction, saveMatchStatsAction, savePrizesAction, updateUserRoleAction, broadcastNotificationAction, addPlayerAction } from "@/lib/actions/admin";
 import { motion, AnimatePresence } from "framer-motion";
 import { TopBar } from "@/components/layout/TopBar";
 import {
@@ -113,6 +113,14 @@ export default function AdminPage() {
           setEditingPrizes(initial);
         }
 
+        // Recent notifications
+        const { data: recentNotifsData } = await supabase
+          .from("notifications")
+          .select("id, title, body, type, created_at")
+          .order("created_at", { ascending: false })
+          .limit(5);
+        if (recentNotifsData) setRecentNotifs(recentNotifsData as typeof recentNotifs);
+
         // Real platform stats
         const [{ count: leagueCount }, { count: liveCount }, { count: notifCount }] = await Promise.all([
           supabase.from("leagues").select("*", { count: "exact", head: true }),
@@ -162,6 +170,10 @@ export default function AdminPage() {
   });
   const [flagSaved, setFlagSaved]   = useState(false);
   const [flagSaving, setFlagSaving] = useState(false);
+  const [recentNotifs, setRecentNotifs] = useState<{ id: string; title: string; body: string; type: string; created_at: string }[]>([]);
+  const [addPlayerOpen, setAddPlayerOpen] = useState(false);
+  const [playerForm, setPlayerForm] = useState({ name: "", position: "MID", price: "" });
+  const [savingPlayer, setSavingPlayer] = useState(false);
 
   // Load feature flags from Supabase on mount
   useEffect(() => {
@@ -191,10 +203,19 @@ export default function AdminPage() {
   }
 
   async function sendNotification() {
+    if (!notifForm.title.trim() || !notifForm.body.trim()) return;
     setSending(true);
-    await new Promise(r => setTimeout(r, 1000));
-    setSending(false);
-    setNotifForm({ title: "", body: "", type: "system" });
+    try {
+      const result = await broadcastNotificationAction(notifForm.title, notifForm.body, notifForm.type);
+      if (result.success) {
+        setNotifForm({ title: "", body: "", type: "system" });
+        // Refresh recent notifs
+        const supabase = createClient();
+        const { data } = await supabase.from("notifications").select("id, title, body, type, created_at").order("created_at", { ascending: false }).limit(5);
+        if (data) setRecentNotifs(data as typeof recentNotifs);
+      }
+    } catch { /* silently fail */ }
+    finally { setSending(false); }
   }
 
   async function openScoring(match: AdminMatch) {
@@ -285,6 +306,20 @@ export default function AdminPage() {
 
   function toggleInjury(id: string) {
     setPlayers(prev => prev.map(p => p.id === id ? { ...p, is_injured: !p.is_injured } : p));
+  }
+
+  async function savePlayer() {
+    if (!playerForm.name.trim() || !playerForm.price) return;
+    setSavingPlayer(true);
+    try {
+      const result = await addPlayerAction({ name: playerForm.name, position: playerForm.position, price: parseFloat(playerForm.price) });
+      if (result.data) {
+        setPlayers(prev => [...prev, { ...result.data, goals: result.data.goals ?? 0 }]);
+        setAddPlayerOpen(false);
+        setPlayerForm({ name: "", position: "MID", price: "" });
+      }
+    } catch { /* silently fail */ }
+    finally { setSavingPlayer(false); }
   }
 
   return (
@@ -414,10 +449,40 @@ export default function AdminPage() {
               <div className="glass-card">
                 <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-200">
                   <h2 className="font-bold text-sfc-black">Player Management</h2>
-                  <button className="btn-primary text-xs py-2 flex items-center gap-1.5 shrink-0">
+                  <button onClick={() => setAddPlayerOpen(true)} className="btn-primary text-xs py-2 flex items-center gap-1.5 shrink-0">
                     <Plus className="w-3 h-3" /> Add Player
                   </button>
                 </div>
+
+                <AnimatePresence>
+                  {addPlayerOpen && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                      className="border-b border-slate-200 bg-slate-50 overflow-hidden">
+                      <div className="p-5 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <div className="col-span-2 sm:col-span-1">
+                          <label className="text-xs font-medium text-muted-foreground mb-1 block">Name *</label>
+                          <input value={playerForm.name} onChange={e => setPlayerForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. Khama Billiat" className="input text-sm py-2" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground mb-1 block">Position *</label>
+                          <select value={playerForm.position} onChange={e => setPlayerForm(p => ({ ...p, position: e.target.value }))} className="select text-sm py-2">
+                            {["GK","DEF","MID","FWD"].map(pos => <option key={pos} value={pos}>{pos}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-muted-foreground mb-1 block">Price ($m) *</label>
+                          <input type="number" step="0.1" min="0.1" max="20" value={playerForm.price} onChange={e => setPlayerForm(p => ({ ...p, price: e.target.value }))} placeholder="5.5" className="input text-sm py-2" />
+                        </div>
+                        <div className="flex items-end gap-2">
+                          <button onClick={savePlayer} disabled={savingPlayer || !playerForm.name.trim() || !playerForm.price} className="btn-primary text-xs py-2 px-4 flex-1 disabled:opacity-60">
+                            {savingPlayer ? "Saving…" : "Save"}
+                          </button>
+                          <button onClick={() => setAddPlayerOpen(false)} className="btn-outline text-xs py-2 px-3">Cancel</button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Mobile: card list */}
                 <div className="sm:hidden divide-y divide-slate-100">
@@ -673,25 +738,28 @@ export default function AdminPage() {
 
                 <div className="glass-card p-7">
                   <h2 className="font-bold text-sfc-black mb-5 flex items-center gap-2">
-                    <Database className="w-4 h-4 text-blue-400" /> Recent Notifications
+                    <Database className="w-4 h-4 text-blue-400" /> Recent Broadcasts
                   </h2>
                   <div className="space-y-3">
-                    {[
-                      { title: "MD11 Complete!", body: "Match stats updated. Check your score.", type: "match", ago: "2h ago" },
-                      { title: "Transfer Window Open", body: "Make your transfers before deadline!", type: "transfer", ago: "1d ago" },
-                      { title: "Congratulations!", body: "You earned the 'Prediction King' badge", type: "reward", ago: "3d ago" },
-                    ].map((n, i) => (
-                      <div key={i} className="flex items-start gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
-                        <div className="text-lg">
-                          {n.type === "match" ? <Radio className="w-5 h-5 text-sfc-blue" /> : n.type === "transfer" ? <TrendingUp className="w-5 h-5 text-amber-400" /> : <Trophy className="w-5 h-5 text-yellow-400" />}
+                    {recentNotifs.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">No broadcasts sent yet</p>
+                    ) : recentNotifs.map((n) => {
+                      const icons: Record<string, React.ReactNode> = {
+                        match: <Radio className="w-5 h-5 text-sfc-blue" />,
+                        transfer: <TrendingUp className="w-5 h-5 text-amber-400" />,
+                        reward: <Trophy className="w-5 h-5 text-yellow-400" />,
+                      };
+                      return (
+                        <div key={n.id} className="flex items-start gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                          <div>{icons[n.type] ?? <Bell className="w-5 h-5 text-slate-400" />}</div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-sfc-black">{n.title}</p>
+                            <p className="text-xs text-muted-foreground truncate">{n.body}</p>
+                            <p className="text-[10px] text-muted-foreground mt-1">{new Date(n.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-sfc-black">{n.title}</p>
-                          <p className="text-xs text-muted-foreground">{n.body}</p>
-                          <p className="text-[10px] text-muted-foreground mt-1">{n.ago}</p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </div>

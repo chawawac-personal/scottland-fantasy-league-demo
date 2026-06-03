@@ -6,7 +6,7 @@ import { TopBar } from "@/components/layout/TopBar";
 import { MessageSquare, Send, BarChart2, Star, Flame, Trophy, Trash2 } from "lucide-react";
 import { cn, timeAgo } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { sendChatMessageAction, deleteChatMessageAction } from "@/lib/actions/chat";
+import { sendChatMessageAction, deleteChatMessageAction, reactToMessageAction } from "@/lib/actions/chat";
 
 interface ChatMsg {
   id: string;
@@ -46,7 +46,7 @@ export default function CommunityPage() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data } = await (supabase as any)
           .from("chat_messages")
-          .select("id, message, created_at, user_id, profiles(username)")
+          .select("id, message, created_at, user_id, reactions, profiles(username)")
           .order("created_at", { ascending: false })
           .limit(50);
 
@@ -61,7 +61,7 @@ export default function CommunityPage() {
             avatar: uname[0].toUpperCase(),
             message: m.message as string,
             time: m.created_at as string,
-            reactions: {} as Record<string, number>,
+            reactions: (m.reactions ?? {}) as Record<string, number>,
             isOwn: user ? m.user_id === user.id : false,
           };
         });
@@ -191,7 +191,7 @@ export default function CommunityPage() {
     } catch { /* optimistic removal already done */ }
   }
 
-  function addReaction(msgId: string, emoji: string) {
+  async function addReaction(msgId: string, emoji: string) {
     setMessages((prev) =>
       prev.map((m) => {
         if (m.id !== msgId) return m;
@@ -201,6 +201,9 @@ export default function CommunityPage() {
       })
     );
     setReactingTo(null);
+    try {
+      await reactToMessageAction(msgId, emoji);
+    } catch { /* optimistic update already applied */ }
   }
 
   async function vote(pollId: string, option: string) {

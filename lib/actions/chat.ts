@@ -21,6 +21,22 @@ export async function sendChatMessageAction(message: string) {
   return { success: true };
 }
 
+export async function reactToMessageAction(msgId: string, emoji: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase: any = await mkClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { data: msg } = await supabase.from("chat_messages").select("reactions").eq("id", msgId).single();
+  if (!msg) return { error: "Message not found" };
+
+  const reactions: Record<string, number> = msg.reactions ?? {};
+  reactions[emoji] = (reactions[emoji] ?? 0) + 1;
+
+  await supabase.from("chat_messages").update({ reactions }).eq("id", msgId);
+  return { success: true };
+}
+
 export async function deleteChatMessageAction(msgId: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase: any = await mkClient();

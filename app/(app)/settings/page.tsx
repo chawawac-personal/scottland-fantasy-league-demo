@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { TopBar } from "@/components/layout/TopBar";
-import { Bell, Shield, Palette, Save, Check } from "lucide-react";
+import { Bell, Shield, Palette, Save, Check, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 
@@ -63,6 +63,9 @@ export default function SettingsPage() {
   const [saved, setSaved]       = useState(false);
   const [saving, setSaving]     = useState(false);
   const [loading, setLoading]   = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [pwSent, setPwSent]     = useState(false);
 
   // Load settings from Supabase on mount
   useEffect(() => {
@@ -103,6 +106,51 @@ export default function SettingsPage() {
       ...prev,
       display: { ...prev.display, [key]: value },
     }));
+  }
+
+  async function changePassword() {
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email) return;
+      await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      setPwSent(true);
+      setTimeout(() => setPwSent(false), 4000);
+    } catch { /* silently fail */ }
+  }
+
+  async function downloadData() {
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const sb = supabase as any;
+      const [{ data: profile }, { data: team }, { data: notifs }] = await Promise.all([
+        sb.from("profiles").select("*").eq("id", user.id).single(),
+        sb.from("fantasy_teams").select("*, fantasy_team_players(*)").eq("user_id", user.id).single(),
+        sb.from("notifications").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+      ]);
+      const blob = new Blob([JSON.stringify({ profile, team, notifications: notifs }, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `sfl-data-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch { /* silently fail */ }
+  }
+
+  async function deleteAccount() {
+    if (!deleteConfirm) { setDeleteConfirm(true); return; }
+    setDeleting(true);
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      window.location.href = "/";
+    } catch { setDeleting(false); }
   }
 
   async function saveSettings() {
@@ -193,11 +241,30 @@ export default function SettingsPage() {
             <Shield className="w-4 h-4 text-blue-400" /> Account Security
           </h2>
           <div className="space-y-3">
-            <button className="btn-outline w-full text-sm py-2.5">Change Password</button>
-            <button className="btn-outline w-full text-sm py-2.5 text-muted-foreground">Download My Data</button>
-            <button className="w-full text-sm py-2.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors">
-              Delete Account
+            <button onClick={changePassword} className="btn-outline w-full text-sm py-2.5">
+              {pwSent ? "✓ Reset link sent to your email" : "Change Password"}
             </button>
+            <button onClick={downloadData} className="btn-outline w-full text-sm py-2.5 text-muted-foreground">
+              Download My Data
+            </button>
+            {!deleteConfirm ? (
+              <button onClick={deleteAccount} className="w-full text-sm py-2.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors">
+                Delete Account
+              </button>
+            ) : (
+              <div className="p-4 rounded-xl border border-red-500/30 bg-red-500/5 space-y-3">
+                <p className="text-sm text-red-400 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
+                  This will sign you out. Your data stays in the DB — contact an admin to fully remove it.
+                </p>
+                <div className="flex gap-2">
+                  <button onClick={() => setDeleteConfirm(false)} className="btn-outline text-sm py-2 px-4 flex-1">Cancel</button>
+                  <button onClick={deleteAccount} disabled={deleting} className="flex-1 text-sm py-2 px-4 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors disabled:opacity-60">
+                    {deleting ? "Signing out…" : "Yes, sign me out"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
