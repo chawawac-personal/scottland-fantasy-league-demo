@@ -23,7 +23,7 @@ All 15 accounts use the same password unless noted.
 | # | Username | Email | Password | Notes |
 |---|---|---|---|---|
 | 1 | ZimWarrior | — | — | Original seed user, rank #1 (702 pts) |
-| 2 | SFCMaster99 | — | — | Original seed user, rank #5 (649 pts) |
+| 2 | SFCMaster99 | — | — | Manager role · Harare Central Branch · rank #5 (649 pts) |
 | 3 | TendaiFC | — | — | Original seed user |
 | 4 | HarareGuru | — | — | Original seed user |
 | 5 | BulawayoBoss | — | — | Original seed user |
