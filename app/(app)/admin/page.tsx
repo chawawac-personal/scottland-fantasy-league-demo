@@ -892,10 +892,17 @@ export default function AdminPage() {
                           </button>
                         )}
                         {m.status === "live" && (
-                          <button onClick={() => openScoring(m)}
-                            className="text-[10px] font-bold px-2 sm:px-3 py-1.5 rounded-lg bg-sfc-blue/10 border border-sfc-blue/30 text-sfc-blue hover:bg-sfc-blue/20 transition-colors flex items-center gap-1 whitespace-nowrap">
-                            <Zap className="w-3 h-3" /> Stats
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <button onClick={() => openScoring(m)}
+                              className="text-[10px] font-bold px-2 sm:px-3 py-1.5 rounded-lg bg-sfc-blue/10 border border-sfc-blue/30 text-sfc-blue hover:bg-sfc-blue/20 transition-colors flex items-center gap-1 whitespace-nowrap">
+                              <Zap className="w-3 h-3" /> Stats
+                            </button>
+                            <button onClick={() => updateMatchStatus(m.id, "scheduled")} disabled={statusUpdating === m.id}
+                              className="text-[10px] font-bold px-2 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-muted-foreground hover:border-red-400/40 hover:text-red-400 transition-colors whitespace-nowrap disabled:opacity-50"
+                              title="Cancel — revert to Scheduled">
+                              ✕
+                            </button>
+                          </div>
                         )}
                         {m.status === "finished" && (
                           <button onClick={() => openScoring(m)}
