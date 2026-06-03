@@ -63,8 +63,6 @@ export default function SettingsPage() {
   const [saved, setSaved]       = useState(false);
   const [saving, setSaving]     = useState(false);
   const [loading, setLoading]   = useState(true);
-  const [deleteConfirm, setDeleteConfirm] = useState(false);
-  const [deleting, setDeleting]           = useState(false);
   const [pwOpen, setPwOpen]               = useState(false);
   const [pwForm, setPwForm]               = useState({ current: "", next: "", confirm: "" });
   const [pwError, setPwError]             = useState("");
@@ -143,37 +141,6 @@ export default function SettingsPage() {
     finally { setPwSaving(false); }
   }
 
-  async function downloadData() {
-    try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const sb = supabase as any;
-      const [{ data: profile }, { data: team }, { data: notifs }] = await Promise.all([
-        sb.from("profiles").select("*").eq("id", user.id).single(),
-        sb.from("fantasy_teams").select("*, fantasy_team_players(*)").eq("user_id", user.id).single(),
-        sb.from("notifications").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-      ]);
-      const blob = new Blob([JSON.stringify({ profile, team, notifications: notifs }, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `sfl-data-${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch { /* silently fail */ }
-  }
-
-  async function deleteAccount() {
-    if (!deleteConfirm) { setDeleteConfirm(true); return; }
-    setDeleting(true);
-    try {
-      const supabase = createClient();
-      await supabase.auth.signOut();
-      window.location.href = "/";
-    } catch { setDeleting(false); }
-  }
 
   async function saveSettings() {
     setSaving(true);
@@ -302,27 +269,6 @@ export default function SettingsPage() {
                   <button onClick={changePassword} disabled={pwSaving}
                     className="btn-primary text-sm py-2 px-4 flex-1 disabled:opacity-60">
                     {pwSaving ? "Updating…" : "Update Password"}
-                  </button>
-                </div>
-              </div>
-            )}
-            <button onClick={downloadData} className="btn-outline w-full text-sm py-2.5 text-muted-foreground">
-              Download My Data
-            </button>
-            {!deleteConfirm ? (
-              <button onClick={deleteAccount} className="w-full text-sm py-2.5 rounded-xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-colors">
-                Delete Account
-              </button>
-            ) : (
-              <div className="p-4 rounded-xl border border-red-500/30 bg-red-500/5 space-y-3">
-                <p className="text-sm text-red-400 flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
-                  This will sign you out. Your data stays in the DB — contact an admin to fully remove it.
-                </p>
-                <div className="flex gap-2">
-                  <button onClick={() => setDeleteConfirm(false)} className="btn-outline text-sm py-2 px-4 flex-1">Cancel</button>
-                  <button onClick={deleteAccount} disabled={deleting} className="flex-1 text-sm py-2 px-4 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors disabled:opacity-60">
-                    {deleting ? "Signing out…" : "Yes, sign me out"}
                   </button>
                 </div>
               </div>
