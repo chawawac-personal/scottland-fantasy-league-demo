@@ -40,6 +40,23 @@ async function requireAdmin() {
   return { error: null, supabase };
 }
 
+async function requireAdminOrManager() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase: any = await mkClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" as const, supabase: null };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single() as { data: { role: string } | null };
+
+  if (!["admin", "manager"].includes(profile?.role ?? "")) return { error: "Not authorized" as const, supabase: null };
+
+  return { error: null, supabase };
+}
+
 export async function saveFlagsAction(flags: Record<string, boolean>) {
   const { error, supabase } = await requireAdmin();
   if (error || !supabase) return { error: error ?? "Unknown error" };
@@ -220,7 +237,7 @@ export async function logMatchEventAction(event: {
   home_team: string;
   away_team: string;
 }) {
-  const { error, supabase } = await requireAdmin();
+  const { error, supabase } = await requireAdminOrManager();
   if (error || !supabase) return { error: error ?? "Unknown error" };
 
   const { data: ev, error: evErr } = await supabase.from("match_events").insert({
@@ -257,7 +274,7 @@ async function recalculateScore(supabase: any, matchId: string, homeTeam: string
 }
 
 export async function deleteMatchEventAction(eventId: string, matchId: string) {
-  const { error, supabase } = await requireAdmin();
+  const { error, supabase } = await requireAdminOrManager();
   if (error || !supabase) return { error: error ?? "Unknown error" };
 
   await supabase.from("match_events").delete().eq("id", eventId);
@@ -269,7 +286,7 @@ export async function deleteMatchEventAction(eventId: string, matchId: string) {
 }
 
 export async function reopenMatchAction(matchId: string, matchday: number, season: string) {
-  const { error, supabase } = await requireAdmin();
+  const { error, supabase } = await requireAdminOrManager();
   if (error || !supabase) return { error: error ?? "Unknown error" };
 
   // Reverse points before deleting stats — weekly_points is the match's contribution
