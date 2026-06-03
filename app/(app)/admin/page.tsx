@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { saveFlagsAction, updateMatchStatusAction, saveFixtureAction, saveMatchStatsAction, savePrizesAction, updateUserRoleAction, broadcastNotificationAction, addPlayerAction } from "@/lib/actions/admin";
+import { saveFlagsAction, updateMatchStatusAction, saveFixtureAction, saveMatchStatsAction, savePrizesAction, updateUserRoleAction, broadcastNotificationAction, addPlayerAction, adminResetPasswordAction } from "@/lib/actions/admin";
 import { motion, AnimatePresence } from "framer-motion";
 import { TopBar } from "@/components/layout/TopBar";
 import {
   Users, Trophy, Radio, Bell, BarChart2,
   Plus, Edit, Trash2, CheckCircle, XCircle, Send,
-  TrendingUp, AlertTriangle, Database, Eye, ToggleLeft,
-  Gift, Globe, Save, Zap, X, Clock,
+  TrendingUp, AlertTriangle, Database, Eye, EyeOff, ToggleLeft,
+  Gift, Globe, Save, Zap, X, Clock, KeyRound,
 } from "lucide-react";
 
 interface AdminMatch {
@@ -174,6 +174,10 @@ export default function AdminPage() {
   const [addPlayerOpen, setAddPlayerOpen] = useState(false);
   const [playerForm, setPlayerForm] = useState({ name: "", position: "MID", price: "" });
   const [savingPlayer, setSavingPlayer] = useState(false);
+  const [resetPwUser, setResetPwUser] = useState<{ id: string; username: string } | null>(null);
+  const [resetPwForm, setResetPwForm] = useState({ next: "", confirm: "" });
+  const [resetPwError, setResetPwError] = useState("");
+  const [resetPwSaving, setResetPwSaving] = useState(false);
 
   // Load feature flags from Supabase on mount
   useEffect(() => {
@@ -306,6 +310,21 @@ export default function AdminPage() {
 
   function toggleInjury(id: string) {
     setPlayers(prev => prev.map(p => p.id === id ? { ...p, is_injured: !p.is_injured } : p));
+  }
+
+  async function resetPassword() {
+    setResetPwError("");
+    if (!resetPwUser) return;
+    if (resetPwForm.next.length < 8) { setResetPwError("Password must be at least 8 characters"); return; }
+    if (resetPwForm.next !== resetPwForm.confirm) { setResetPwError("Passwords do not match"); return; }
+    setResetPwSaving(true);
+    try {
+      const result = await adminResetPasswordAction(resetPwUser.id, resetPwForm.next);
+      if (result.error) { setResetPwError(result.error); return; }
+      setResetPwUser(null);
+      setResetPwForm({ next: "", confirm: "" });
+    } catch { setResetPwError("Something went wrong"); }
+    finally { setResetPwSaving(false); }
   }
 
   async function savePlayer() {
@@ -602,18 +621,25 @@ export default function AdminPage() {
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">{user.points.toLocaleString()} pts · {user.joined}</p>
                       </div>
-                      <select
-                        defaultValue={user.level === "Admin" ? "admin" : user.level === "Manager" ? "manager" : user.level === "Mod" ? "moderator" : "user"}
-                        onChange={async (e) => {
-                          await updateUserRoleAction(user.userId, e.target.value);
-                          setUsers(prev => prev.map(u => u.id === user.id ? { ...u, level: e.target.value === "admin" ? "Admin" : e.target.value === "manager" ? "Manager" : e.target.value === "moderator" ? "Mod" : "User" } : u));
-                        }}
-                        className="select-sm shrink-0"
-                      >
-                        <option value="user">User</option>
-                        <option value="manager">Manager</option>
-                        <option value="admin">Admin</option>
-                      </select>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <select
+                          defaultValue={user.level === "Admin" ? "admin" : user.level === "Manager" ? "manager" : user.level === "Mod" ? "moderator" : "user"}
+                          onChange={async (e) => {
+                            await updateUserRoleAction(user.userId, e.target.value);
+                            setUsers(prev => prev.map(u => u.id === user.id ? { ...u, level: e.target.value === "admin" ? "Admin" : e.target.value === "manager" ? "Manager" : e.target.value === "moderator" ? "Mod" : "User" } : u));
+                          }}
+                          className="select-sm"
+                        >
+                          <option value="user">User</option>
+                          <option value="manager">Manager</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                        <button onClick={() => { setResetPwUser({ id: user.userId, username: user.username }); setResetPwForm({ next: "", confirm: "" }); setResetPwError(""); }}
+                          className="p-1.5 rounded-lg border border-slate-200 hover:border-amber-400/50 text-muted-foreground hover:text-amber-500 transition-colors"
+                          title="Reset password">
+                          <KeyRound className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -662,18 +688,25 @@ export default function AdminPage() {
                           </td>
                           <td className="px-4 py-3.5">
                             <div className="flex items-center justify-center gap-2">
-                              <select
-                                defaultValue={user.level === "Admin" ? "admin" : user.level === "Manager" ? "manager" : user.level === "Mod" ? "moderator" : "user"}
-                                onChange={async (e) => {
-                                  await updateUserRoleAction(user.userId, e.target.value);
-                                  setUsers(prev => prev.map(u => u.id === user.id ? { ...u, level: e.target.value === "admin" ? "Admin" : e.target.value === "manager" ? "Manager" : e.target.value === "moderator" ? "Mod" : "User" } : u));
-                                }}
-                                className="select-sm"
-                              >
-                                <option value="user">User</option>
-                                <option value="manager">Manager</option>
-                                <option value="admin">Admin</option>
-                              </select>
+                              <div className="flex items-center gap-2">
+                                <select
+                                  defaultValue={user.level === "Admin" ? "admin" : user.level === "Manager" ? "manager" : user.level === "Mod" ? "moderator" : "user"}
+                                  onChange={async (e) => {
+                                    await updateUserRoleAction(user.userId, e.target.value);
+                                    setUsers(prev => prev.map(u => u.id === user.id ? { ...u, level: e.target.value === "admin" ? "Admin" : e.target.value === "manager" ? "Manager" : e.target.value === "moderator" ? "Mod" : "User" } : u));
+                                  }}
+                                  className="select-sm"
+                                >
+                                  <option value="user">User</option>
+                                  <option value="manager">Manager</option>
+                                  <option value="admin">Admin</option>
+                                </select>
+                                <button onClick={() => { setResetPwUser({ id: user.userId, username: user.username }); setResetPwForm({ next: "", confirm: "" }); setResetPwError(""); }}
+                                  className="p-1.5 rounded-lg border border-slate-200 hover:border-amber-400/50 text-muted-foreground hover:text-amber-500 transition-colors"
+                                  title="Reset password">
+                                  <KeyRound className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </div>
                           </td>
                         </tr>
@@ -1007,6 +1040,49 @@ export default function AdminPage() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* ── Admin Reset Password Modal ── */}
+      <AnimatePresence>
+        {resetPwUser && (
+          <>
+            <motion.div key="rp-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => !resetPwSaving && setResetPwUser(null)}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
+            <motion.div key="rp-modal" initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-sm p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="font-bold text-sfc-black flex items-center gap-2"><KeyRound className="w-4 h-4 text-amber-500" /> Reset Password</h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">Setting new password for <span className="font-semibold text-sfc-black">@{resetPwUser.username}</span></p>
+                  </div>
+                  <button onClick={() => setResetPwUser(null)} disabled={resetPwSaving} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400"><X className="w-4 h-4" /></button>
+                </div>
+                {[
+                  { key: "next",    label: "New password",     placeholder: "At least 8 characters" },
+                  { key: "confirm", label: "Confirm password", placeholder: "Repeat new password" },
+                ].map(({ key, label, placeholder }) => (
+                  <div key={key}>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">{label}</label>
+                    <div className="relative">
+                      <input type="password" value={resetPwForm[key as keyof typeof resetPwForm]}
+                        onChange={e => setResetPwForm(p => ({ ...p, [key]: e.target.value }))}
+                        placeholder={placeholder} className="input text-sm py-2" />
+                    </div>
+                  </div>
+                ))}
+                {resetPwError && <p className="text-xs text-red-400 flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5" />{resetPwError}</p>}
+                <div className="flex gap-2 pt-1">
+                  <button onClick={() => setResetPwUser(null)} disabled={resetPwSaving} className="btn-outline text-sm py-2.5 flex-1">Cancel</button>
+                  <button onClick={resetPassword} disabled={resetPwSaving} className="btn-primary text-sm py-2.5 flex-1 disabled:opacity-60">
+                    {resetPwSaving ? "Saving…" : "Set Password"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ── Scoring Modal ── */}
       <AnimatePresence>

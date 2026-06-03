@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { TopBar } from "@/components/layout/TopBar";
-import { Bell, Shield, Palette, Save, Check, AlertTriangle } from "lucide-react";
+import { Bell, Shield, Palette, Save, Check, AlertTriangle, KeyRound, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 
@@ -64,8 +64,13 @@ export default function SettingsPage() {
   const [saving, setSaving]     = useState(false);
   const [loading, setLoading]   = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [pwSent, setPwSent]     = useState(false);
+  const [deleting, setDeleting]           = useState(false);
+  const [pwOpen, setPwOpen]               = useState(false);
+  const [pwForm, setPwForm]               = useState({ current: "", next: "", confirm: "" });
+  const [pwError, setPwError]             = useState("");
+  const [pwSaving, setPwSaving]           = useState(false);
+  const [pwDone, setPwDone]               = useState(false);
+  const [showPw, setShowPw]               = useState({ current: false, next: false, confirm: false });
 
   // Load settings from Supabase on mount
   useEffect(() => {
@@ -109,16 +114,33 @@ export default function SettingsPage() {
   }
 
   async function changePassword() {
+    setPwError("");
+    if (!pwForm.current) { setPwError("Enter your current password"); return; }
+    if (pwForm.next.length < 8) { setPwError("New password must be at least 8 characters"); return; }
+    if (pwForm.next !== pwForm.confirm) { setPwError("New passwords do not match"); return; }
+    setPwSaving(true);
     try {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) return;
-      await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+
+      // Verify current password
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: pwForm.current,
       });
-      setPwSent(true);
-      setTimeout(() => setPwSent(false), 4000);
-    } catch { /* silently fail */ }
+      if (signInErr) { setPwError("Current password is incorrect"); return; }
+
+      // Set new password
+      const { error: updateErr } = await supabase.auth.updateUser({ password: pwForm.next });
+      if (updateErr) { setPwError(updateErr.message); return; }
+
+      setPwDone(true);
+      setPwOpen(false);
+      setPwForm({ current: "", next: "", confirm: "" });
+      setTimeout(() => setPwDone(false), 3000);
+    } catch { setPwError("Something went wrong — please try again"); }
+    finally { setPwSaving(false); }
   }
 
   async function downloadData() {
@@ -241,9 +263,49 @@ export default function SettingsPage() {
             <Shield className="w-4 h-4 text-blue-400" /> Account Security
           </h2>
           <div className="space-y-3">
-            <button onClick={changePassword} className="btn-outline w-full text-sm py-2.5">
-              {pwSent ? "✓ Reset link sent to your email" : "Change Password"}
-            </button>
+            {/* Change password — inline form */}
+            {!pwOpen ? (
+              <button onClick={() => { setPwOpen(true); setPwError(""); }}
+                className="btn-outline w-full text-sm py-2.5 flex items-center justify-center gap-2">
+                <KeyRound className="w-4 h-4" />
+                {pwDone ? "✓ Password updated" : "Change Password"}
+              </button>
+            ) : (
+              <div className="border border-slate-200 rounded-xl p-4 space-y-3 bg-slate-50/50">
+                {[
+                  { key: "current", label: "Current password", placeholder: "Enter current password" },
+                  { key: "next",    label: "New password",      placeholder: "At least 8 characters" },
+                  { key: "confirm", label: "Confirm new password", placeholder: "Repeat new password" },
+                ].map(({ key, label, placeholder }) => (
+                  <div key={key}>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">{label}</label>
+                    <div className="relative">
+                      <input
+                        type={showPw[key as keyof typeof showPw] ? "text" : "password"}
+                        value={pwForm[key as keyof typeof pwForm]}
+                        onChange={e => setPwForm(p => ({ ...p, [key]: e.target.value }))}
+                        placeholder={placeholder}
+                        className="input text-sm py-2 pr-10"
+                      />
+                      <button type="button"
+                        onClick={() => setShowPw(p => ({ ...p, [key]: !p[key as keyof typeof p] }))}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                        {showPw[key as keyof typeof showPw] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {pwError && <p className="text-xs text-red-400 flex items-center gap-1.5"><AlertTriangle className="w-3.5 h-3.5" />{pwError}</p>}
+                <div className="flex gap-2 pt-1">
+                  <button onClick={() => { setPwOpen(false); setPwForm({ current: "", next: "", confirm: "" }); setPwError(""); }}
+                    className="btn-outline text-sm py-2 px-4 flex-1">Cancel</button>
+                  <button onClick={changePassword} disabled={pwSaving}
+                    className="btn-primary text-sm py-2 px-4 flex-1 disabled:opacity-60">
+                    {pwSaving ? "Updating…" : "Update Password"}
+                  </button>
+                </div>
+              </div>
+            )}
             <button onClick={downloadData} className="btn-outline w-full text-sm py-2.5 text-muted-foreground">
               Download My Data
             </button>

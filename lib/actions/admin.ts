@@ -2,7 +2,16 @@
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { createClient: mkClient } = require("@/lib/supabase/server");
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+
+function serviceRole() {
+  return createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+}
 
 interface PlayerStat {
   player_id: string;
@@ -177,6 +186,18 @@ export async function broadcastNotificationAction(title: string, body: string, t
 
   revalidatePath("/admin");
   return { success: true, count: profiles.length };
+}
+
+export async function adminResetPasswordAction(targetUserId: string, newPassword: string) {
+  if (!newPassword || newPassword.length < 8) return { error: "Password must be at least 8 characters" };
+
+  const { error } = await requireAdmin();
+  if (error) return { error };
+
+  const admin = serviceRole();
+  const { error: updateError } = await admin.auth.admin.updateUserById(targetUserId, { password: newPassword });
+  if (updateError) return { error: updateError.message };
+  return { success: true };
 }
 
 export async function addPlayerAction(player: { name: string; position: string; price: number }) {
