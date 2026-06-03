@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { saveFlagsAction, updateMatchStatusAction, cancelMatchLiveAction, saveFixtureAction, saveMatchStatsAction, savePrizesAction, updateUserRoleAction, broadcastNotificationAction, addPlayerAction, adminResetPasswordAction } from "@/lib/actions/admin";
+import { deleteLeagueAction } from "@/lib/actions/leagues";
 import { motion, AnimatePresence } from "framer-motion";
 import { TopBar } from "@/components/layout/TopBar";
 import {
@@ -970,7 +971,17 @@ export default function AdminPage() {
                       ))}
                     </div>
 
-                    <div className="flex justify-end mt-4">
+                    <div className="flex items-center justify-between mt-4">
+                      <button
+                        onClick={async () => {
+                          if (!confirm(`Delete "${league.name}" and remove all ${league.member_count} members?`)) return;
+                          await deleteLeagueAction(league.id);
+                          setPublicLeagues(prev => prev.filter(l => l.id !== league.id));
+                        }}
+                        className="text-xs text-red-400 hover:text-red-500 flex items-center gap-1 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete League
+                      </button>
                       <button
                         onClick={() => savePrizes(league.id)}
                         disabled={savingPrize === league.id}

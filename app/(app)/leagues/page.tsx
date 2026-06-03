@@ -6,11 +6,11 @@ import { TopBar } from "@/components/layout/TopBar";
 import {
   Trophy, Plus, Link2, Users, Crown, Globe, Lock,
   TrendingUp, TrendingDown, Minus, Copy, Check, Search,
-  Gift, AlertCircle, CheckCircle2, X,
+  Gift, AlertCircle, CheckCircle2, X, Trash2, AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { createLeague, joinLeague } from "@/lib/actions/leagues";
+import { createLeague, joinLeague, deleteLeagueAction } from "@/lib/actions/leagues";
 
 
 interface League {
@@ -47,6 +47,8 @@ export default function LeaguesPage() {
   const [viewingLeague, setViewingLeague] = useState<League | null>(null);
   const [leagueMembers, setLeagueMembers] = useState<{ rank: number; username: string; points: number; weekly: number }[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     async function loadAll() {
@@ -390,7 +392,7 @@ export default function LeaguesPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {league.inviteCode && (
                         <button
                           onClick={() => copyCode(league.inviteCode!)}
@@ -401,7 +403,49 @@ export default function LeaguesPage() {
                         </button>
                       )}
                       <button onClick={() => openLeague(league)} className="btn-outline text-xs py-1.5 px-3">View League</button>
+                      {league.isOwner && confirmDeleteId !== league.id && (
+                        <button
+                          onClick={() => setConfirmDeleteId(league.id)}
+                          className="p-1.5 rounded-lg border border-slate-200 text-muted-foreground hover:border-red-400/40 hover:text-red-400 transition-colors"
+                          title="Delete league"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
+
+                    {/* Inline delete confirmation */}
+                    {league.isOwner && confirmDeleteId === league.id && (
+                      <div className="mt-3 p-3 rounded-xl border border-red-200 bg-red-50 space-y-2">
+                        <p className="text-xs text-red-600 flex items-center gap-1.5">
+                          <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                          Delete <strong>{league.name}</strong>? This removes all {league.members} members and cannot be undone.
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="flex-1 text-xs py-1.5 rounded-lg border border-slate-200 text-muted-foreground hover:bg-slate-50 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            disabled={deleting}
+                            onClick={async () => {
+                              setDeleting(true);
+                              const result = await deleteLeagueAction(league.id);
+                              if (!result.error) {
+                                setLocalLeagues(prev => prev.filter(l => l.id !== league.id));
+                                setConfirmDeleteId(null);
+                              }
+                              setDeleting(false);
+                            }}
+                            className="flex-1 text-xs py-1.5 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors disabled:opacity-60"
+                          >
+                            {deleting ? "Deleting…" : "Yes, Delete"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-3 gap-3 mb-3">

@@ -66,6 +66,30 @@ export async function joinLeague(inviteCode: string) {
   return { success: true, league };
 }
 
+export async function deleteLeagueAction(leagueId: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase: any = await mkClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  // Verify caller is the owner OR an admin
+  const { data: league } = await supabase.from("leagues").select("owner_id").eq("id", leagueId).single();
+  if (!league) return { error: "League not found" };
+
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  const isAdmin = profile?.role === "admin";
+  const isOwner = league.owner_id === user.id;
+  if (!isOwner && !isAdmin) return { error: "Not authorised" };
+
+  // Remove all members first, then the league (FK safety)
+  await supabase.from("league_members").delete().eq("league_id", leagueId);
+  const { error } = await supabase.from("leagues").delete().eq("id", leagueId);
+
+  if (error) return { error: error.message };
+  revalidatePath("/leagues");
+  return { success: true };
+}
+
 export async function getLeagueStandings(leagueId: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase: any = await mkClient();
