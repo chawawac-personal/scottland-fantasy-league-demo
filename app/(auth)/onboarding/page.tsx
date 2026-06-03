@@ -2,7 +2,8 @@
 export const dynamic = "force-dynamic";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, ChevronRight, User, MapPin, Heart, FileText } from "lucide-react";
+import { ChevronRight, User, MapPin, Heart, FileText } from "lucide-react";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
@@ -39,8 +40,8 @@ export default function OnboardingPage() {
   return (
     <motion.div initial={{ opacity:0,y:20 }} animate={{ opacity:1,y:0 }} className="glass-card p-8 sm:p-10">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-sfc-blue to-sfc-blue-dark shadow-blue-glow mb-4">
-          <Star className="w-7 h-7 text-white" />
+        <div className="mb-4">
+          <Image src="/logo.png" alt="Scottland FC" width={80} height={80} className="object-contain mx-auto" />
         </div>
         <h1 className="font-display text-2xl text-sfc-black tracking-wider">SET UP YOUR PROFILE</h1>
         <p className="text-xs text-muted-foreground mt-1">Step {step+1} of {steps.length}</p>

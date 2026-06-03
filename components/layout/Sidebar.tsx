@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, Trophy, ShoppingCart,
   Radio, MessageSquare, User, Settings, Shield,
-  Star, ChevronRight, LogOut, X, BarChart2,
+  ChevronRight, LogOut, X, BarChart2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/lib/sidebar-store";
@@ -61,10 +62,7 @@ function SidebarContent({ username, level, xp, avatarUrl, isAdmin, isManager, on
       {/* Logo */}
       <div className="p-6 border-b border-slate-200 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sfc-blue to-sfc-blue-dark
-                          flex items-center justify-center shadow-blue-glow shrink-0">
-            <Star className="w-5 h-5 text-white" />
-          </div>
+          <Image src="/logo.png" alt="Scottland FC" width={44} height={44} className="object-contain shrink-0" priority />
           <div>
             <p className="font-display text-lg text-sfc-black tracking-wider leading-none">SCOTTLAND</p>
             <p className="text-[10px] text-sfc-blue font-semibold tracking-widest mt-0.5">FANTASY LEAGUE</p>
