@@ -2,8 +2,17 @@
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { createClient: mkClient } = require("@/lib/supabase/server");
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { generateInviteCode } from "@/lib/utils";
+
+function serviceRole() {
+  return createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  );
+}
 
 export async function createLeague(
   name: string,
@@ -81,9 +90,11 @@ export async function deleteLeagueAction(leagueId: string) {
   const isOwner = league.owner_id === user.id;
   if (!isOwner && !isAdmin) return { error: "Not authorised" };
 
-  // Remove all members first, then the league (FK safety)
-  await supabase.from("league_members").delete().eq("league_id", leagueId);
-  const { error } = await supabase.from("leagues").delete().eq("id", leagueId);
+  // Use service role to remove all members (owner can only delete their own
+  // membership row via RLS; service role bypasses this for the cleanup)
+  const admin = serviceRole();
+  await admin.from("league_members").delete().eq("league_id", leagueId);
+  const { error } = await admin.from("leagues").delete().eq("id", leagueId);
 
   if (error) return { error: error.message };
   revalidatePath("/leagues");
