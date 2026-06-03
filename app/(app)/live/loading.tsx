@@ -3,7 +3,7 @@
 export default function LiveLoading() {
   return (
     <div className="min-h-screen">
-      <div className="h-16 flex items-center justify-between px-6 border-b border-slate-200 bg-white">
+      <div className="h-16 flex items-center justify-between px-4 sm:px-6 border-b border-slate-200 bg-white">
         <div className="space-y-1.5">
           <Skeleton className="h-5 w-44" />
           <Skeleton className="h-3 w-32" />
@@ -11,13 +11,13 @@ export default function LiveLoading() {
         <Skeleton className="h-7 w-16 rounded-full" />
       </div>
 
-      <div className="p-6 space-y-5">
+      <div className="p-4 sm:p-6 space-y-5">
         {/* Score banner */}
         <div className="glass-card p-6">
           <div className="flex items-center justify-between">
             <div className="flex-1 text-center space-y-2">
               <Skeleton className="h-3 w-12 mx-auto" />
-              <Skeleton className="h-7 w-36 mx-auto" />
+              <Skeleton className="h-7 w-24 sm:w-36 mx-auto" />
             </div>
             <div className="text-center px-4 sm:px-8 space-y-2">
               <div className="flex items-center gap-4 justify-center">
@@ -29,7 +29,7 @@ export default function LiveLoading() {
             </div>
             <div className="flex-1 text-center space-y-2">
               <Skeleton className="h-3 w-12 mx-auto" />
-              <Skeleton className="h-7 w-36 mx-auto" />
+              <Skeleton className="h-7 w-24 sm:w-36 mx-auto" />
             </div>
           </div>
         </div>

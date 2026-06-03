@@ -3,19 +3,19 @@
 export default function CommunityLoading() {
   return (
     <div className="min-h-screen">
-      <div className="h-16 flex items-center justify-between px-6 border-b border-slate-200 bg-white">
+      <div className="h-16 flex items-center justify-between px-4 sm:px-6 border-b border-slate-200 bg-white">
         <div className="space-y-1.5">
           <Skeleton className="h-5 w-32" />
           <Skeleton className="h-3 w-36" />
         </div>
       </div>
 
-      <div className="p-6 space-y-5">
+      <div className="p-4 sm:p-6 space-y-5">
         <SkeletonNavTabs count={3} />
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
           {/* Chat area */}
-          <div className="col-span-1 lg:col-span-3 glass-card overflow-hidden flex flex-col" style={{ height: "600px" }}>
+          <div className="col-span-1 lg:col-span-3 glass-card overflow-hidden flex flex-col h-[400px] sm:h-[600px]">
             <div className="p-4 border-b border-slate-200 flex items-center gap-2">
               <Skeleton className="w-2 h-2 rounded-full" />
               <Skeleton className="h-4 w-40" />
@@ -32,7 +32,7 @@ export default function CommunityLoading() {
             {/* Input */}
             <div className="p-4 border-t border-slate-200">
               <div className="flex items-center gap-3">
-                <div className="flex gap-1.5">
+                <div className="hidden sm:flex gap-1.5">
                   {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="w-7 h-7 rounded-lg" />)}
                 </div>
                 <Skeleton className="flex-1 h-10 rounded-xl" />
