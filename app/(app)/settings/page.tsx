@@ -85,7 +85,7 @@ export default function SettingsPage() {
           .from("user_settings")
           .select("notifications, display")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
         if (data) {
           setSettings({
