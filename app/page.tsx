@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
-import { Trophy, Zap, Users, ChevronRight, Star, Shield } from "lucide-react";
+import { Trophy, Zap, Users, ChevronRight, Shield } from "lucide-react";
 
 const features = [
   { icon: Trophy, title: "Fantasy Leagues", desc: "Build your perfect squad and compete with fans across Zimbabwe" },
   { icon: Zap, title: "Live Matchday", desc: "Real-time points, live match events, and dynamic leaderboards" },
   { icon: Users, title: "Fan Community", desc: "Vote in fan polls and have your say" },
-  { icon: Star, title: "Gamification", desc: "Earn XP, unlock badges, and climb the levels from Rookie to Legend" },
+  { icon: Trophy, title: "Gamification", desc: "Earn XP, unlock badges, and climb the levels from Rookie to Legend" },
 ];
 
 export default function HomePage() {
@@ -23,9 +24,7 @@ export default function HomePage() {
       {/* Nav */}
       <nav className="relative z-10 flex items-center justify-between px-4 sm:px-8 lg:px-10 py-6 border-b border-slate-200">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sfc-blue to-sfc-blue-dark flex items-center justify-center shadow-blue-glow">
-            <Star className="w-5 h-5 text-sfc-black" />
-          </div>
+          <Image src="/logo.png" alt="Scottland FC" width={44} height={44} className="object-contain" priority />
           <div>
             <p className="font-display text-xl text-sfc-black tracking-wider">SCOTTLAND</p>
             <p className="text-[10px] text-sfc-blue font-medium tracking-widest">FANTASY LEAGUE</p>
