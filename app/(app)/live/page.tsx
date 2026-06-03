@@ -273,15 +273,68 @@ export default function LivePage() {
               <Zap className="w-4 h-4 text-amber-400" />
               <h2 className="font-bold text-sfc-black text-sm">Live Points</h2>
             </div>
-            <div className="p-4">
-              <div className="text-center py-4">
+            <div className="p-4 space-y-4">
+              {/* Big total */}
+              <div className="text-center py-2">
                 <p className="text-xs text-muted-foreground mb-1">From this match</p>
                 <p className="text-5xl font-display text-sfc-blue">
                   <AnimatedCounter value={calcLivePoints(events, myTeam)} />
                 </p>
-                <p className="text-xs text-muted-foreground mt-2">Goals &amp; cards only</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">Minutes + clean sheet added at full time</p>
               </div>
+
+              {/* Per-player breakdown */}
+              {(() => {
+                const rows = myTeam.map(tp => {
+                  const playerEvents = events.filter(e =>
+                    e.player_id === tp.player_id &&
+                    ["goal","assist","yellow_card","red_card"].includes(e.event_type)
+                  );
+                  if (playerEvents.length === 0) return null;
+
+                  let rawPts = 0;
+                  const icons: string[] = [];
+                  for (const ev of playerEvents) {
+                    if (ev.event_type === "goal")        { rawPts += GOAL_PTS[tp.position] ?? 4; icons.push("⚽"); }
+                    else if (ev.event_type === "assist") { rawPts += 3; icons.push("🎯"); }
+                    else if (ev.event_type === "yellow_card") { rawPts -= 1; icons.push("🟨"); }
+                    else if (ev.event_type === "red_card")    { rawPts -= 3; icons.push("🟥"); }
+                  }
+                  const mult = tp.is_captain ? 2 : tp.is_vice_captain ? 1.5 : 1;
+                  const finalPts = Math.floor(Math.max(0, rawPts) * mult);
+                  return { name: playerEvents[0].player_name, tp, icons, rawPts, finalPts, mult };
+                }).filter(Boolean);
+
+                if (rows.length === 0) return (
+                  <p className="text-xs text-muted-foreground text-center py-2">None of your players involved yet</p>
+                );
+
+                return (
+                  <div className="border-t border-slate-100 pt-3 space-y-2.5">
+                    {rows.map((row, i) => row && (
+                      <div key={i} className="flex items-center gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-xs font-semibold text-sfc-black truncate">{row.name}</span>
+                            {row.tp.is_captain && <span className="text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-1 py-0.5 rounded leading-none">C</span>}
+                            {row.tp.is_vice_captain && <span className="text-[9px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-1 py-0.5 rounded leading-none">VC</span>}
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            {row.icons.join(" ")}
+                            {row.mult > 1 && <span className="ml-1 text-amber-500">×{row.mult}</span>}
+                          </p>
+                        </div>
+                        <span className={cn("text-sm font-bold shrink-0", row.finalPts >= 0 ? "text-sfc-blue" : "text-red-400")}>
+                          {row.finalPts >= 0 ? "+" : ""}{row.finalPts}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
+              <p className="text-[10px] text-muted-foreground text-center border-t border-slate-100 pt-3">
+                Minutes + clean sheet added at full time
+              </p>
             </div>
           </div>
 
