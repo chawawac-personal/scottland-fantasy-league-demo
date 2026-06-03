@@ -168,9 +168,11 @@ export default function ManagerPage() {
     setStatusUpdating(matchId);
     try {
       const supabase = createClient();
+      const update: Record<string, string> = { status };
+      if (status === "live") update.kickoff_time = new Date().toISOString();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase as any).from("matches").update({ status }).eq("id", matchId);
-      setMatches(prev => prev.map(m => m.id === matchId ? { ...m, status } : m));
+      await (supabase as any).from("matches").update(update).eq("id", matchId);
+      setMatches(prev => prev.map(m => m.id === matchId ? { ...m, status, ...(status === "live" ? { kickoff_time: update.kickoff_time } : {}) } : m));
     } finally { setStatusUpdating(null); }
   }
 

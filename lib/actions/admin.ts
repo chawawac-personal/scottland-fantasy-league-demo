@@ -76,7 +76,9 @@ export async function updateMatchStatusAction(matchId: string, status: string) {
   const { error, supabase } = await requireAdmin();
   if (error || !supabase) return { error: error ?? "Unknown error" };
 
-  await supabase.from("matches").update({ status }).eq("id", matchId);
+  const update: Record<string, string> = { status };
+  if (status === "live") update.kickoff_time = new Date().toISOString();
+  await supabase.from("matches").update(update).eq("id", matchId);
   return { success: true };
 }
 

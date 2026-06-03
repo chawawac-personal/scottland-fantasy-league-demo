@@ -174,7 +174,7 @@ export default function LivePage() {
           <div className="flex items-center justify-between">
             <div className="text-center flex-1 min-w-0 px-2">
               <p className="text-xs text-muted-foreground mb-1">Home</p>
-              <p className="text-sm sm:text-xl font-bold text-sfc-blue truncate">{liveMatch.home}</p>
+              <p className={cn("text-sm sm:text-xl font-bold truncate", liveMatch.home === "Scottland FC" ? "text-sfc-blue" : "text-sfc-black")}>{liveMatch.home}</p>
             </div>
             <div className="text-center shrink-0 px-2 sm:px-8">
               <div className="flex items-center gap-3 sm:gap-4">
@@ -184,12 +184,12 @@ export default function LivePage() {
               </div>
               <div className="flex items-center justify-center gap-2 mt-2">
                 <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-sm font-bold text-sfc-black">{matchTime}&apos;</span>
+                <span className="text-sm font-bold text-sfc-black">{matchTime > 0 ? `${matchTime}'` : "KO"}</span>
               </div>
             </div>
             <div className="text-center flex-1 min-w-0 px-2">
               <p className="text-xs text-muted-foreground mb-1">Away</p>
-              <p className="text-sm sm:text-xl font-bold text-sfc-black truncate">{liveMatch.away}</p>
+              <p className={cn("text-sm sm:text-xl font-bold truncate", liveMatch.away === "Scottland FC" ? "text-sfc-blue" : "text-sfc-black")}>{liveMatch.away}</p>
             </div>
           </div>
         </motion.div>
