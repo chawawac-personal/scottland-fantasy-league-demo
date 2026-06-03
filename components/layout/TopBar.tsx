@@ -50,23 +50,43 @@ export function TopBar({ title, subtitle, rightContent }: TopBarProps) {
   }, []);
 
   useEffect(() => {
+    const supabase = createClient();
+    let userId: string | null = null;
+
     async function load() {
       try {
-        const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
-        const { data } = await supabase
-          .from("notifications")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false })
-          .limit(10);
-        if (data && data.length > 0) setNotifs(data);
-        const { data: profile } = await (supabase as any).from("profiles").select("fantasy_points").eq("id", user.id).single();
+        userId = user.id;
+
+        const [{ data: notifData }, { data: profile }] = await Promise.all([
+          supabase.from("notifications").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+          (supabase as any).from("profiles").select("fantasy_points").eq("id", user.id).single(),
+        ]);
+        if (notifData && notifData.length > 0) setNotifs(notifData);
         if (profile) setUserPoints(profile.fantasy_points ?? 0);
-      } catch { /* keep mock data */ }
+      } catch { /* keep defaults */ }
     }
+
     load();
+
+    // Realtime — new notifications appear instantly without refresh
+    const channel = supabase
+      .channel("topbar-notifications")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications" },
+        (payload) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const n = payload.new as any;
+          if (n.user_id === userId) {
+            setNotifs((prev) => [n, ...prev].slice(0, 10));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   async function markAllRead() {
