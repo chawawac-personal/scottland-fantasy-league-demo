@@ -47,7 +47,7 @@ const NAV_ITEMS = [
   { href: "/my-team",   label: "My Team",       icon: Users,           live: false },
   { href: "/market",    label: "Player Market", icon: ShoppingCart,    live: false },
   { href: "/leagues",   label: "Leagues",       icon: Trophy,          live: false },
-  { href: "/live",         label: "Live Matchday", icon: Radio,       live: true  },
+  { href: "/live",         label: "Matchday",      icon: Radio,       live: true  },
   { href: "/match-stats", label: "Match Stats",  icon: BarChart2,    live: false },
   { href: "/community",   label: "Community",    icon: MessageSquare, live: false },
   { href: "/profile",   label: "My Profile",    icon: User,            live: false },
