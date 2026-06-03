@@ -115,6 +115,22 @@ export async function joinPublicLeague(leagueId: string) {
   return { success: true };
 }
 
+export async function leaveLeagueAction(leagueId: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase: any = await mkClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  // Owners cannot leave their own league — they must delete it
+  const { data: league } = await supabase.from("leagues").select("owner_id").eq("id", leagueId).single();
+  if (league?.owner_id === user.id) return { error: "Owners cannot leave their own league. Delete it instead." };
+
+  const { error } = await supabase.from("league_members").delete().eq("league_id", leagueId).eq("user_id", user.id);
+  if (error) return { error: error.message };
+  revalidatePath("/leagues");
+  return { success: true };
+}
+
 export async function deleteLeagueAction(leagueId: string) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase: any = await mkClient();

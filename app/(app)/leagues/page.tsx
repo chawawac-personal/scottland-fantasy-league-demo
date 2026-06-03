@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { createLeague, joinLeague, deleteLeagueAction, getPublicLeagues, joinPublicLeague } from "@/lib/actions/leagues";
+import { createLeague, joinLeague, deleteLeagueAction, getPublicLeagues, joinPublicLeague, leaveLeagueAction } from "@/lib/actions/leagues";
 
 
 interface League {
@@ -49,6 +49,8 @@ export default function LeaguesPage() {
   const [membersLoading, setMembersLoading] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [confirmLeaveId, setConfirmLeaveId] = useState<string | null>(null);
+  const [leaving, setLeaving] = useState(false);
   const [publicLeagues, setPublicLeagues] = useState<{ id: string; name: string; description: string | null; prizes: unknown }[]>([]);
   const [joiningPublic, setJoiningPublic] = useState<string | null>(null);
 
@@ -422,7 +424,48 @@ export default function LeaguesPage() {
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       )}
+                      {!league.isOwner && confirmLeaveId !== league.id && (
+                        <button
+                          onClick={() => setConfirmLeaveId(league.id)}
+                          className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 text-muted-foreground hover:border-red-400/40 hover:text-red-400 transition-colors"
+                        >
+                          Leave
+                        </button>
+                      )}
                     </div>
+
+                    {/* Inline leave confirmation */}
+                    {!league.isOwner && confirmLeaveId === league.id && (
+                      <div className="mt-3 p-3 rounded-xl border border-amber-200 bg-amber-50 space-y-2">
+                        <p className="text-xs text-amber-700 flex items-center gap-1.5">
+                          <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                          Leave <strong>{league.name}</strong>? You can rejoin later if you have the invite code.
+                        </p>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setConfirmLeaveId(null)}
+                            className="flex-1 text-xs py-1.5 rounded-lg border border-slate-200 text-muted-foreground hover:bg-slate-50 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            disabled={leaving}
+                            onClick={async () => {
+                              setLeaving(true);
+                              const result = await leaveLeagueAction(league.id);
+                              if (!result.error) {
+                                setLocalLeagues(prev => prev.filter(l => l.id !== league.id));
+                                setConfirmLeaveId(null);
+                              }
+                              setLeaving(false);
+                            }}
+                            className="flex-1 text-xs py-1.5 rounded-lg bg-amber-500 text-white font-semibold hover:bg-amber-600 transition-colors disabled:opacity-60"
+                          >
+                            {leaving ? "Leaving…" : "Yes, Leave"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Inline delete confirmation */}
                     {league.isOwner && confirmDeleteId === league.id && (
