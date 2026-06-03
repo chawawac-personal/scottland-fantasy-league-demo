@@ -12,6 +12,33 @@ interface LiveEvent {
   minute: number;
   event_type: string;
   player_name: string;
+  player_id: string | null;
+}
+
+interface MyTeamPlayer {
+  player_id: string;
+  position: string;
+  is_captain: boolean;
+  is_vice_captain: boolean;
+}
+
+const GOAL_PTS: Record<string, number> = { GK: 10, DEF: 6, MID: 5, FWD: 4 };
+
+function calcLivePoints(events: LiveEvent[], myTeam: MyTeamPlayer[]): number {
+  let total = 0;
+  for (const tp of myTeam) {
+    const playerEvents = events.filter(e => e.player_id === tp.player_id);
+    let pts = 0;
+    for (const ev of playerEvents) {
+      if (ev.event_type === "goal")             pts += GOAL_PTS[tp.position] ?? 4;
+      else if (ev.event_type === "assist")      pts += 3;
+      else if (ev.event_type === "yellow_card") pts -= 1;
+      else if (ev.event_type === "red_card")    pts -= 3;
+    }
+    const mult = tp.is_captain ? 2 : tp.is_vice_captain ? 1.5 : 1;
+    total += Math.floor(Math.max(0, pts) * mult);
+  }
+  return total;
 }
 
 interface LeaderboardEntry {
@@ -70,7 +97,7 @@ export default function LivePage() {
   } | null>(null);
   const [events, setEvents] = useState<LiveEvent[]>([]);
   const [liveLeaderboard, setLiveLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [myLiveScore, setMyLiveScore] = useState(0);
+  const [myTeam, setMyTeam] = useState<MyTeamPlayer[]>([]);
 
   const matchTime = useMatchClock(liveMatch?.kickoffTime ?? null);
 
@@ -112,10 +139,23 @@ export default function LivePage() {
           })));
         }
 
-        // My score
+        // User's starting XI for live point calculation
         if (user) {
-          const { data: team } = await sb.from("fantasy_teams").select("weekly_points").eq("user_id", user.id).maybeSingle();
-          if (team) setMyLiveScore(team.weekly_points ?? 0);
+          const { data: ft } = await sb.from("fantasy_teams").select("id").eq("user_id", user.id).maybeSingle();
+          if (ft) {
+            const { data: ftp } = await sb
+              .from("fantasy_team_players")
+              .select("player_id, is_captain, is_vice_captain, players(position)")
+              .eq("fantasy_team_id", ft.id)
+              .eq("is_starting", true);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            setMyTeam((ftp ?? []).map((tp: any) => ({
+              player_id: tp.player_id,
+              position: tp.players?.position ?? "MID",
+              is_captain: tp.is_captain,
+              is_vice_captain: tp.is_vice_captain,
+            })));
+          }
         }
       } catch { /* show empty */ }
     }
@@ -233,11 +273,14 @@ export default function LivePage() {
               <Zap className="w-4 h-4 text-amber-400" />
               <h2 className="font-bold text-sfc-black text-sm">Live Points</h2>
             </div>
-            <div className="p-4 space-y-3">
-              <div className="text-center py-4 border-b border-slate-200">
-                <p className="text-xs text-muted-foreground mb-1">Your Live Score</p>
-                <p className="text-5xl font-display text-sfc-blue"><AnimatedCounter value={myLiveScore} /></p>
-                <p className="text-xs text-muted-foreground mt-1">Points finalise when match ends</p>
+            <div className="p-4">
+              <div className="text-center py-4">
+                <p className="text-xs text-muted-foreground mb-1">From this match</p>
+                <p className="text-5xl font-display text-sfc-blue">
+                  <AnimatedCounter value={calcLivePoints(events, myTeam)} />
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">Goals &amp; cards only</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Minutes + clean sheet added at full time</p>
               </div>
             </div>
           </div>
