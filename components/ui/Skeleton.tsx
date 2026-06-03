@@ -98,7 +98,7 @@ export function SkeletonStat() {
 
 export function SkeletonNavTabs({ count = 4 }: { count?: number }) {
   return (
-    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+    <div className="w-full flex gap-2 overflow-x-auto pb-1 scrollbar-none">
       {Array.from({ length: count }).map((_, i) => (
         <Skeleton key={i} className="h-10 w-28 rounded-xl shrink-0" />
       ))}

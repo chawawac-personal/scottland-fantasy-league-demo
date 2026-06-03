@@ -2,7 +2,7 @@
 
 export default function LeaguesLoading() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen w-full overflow-x-hidden">
       <div className="h-16 flex items-center justify-between px-4 sm:px-6 border-b border-slate-200 bg-white">
         <div className="space-y-1.5">
           <Skeleton className="h-5 w-20" />

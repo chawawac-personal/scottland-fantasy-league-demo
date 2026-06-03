@@ -2,7 +2,7 @@ import { Skeleton, SkeletonPitchSlot } from "@/components/ui/Skeleton";
 
 export default function MyTeamLoading() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen w-full overflow-x-hidden">
       {/* TopBar */}
       <div className="h-16 flex items-center justify-between px-4 sm:px-6 border-b border-slate-200 bg-white">
         <div className="space-y-1.5">
