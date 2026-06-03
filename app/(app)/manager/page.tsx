@@ -258,7 +258,7 @@ export default function ManagerPage() {
                       <div className="flex-1 min-w-0 flex items-center justify-center gap-1.5 sm:gap-3">
                         <span className={cn("text-xs sm:text-sm font-bold text-right flex-1 truncate", m.home_team === "Scottland FC" && "text-sfc-blue")}>{m.home_team}</span>
                         <span className="text-xs sm:text-sm font-bold text-sfc-black shrink-0 w-10 sm:w-12 text-center">
-                          {m.status === "finished" || m.status === "live" ? `${m.home_score ?? 0}–${m.away_score ?? 0}` : "vs"}
+                          {m.status === "finished" || m.status === "live" ? `${m.home_score ?? 0} – ${m.away_score ?? 0}` : "vs"}
                         </span>
                         <span className={cn("text-xs sm:text-sm font-bold flex-1 truncate", m.away_team === "Scottland FC" && "text-sfc-blue")}>{m.away_team}</span>
                       </div>

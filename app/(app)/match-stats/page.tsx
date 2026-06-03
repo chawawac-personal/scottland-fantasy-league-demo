@@ -184,7 +184,7 @@ export default function MatchStatsPage() {
                   <div className="flex items-center justify-between text-sm gap-1">
                     <span className={cn("font-semibold flex-1 truncate", m.home_team === SFC ? "text-sfc-blue" : "text-sfc-black")}>{m.home_team}</span>
                     <span className={cn("font-bold px-2 sm:px-4 tabular-nums shrink-0", hasScore ? "text-sfc-black" : "text-muted-foreground")}>
-                      {hasScore ? `${m.home_score} — ${m.away_score}` : "VS"}
+                      {hasScore ? `${m.home_score} – ${m.away_score}` : "VS"}
                     </span>
                     <span className={cn("font-semibold flex-1 text-right truncate", m.away_team === SFC ? "text-sfc-blue" : "text-sfc-black")}>{m.away_team}</span>
                   </div>

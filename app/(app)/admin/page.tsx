@@ -452,7 +452,7 @@ export default function AdminPage() {
                           "bg-blue-500/10 border-blue-500/20 text-blue-300"
                         )}>
                           <AlertTriangle className="w-3 h-3 flex-shrink-0" />
-                          <span className="flex-1">MD{r.matchday}: SFC {result} vs {opp} ({r.home_score}–{r.away_score})</span>
+                          <span className="flex-1">MD{r.matchday}: SFC {result} vs {opp} ({r.home_score} – {r.away_score})</span>
                           <span className="text-muted-foreground">{new Date(r.kickoff_time).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
                         </div>
                       );
@@ -867,7 +867,7 @@ export default function AdminPage() {
                       <div className="flex-1 min-w-0 flex items-center justify-center gap-1.5 sm:gap-3">
                         <span className={cn("text-xs sm:text-sm font-bold text-right flex-1 truncate", m.home_team === "Scottland FC" && "text-sfc-blue")}>{m.home_team}</span>
                         <span className="text-xs sm:text-sm font-bold text-sfc-black shrink-0 w-10 sm:w-12 text-center">
-                          {m.status === "finished" || m.status === "live" ? `${m.home_score ?? 0}–${m.away_score ?? 0}` : "vs"}
+                          {m.status === "finished" || m.status === "live" ? `${m.home_score ?? 0} – ${m.away_score ?? 0}` : "vs"}
                         </span>
                         <span className={cn("text-xs sm:text-sm font-bold flex-1 truncate", m.away_team === "Scottland FC" && "text-sfc-blue")}>{m.away_team}</span>
                       </div>
