@@ -223,6 +223,37 @@ export async function adminResetPasswordAction(targetUserId: string, newPassword
   return { success: true };
 }
 
+export async function editPlayerAction(id: string, player: { name: string; position: string; price: number; is_injured: boolean }) {
+  const VALID_POSITIONS = ["GK", "DEF", "MID", "FWD"];
+  if (!player.name?.trim()) return { error: "Name is required" };
+  if (!VALID_POSITIONS.includes(player.position)) return { error: "Invalid position" };
+  if (isNaN(player.price) || player.price < 0.1 || player.price > 100) return { error: "Price must be between 0.1 and 100" };
+
+  const { error, supabase } = await requireAdmin();
+  if (error || !supabase) return { error: error ?? "Unknown error" };
+
+  const { data, error: dbError } = await supabase.from("players").update({
+    name: player.name.trim().slice(0, 100),
+    position: player.position,
+    price: Math.round(player.price * 10) / 10,
+    is_injured: player.is_injured,
+  }).eq("id", id).select().single();
+
+  if (dbError) return { error: dbError.message };
+  revalidatePath("/admin");
+  return { error: null, data };
+}
+
+export async function deletePlayerAction(id: string) {
+  const { error, supabase } = await requireAdmin();
+  if (error || !supabase) return { error: error ?? "Unknown error" };
+
+  const { error: dbError } = await supabase.from("players").delete().eq("id", id);
+  if (dbError) return { error: dbError.message };
+  revalidatePath("/admin");
+  return { success: true };
+}
+
 export async function addPlayerAction(player: { name: string; position: string; price: number }) {
   const VALID_POSITIONS = ["GK", "DEF", "MID", "FWD"];
   if (!player.name?.trim()) return { error: "Name is required", data: null };

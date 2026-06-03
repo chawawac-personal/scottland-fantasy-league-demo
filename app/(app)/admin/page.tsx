@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { saveFlagsAction, updateMatchStatusAction, cancelMatchLiveAction, saveFixtureAction, saveMatchStatsAction, savePrizesAction, updateUserRoleAction, broadcastNotificationAction, addPlayerAction, adminResetPasswordAction } from "@/lib/actions/admin";
+import { saveFlagsAction, updateMatchStatusAction, cancelMatchLiveAction, saveFixtureAction, saveMatchStatsAction, savePrizesAction, updateUserRoleAction, broadcastNotificationAction, addPlayerAction, editPlayerAction, deletePlayerAction, adminResetPasswordAction } from "@/lib/actions/admin";
 import { deleteLeagueAction } from "@/lib/actions/leagues";
 import { motion, AnimatePresence } from "framer-motion";
 import { TopBar } from "@/components/layout/TopBar";
@@ -175,6 +175,10 @@ export default function AdminPage() {
   const [addPlayerOpen, setAddPlayerOpen] = useState(false);
   const [playerForm, setPlayerForm] = useState({ name: "", position: "MID", price: "" });
   const [savingPlayer, setSavingPlayer] = useState(false);
+  const [editForm, setEditForm] = useState<{ id: string; name: string; position: string; price: string; is_injured: boolean } | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [confirmDeletePlayer, setConfirmDeletePlayer] = useState<string | null>(null);
+  const [deletingPlayer, setDeletingPlayer] = useState(false);
   const [resetPwUser, setResetPwUser] = useState<{ id: string; username: string } | null>(null);
   const [resetPwForm, setResetPwForm] = useState({ next: "", confirm: "" });
   const [resetPwError, setResetPwError] = useState("");
@@ -326,6 +330,37 @@ export default function AdminPage() {
       setResetPwForm({ next: "", confirm: "" });
     } catch { setResetPwError("Something went wrong"); }
     finally { setResetPwSaving(false); }
+  }
+
+  async function saveEdit() {
+    if (!editForm) return;
+    setSavingEdit(true);
+    try {
+      const result = await editPlayerAction(editForm.id, {
+        name: editForm.name,
+        position: editForm.position,
+        price: parseFloat(editForm.price),
+        is_injured: editForm.is_injured,
+      });
+      if (!result.error && result.data) {
+        setPlayers(prev => prev.map(p => p.id === editForm.id ? { ...p, ...result.data } : p));
+        setEditingPlayer(null);
+        setEditForm(null);
+      }
+    } catch { /* silently fail */ }
+    finally { setSavingEdit(false); }
+  }
+
+  async function handleDeletePlayer(id: string) {
+    setDeletingPlayer(true);
+    try {
+      const result = await deletePlayerAction(id);
+      if (!result.error) {
+        setPlayers(prev => prev.filter(p => p.id !== id));
+        setConfirmDeletePlayer(null);
+      }
+    } catch { /* silently fail */ }
+    finally { setDeletingPlayer(false); }
   }
 
   async function savePlayer() {
@@ -526,10 +561,10 @@ export default function AdminPage() {
                             ? <XCircle className="w-4 h-4 text-red-400" />
                             : <CheckCircle className="w-4 h-4 text-sfc-blue" />}
                         </button>
-                        <button onClick={() => setEditingPlayer(player.id)} className="p-1.5 rounded-lg border border-slate-200 hover:border-sfc-blue/30 text-muted-foreground hover:text-sfc-blue transition-colors">
+                        <button onClick={() => { setEditingPlayer(player.id); setEditForm({ id: player.id, name: player.name, position: player.position, price: String(player.price), is_injured: player.is_injured }); }} className="p-1.5 rounded-lg border border-slate-200 hover:border-sfc-blue/30 text-muted-foreground hover:text-sfc-blue transition-colors">
                           <Edit className="w-3.5 h-3.5" />
                         </button>
-                        <button className="p-1.5 rounded-lg border border-slate-200 hover:border-red-500/30 text-muted-foreground hover:text-red-400 transition-colors">
+                        <button onClick={() => setConfirmDeletePlayer(player.id)} className="p-1.5 rounded-lg border border-slate-200 hover:border-red-500/30 text-muted-foreground hover:text-red-400 transition-colors">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -1064,6 +1099,86 @@ export default function AdminPage() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* ── Edit Player Modal ── */}
+      <AnimatePresence>
+        {editForm && (
+          <>
+            <motion.div key="ep-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => !savingEdit && (setEditingPlayer(null), setEditForm(null))}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
+            <motion.div key="ep-modal" initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-sm p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-bold text-sfc-black">Edit Player</h2>
+                  <button onClick={() => { setEditingPlayer(null); setEditForm(null); }} disabled={savingEdit}
+                    className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400"><X className="w-4 h-4" /></button>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">Name</label>
+                  <input value={editForm.name} onChange={e => setEditForm(p => p && ({ ...p, name: e.target.value }))} className="input text-sm py-2" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Position</label>
+                    <select value={editForm.position} onChange={e => setEditForm(p => p && ({ ...p, position: e.target.value }))} className="select text-sm py-2">
+                      {["GK","DEF","MID","FWD"].map(pos => <option key={pos} value={pos}>{pos}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Price ($m)</label>
+                    <input type="number" step="0.1" min="0.1" max="20" value={editForm.price}
+                      onChange={e => setEditForm(p => p && ({ ...p, price: e.target.value }))} className="input text-sm py-2" />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between py-2 border-t border-slate-100">
+                  <span className="text-sm text-sfc-black">Injured</span>
+                  <button onClick={() => setEditForm(p => p && ({ ...p, is_injured: !p.is_injured }))}
+                    className={cn("relative w-11 h-6 rounded-full border transition-all", editForm.is_injured ? "bg-red-500/20 border-red-500/40" : "bg-slate-100 border-slate-200")}>
+                    <div className={cn("absolute top-0.5 w-5 h-5 rounded-full transition-all shadow-sm", editForm.is_injured ? "left-5 bg-red-500" : "left-0.5 bg-slate-300")} />
+                  </button>
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button onClick={() => { setEditingPlayer(null); setEditForm(null); }} disabled={savingEdit} className="btn-outline text-sm py-2.5 flex-1">Cancel</button>
+                  <button onClick={saveEdit} disabled={savingEdit || !editForm.name.trim() || !editForm.price}
+                    className="btn-primary text-sm py-2.5 flex-1 disabled:opacity-60">
+                    {savingEdit ? "Saving…" : "Save Changes"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── Delete Player Confirm ── */}
+      <AnimatePresence>
+        {confirmDeletePlayer && (
+          <>
+            <motion.div key="dp-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => !deletingPlayer && setConfirmDeletePlayer(null)}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
+            <motion.div key="dp-modal" initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-sm p-6 space-y-4">
+                <h2 className="font-bold text-sfc-black">Delete Player</h2>
+                <p className="text-sm text-muted-foreground">
+                  Delete <span className="font-semibold text-sfc-black">{players.find(p => p.id === confirmDeletePlayer)?.name}</span>?
+                  This will remove them from all fantasy teams and cannot be undone.
+                </p>
+                <div className="flex gap-2">
+                  <button onClick={() => setConfirmDeletePlayer(null)} disabled={deletingPlayer} className="btn-outline text-sm py-2.5 flex-1">Cancel</button>
+                  <button onClick={() => handleDeletePlayer(confirmDeletePlayer)} disabled={deletingPlayer}
+                    className="flex-1 text-sm py-2.5 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors disabled:opacity-60">
+                    {deletingPlayer ? "Deleting…" : "Delete"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ── Admin Reset Password Modal ── */}
       <AnimatePresence>
