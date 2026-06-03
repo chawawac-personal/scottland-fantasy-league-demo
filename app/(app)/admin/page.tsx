@@ -80,7 +80,7 @@ export default function AdminPage() {
             id: String(i + 1),
             userId: p.id,
             username: p.username,
-            email: `${p.username.toLowerCase()}@sfc.zw`,
+            email: `${p.username.toLowerCase()}@scottland.demo`,
             level: p.role === "admin" ? "Admin" : p.role === "manager" ? "Manager" : p.role === "moderator" ? "Mod" : "User",
             points: p.fantasy_points,
             status: "active",

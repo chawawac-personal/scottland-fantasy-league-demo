@@ -18,19 +18,19 @@ Fantasy football platform for Zimbabwean club football. Players build squads, co
 | Email | Username | Role | Points |
 |-------|----------|------|--------|
 | admin@scottland.demo | SFCAdmin | admin | 665 |
-| binduraminer@sfc.zw | BinduraMiner | user | 597 |
+| binduraminer@scottland.demo | BinduraMiner | user | 597 |
 | bulawayoboss@scottland.demo | BulawayoBoss | user | 540 |
-| chikomba@sfc.zw | ChikombaWizard | user | 681 |
-| greenarmy@sfc.zw | GreenArmyFan | user | 605 |
+| chikomba@scottland.demo | ChikombaWizard | user | 681 |
+| greenarmy@scottland.demo | GreenArmyFan | user | 605 |
 | harareguru@scottland.demo | HarareGuru | user | 575 |
-| hwangecoal@sfc.zw | HwangeCoal | user | 549 |
-| kwekweking@sfc.zw | KweKweKing | user | 667 |
-| masvingofc@sfc.zw | MasvingoFC | user | 633 |
-| mutarefc@sfc.zw | MutareFC | user | 594 |
+| hwangecoal@scottland.demo | HwangeCoal | user | 549 |
+| kwekweking@scottland.demo | KweKweKing | user | 667 |
+| masvingofc@scottland.demo | MasvingoFC | user | 633 |
+| mutarefc@scottland.demo | MutareFC | user | 594 |
 | qa_test_74133@scottland.demo | VictoriaFalls | user | 536 |
 | sfcmaster@scottland.demo | SFCMaster99 | user | 649 |
 | tendaifc@scottland.demo | TendaiFC | user | 549 |
-| zimbabwestar@sfc.zw | ZimbabweStar | user | 578 |
+| zimbabwestar@scottland.demo | ZimbabweStar | user | 578 |
 | zimwarrior@scottland.demo | ZimWarrior | user | 702 |
 
 ## Supabase Project

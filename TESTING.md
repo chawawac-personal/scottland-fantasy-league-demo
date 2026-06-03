@@ -29,14 +29,14 @@ All 15 accounts use the same password unless noted.
 | 5 | BulawayoBoss | — | — | Original seed user |
 | 6 | SFCAdmin | — | — | Original seed user, Level 10, Admin role |
 | 7 | VictoriaFalls | — | — | Original seed user (was qa_test) |
-| 8 | MutareFC | `mutarefc@sfc.zw` | `SFC2026demo!` | |
-| 9 | GreenArmyFan | `greenarmy@sfc.zw` | `SFC2026demo!` | |
-| 10 | ChikombaWizard | `chikomba@sfc.zw` | `SFC2026demo!` | |
-| 11 | KweKweKing | `kwekweking@sfc.zw` | `SFC2026demo!` | |
-| 12 | MasvingoFC | `masvingofc@sfc.zw` | `SFC2026demo!` | |
-| 13 | HwangeCoal | `hwangecoal@sfc.zw` | `SFC2026demo!` | Bad GK pick (Manuvire), low score |
-| 14 | BinduraMiner | `binduraminer@sfc.zw` | `SFC2026demo!` | |
-| 15 | ZimbabweStar | `zimbabwestar@sfc.zw` | `SFC2026demo!` | |
+| 8 | MutareFC | `mutarefc@scottland.demo` | `SFC2026demo!` | |
+| 9 | GreenArmyFan | `greenarmy@scottland.demo` | `SFC2026demo!` | |
+| 10 | ChikombaWizard | `chikomba@scottland.demo` | `SFC2026demo!` | |
+| 11 | KweKweKing | `kwekweking@scottland.demo` | `SFC2026demo!` | |
+| 12 | MasvingoFC | `masvingofc@scottland.demo` | `SFC2026demo!` | |
+| 13 | HwangeCoal | `hwangecoal@scottland.demo` | `SFC2026demo!` | Bad GK pick (Manuvire), low score |
+| 14 | BinduraMiner | `binduraminer@scottland.demo` | `SFC2026demo!` | |
+| 15 | ZimbabweStar | `zimbabwestar@scottland.demo` | `SFC2026demo!` | |
 
 > Original seed users (1–7) were created directly in the DB. To sign in as them, use the Supabase Dashboard → Authentication → Users → send password reset, or register new accounts.
 
