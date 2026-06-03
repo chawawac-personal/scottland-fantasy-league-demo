@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { TopBar } from "@/components/layout/TopBar";
 import { Radio, Trophy, Edit, Plus, Zap, X, Clock, CheckCircle, XCircle } from "lucide-react";
 import { cn, getPositionColor } from "@/lib/utils";
-import { cancelMatchLiveAction } from "@/lib/actions/admin";
+import { cancelMatchLiveAction, logMatchEventAction, deleteMatchEventAction } from "@/lib/actions/admin";
 
 interface AdminMatch {
   id: string;
@@ -48,6 +48,12 @@ export default function ManagerPage() {
   const [fixtureForm, setFixtureForm] = useState({ home: "Scottland FC", away: "", matchday: "", kickoff: "", season: "2025/26" });
   const [savingFixture, setSavingFixture] = useState(false);
 
+  // ── Live Scoring ─────────────────────────────────────────────────────────
+  const [liveScoreMatch, setLiveScoreMatch] = useState<AdminMatch | null>(null);
+  const [liveEvents, setLiveEvents] = useState<{ id: string; minute: number; event_type: string; player_name: string }[]>([]);
+  const [eventForm, setEventForm] = useState({ minute: "", event_type: "goal", player_id: "", player_name: "" });
+  const [loggingEvent, setLoggingEvent] = useState(false);
+
   // ── Players ───────────────────────────────────────────────────────────────
   const [players, setPlayers] = useState<{ id: string; name: string; position: string; total_points: number; is_injured: boolean }[]>([]);
   const [togglingInjury, setTogglingInjury] = useState<string | null>(null);
@@ -78,24 +84,43 @@ export default function ManagerPage() {
       const supabase = createClient();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const sb = supabase as any;
-      const [{ data: allPlayers }, { data: existingStats }] = await Promise.all([
+      const [{ data: allPlayers }, { data: existingStats }, { data: events }] = await Promise.all([
         supabase.from("players").select("id, name, position").order("position").order("total_points", { ascending: false }),
         sb.from("player_match_stats").select("*").eq("match_id", match.id),
+        sb.from("match_events").select("*").eq("match_id", match.id),
       ]);
+
       const statsMap: Record<string, Partial<PlayerStatRow>> = {};
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (existingStats ?? []).forEach((s: any) => { statsMap[s.player_id] = { ...s, minutes: s.minutes_played }; });
+
+      // Aggregate live events by player_id for pre-fill when no saved stats exist yet
+      const eventsMap: Record<string, { goals: number; assists: number; yellow_cards: number; red_cards: number }> = {};
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setPlayerStatRows((allPlayers ?? []).map((p: any) => ({
-        player_id: p.id, name: p.name, position: p.position,
-        minutes: statsMap[p.id]?.minutes ?? 0,
-        goals: statsMap[p.id]?.goals ?? 0,
-        assists: statsMap[p.id]?.assists ?? 0,
-        yellow_cards: statsMap[p.id]?.yellow_cards ?? 0,
-        red_cards: statsMap[p.id]?.red_cards ?? 0,
-        clean_sheet: statsMap[p.id]?.clean_sheet ?? false,
-        fantasy_points: statsMap[p.id]?.fantasy_points ?? 0,
-      })));
+      (events ?? []).forEach((ev: any) => {
+        if (!ev.player_id) return;
+        if (!eventsMap[ev.player_id]) eventsMap[ev.player_id] = { goals: 0, assists: 0, yellow_cards: 0, red_cards: 0 };
+        if (ev.event_type === "goal")        eventsMap[ev.player_id].goals++;
+        if (ev.event_type === "assist")      eventsMap[ev.player_id].assists++;
+        if (ev.event_type === "yellow_card") eventsMap[ev.player_id].yellow_cards++;
+        if (ev.event_type === "red_card")    eventsMap[ev.player_id].red_cards++;
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setPlayerStatRows((allPlayers ?? []).map((p: any) => {
+        const saved = statsMap[p.id];
+        const live  = eventsMap[p.id];
+        return {
+          player_id: p.id, name: p.name, position: p.position,
+          minutes:      saved?.minutes      ?? 0,
+          goals:        saved?.goals        ?? live?.goals        ?? 0,
+          assists:      saved?.assists      ?? live?.assists      ?? 0,
+          yellow_cards: saved?.yellow_cards ?? live?.yellow_cards ?? 0,
+          red_cards:    saved?.red_cards    ?? live?.red_cards    ?? 0,
+          clean_sheet:  saved?.clean_sheet  ?? false,
+          fantasy_points: saved?.fantasy_points ?? 0,
+        };
+      }));
     } finally { setStatsLoading(false); }
   }
 
@@ -163,6 +188,56 @@ export default function ManagerPage() {
       setAddFixtureOpen(false);
       setFixtureForm({ home: "Scottland FC", away: "", matchday: "", kickoff: "", season: "2025/26" });
     } finally { setSavingFixture(false); }
+  }
+
+  async function openLiveScoring(match: AdminMatch) {
+    setLiveScoreMatch(match);
+    const supabase = createClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase as any).from("match_events").select("*").eq("match_id", match.id).order("minute", { ascending: true });
+    setLiveEvents(data ?? []);
+    setEventForm({ minute: "", event_type: "goal", player_id: "", player_name: "" });
+  }
+
+  async function submitEvent() {
+    if (!liveScoreMatch || !eventForm.minute || !eventForm.player_name) return;
+    setLoggingEvent(true);
+    try {
+      const result = await logMatchEventAction({
+        match_id: liveScoreMatch.id,
+        player_id: eventForm.player_id || null,
+        player_name: eventForm.player_name,
+        event_type: eventForm.event_type as "goal" | "own_goal" | "assist" | "yellow_card" | "red_card",
+        minute: parseInt(eventForm.minute),
+        home_team: liveScoreMatch.home_team,
+        away_team: liveScoreMatch.away_team,
+        is_sfc_player: players.some(p => p.name === eventForm.player_name),
+      });
+      if (result.success && result.event) {
+        setLiveEvents(prev => [...prev, result.event].sort((a, b) => a.minute - b.minute));
+        // Refresh match score
+        const supabase = createClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: fresh } = await (supabase as any).from("matches").select("*").eq("id", liveScoreMatch.id).single();
+        if (fresh) {
+          setMatches(prev => prev.map(m => m.id === liveScoreMatch.id ? fresh as AdminMatch : m));
+          setLiveScoreMatch(fresh as AdminMatch);
+        }
+        setEventForm(p => ({ ...p, minute: "", player_id: "", player_name: "" }));
+      }
+    } finally { setLoggingEvent(false); }
+  }
+
+  async function deleteEvent(eventId: string) {
+    await deleteMatchEventAction(eventId, liveScoreMatch!.id);
+    setLiveEvents(prev => prev.filter(e => e.id !== eventId));
+    const supabase = createClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: fresh } = await (supabase as any).from("matches").select("*").eq("id", liveScoreMatch!.id).single();
+    if (fresh) {
+      setMatches(prev => prev.map(m => m.id === liveScoreMatch!.id ? fresh as AdminMatch : m));
+      setLiveScoreMatch(fresh as AdminMatch);
+    }
   }
 
   async function toggleInjury(id: string, current: boolean) {
@@ -282,9 +357,13 @@ export default function ManagerPage() {
                         )}
                         {m.status === "live" && (
                           <div className="flex items-center gap-1.5">
+                            <button onClick={() => openLiveScoring(m)}
+                              className="text-[10px] font-bold px-2 sm:px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500/20 transition-colors flex items-center gap-1 whitespace-nowrap">
+                              <Zap className="w-3 h-3" /> Live
+                            </button>
                             <button onClick={() => openScoring(m)}
                               className="text-[10px] font-bold px-2 sm:px-3 py-1.5 rounded-lg bg-sfc-blue/10 border border-sfc-blue/30 text-sfc-blue hover:bg-sfc-blue/20 transition-colors flex items-center gap-1 whitespace-nowrap">
-                              <Zap className="w-3 h-3" /> Stats
+                              <Edit className="w-3 h-3" /> Stats
                             </button>
                             <button
                               onClick={async () => {
@@ -396,6 +475,111 @@ export default function ManagerPage() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* ── Live Scoring Modal ── */}
+      <AnimatePresence>
+        {liveScoreMatch && (
+          <>
+            <motion.div key="ls-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setLiveScoreMatch(null)} className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
+            <motion.div key="ls-modal" initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg max-h-[92vh] flex flex-col">
+
+                {/* Header + score */}
+                <div className="p-5 border-b border-slate-200 shrink-0">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="font-bold text-sfc-black flex items-center gap-2"><Zap className="w-4 h-4 text-red-500" /> Live Scoring</h2>
+                    <button onClick={() => setLiveScoreMatch(null)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400"><X className="w-4 h-4" /></button>
+                  </div>
+                  <div className="flex items-center justify-between text-center">
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground mb-1 truncate">{liveScoreMatch.home_team}</p>
+                    </div>
+                    <div className="px-6">
+                      <p className="text-4xl font-display text-sfc-black">{liveScoreMatch.home_score ?? 0} – {liveScoreMatch.away_score ?? 0}</p>
+                      <p className="text-xs text-red-500 font-bold mt-1">● LIVE</p>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground mb-1 truncate">{liveScoreMatch.away_team}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Log event form */}
+                <div className="p-5 border-b border-slate-200 shrink-0 space-y-3">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Log Event</p>
+
+                  {/* Event type buttons */}
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {[
+                      { type: "goal",        label: "⚽ Goal",   color: "bg-sfc-blue/10 border-sfc-blue/30 text-sfc-blue" },
+                      { type: "own_goal",    label: "🔴 OG",     color: "bg-orange-500/10 border-orange-500/30 text-orange-500" },
+                      { type: "assist",      label: "🎯 Assist", color: "bg-purple-500/10 border-purple-500/30 text-purple-500" },
+                      { type: "yellow_card", label: "🟨 Yellow", color: "bg-amber-500/10 border-amber-500/30 text-amber-500" },
+                      { type: "red_card",    label: "🟥 Red",    color: "bg-red-500/10 border-red-500/30 text-red-500" },
+                    ].map(({ type, label, color }) => (
+                      <button key={type} onClick={() => setEventForm(p => ({ ...p, event_type: type }))}
+                        className={cn("text-[10px] font-bold py-2 rounded-xl border transition-all", eventForm.event_type === type ? color : "border-slate-200 text-muted-foreground hover:border-slate-300")}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-2">
+                    {/* Player select */}
+                    <select className="select text-sm py-2 flex-1" value={eventForm.player_id}
+                      onChange={e => {
+                        const p = players.find(pl => pl.id === e.target.value);
+                        setEventForm(prev => ({ ...prev, player_id: e.target.value, player_name: p?.name ?? "" }));
+                      }}>
+                      <option value="">Select player…</option>
+                      {["GK","DEF","MID","FWD"].map(pos => (
+                        <optgroup key={pos} label={pos}>
+                          {players.filter(p => p.position === pos).map(p => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                    {/* Minute */}
+                    <input type="number" min={0} max={120} placeholder="Min" value={eventForm.minute}
+                      onChange={e => setEventForm(p => ({ ...p, minute: e.target.value }))}
+                      className="input text-sm py-2 w-20 shrink-0" />
+                    <button onClick={submitEvent} disabled={loggingEvent || !eventForm.player_name || !eventForm.minute}
+                      className="btn-primary text-sm py-2 px-4 shrink-0 disabled:opacity-60">
+                      {loggingEvent ? "…" : "Log"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Events list */}
+                <div className="overflow-y-auto flex-1">
+                  {liveEvents.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-8">No events yet</p>
+                  ) : (
+                    <div className="divide-y divide-slate-100">
+                      {[...liveEvents].reverse().map(ev => {
+                        const icons: Record<string, string> = { goal:"⚽", own_goal:"🔴", assist:"🎯", yellow_card:"🟨", red_card:"🟥" };
+                        return (
+                          <div key={ev.id} className="flex items-center gap-3 px-5 py-3">
+                            <span className="text-xs font-bold text-sfc-blue w-8 shrink-0">{ev.minute}&apos;</span>
+                            <span className="text-base">{icons[ev.event_type] ?? "📋"}</span>
+                            <span className="text-sm flex-1">{ev.player_name}</span>
+                            <button onClick={() => deleteEvent(ev.id)} className="text-slate-300 hover:text-red-400 transition-colors shrink-0">
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* ── Scoring Modal (identical to admin) ── */}
       <AnimatePresence>

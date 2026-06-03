@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { saveFlagsAction, updateMatchStatusAction, cancelMatchLiveAction, saveFixtureAction, saveMatchStatsAction, savePrizesAction, updateUserRoleAction, broadcastNotificationAction, addPlayerAction, editPlayerAction, deletePlayerAction, adminResetPasswordAction } from "@/lib/actions/admin";
+import { saveFlagsAction, updateMatchStatusAction, cancelMatchLiveAction, saveFixtureAction, saveMatchStatsAction, savePrizesAction, updateUserRoleAction, broadcastNotificationAction, addPlayerAction, editPlayerAction, deletePlayerAction, adminResetPasswordAction, logMatchEventAction, deleteMatchEventAction } from "@/lib/actions/admin";
 import { deleteLeagueAction } from "@/lib/actions/leagues";
 import { motion, AnimatePresence } from "framer-motion";
 import { TopBar } from "@/components/layout/TopBar";
@@ -161,6 +161,12 @@ export default function AdminPage() {
   const [addFixtureOpen, setAddFixtureOpen] = useState(false);
   const [fixtureForm, setFixtureForm] = useState({ home: "Scottland FC", away: "", matchday: "", kickoff: "", season: "2025/26" });
   const [savingFixture, setSavingFixture] = useState(false);
+  // ── Live Scoring ─────────────────────────────────────────────────────────
+  const [liveScoreMatch, setLiveScoreMatch] = useState<AdminMatch | null>(null);
+  const [liveEvents, setLiveEvents] = useState<{ id: string; minute: number; event_type: string; player_name: string }[]>([]);
+  const [eventForm, setEventForm] = useState({ minute: "", event_type: "goal", player_id: "", player_name: "" });
+  const [loggingEvent, setLoggingEvent] = useState(false);
+
   const [publicLeagues, setPublicLeagues] = useState<{ id: string; name: string; member_count: number; prizes: { first: string; second: string; third: string } | null }[]>([]);
   const [editingPrizes, setEditingPrizes] = useState<Record<string, { first: string; second: string; third: string }>>({});
   const [savingPrize, setSavingPrize] = useState<string | null>(null);
@@ -234,26 +240,45 @@ export default function AdminPage() {
       const supabase = createClient();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const sb = supabase as any;
-      const [{ data: allPlayers }, { data: existingStats }] = await Promise.all([
+      const [{ data: allPlayers }, { data: existingStats }, { data: events }] = await Promise.all([
         supabase.from("players").select("id, name, position").order("position").order("total_points", { ascending: false }),
         sb.from("player_match_stats").select("*").eq("match_id", match.id),
+        sb.from("match_events").select("*").eq("match_id", match.id),
       ]);
+
       const statsMap: Record<string, Partial<PlayerStatRow>> = {};
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (existingStats ?? []).forEach((s: any) => { statsMap[s.player_id] = { ...s, minutes: s.minutes_played }; });
+
+      // Aggregate live events for pre-fill when no saved stats exist yet
+      const eventsMap: Record<string, { goals: number; assists: number; yellow_cards: number; red_cards: number }> = {};
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setPlayerStatRows((allPlayers ?? []).map((p: any) => ({
-        player_id: p.id,
-        name: p.name,
-        position: p.position,
-        minutes: statsMap[p.id]?.minutes ?? 0,
-        goals: statsMap[p.id]?.goals ?? 0,
-        assists: statsMap[p.id]?.assists ?? 0,
-        yellow_cards: statsMap[p.id]?.yellow_cards ?? 0,
-        red_cards: statsMap[p.id]?.red_cards ?? 0,
-        clean_sheet: statsMap[p.id]?.clean_sheet ?? false,
-        fantasy_points: statsMap[p.id]?.fantasy_points ?? 0,
-      })));
+      (events ?? []).forEach((ev: any) => {
+        if (!ev.player_id) return;
+        if (!eventsMap[ev.player_id]) eventsMap[ev.player_id] = { goals: 0, assists: 0, yellow_cards: 0, red_cards: 0 };
+        if (ev.event_type === "goal")        eventsMap[ev.player_id].goals++;
+        if (ev.event_type === "assist")      eventsMap[ev.player_id].assists++;
+        if (ev.event_type === "yellow_card") eventsMap[ev.player_id].yellow_cards++;
+        if (ev.event_type === "red_card")    eventsMap[ev.player_id].red_cards++;
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setPlayerStatRows((allPlayers ?? []).map((p: any) => {
+        const saved = statsMap[p.id];
+        const live  = eventsMap[p.id];
+        return {
+          player_id: p.id,
+          name: p.name,
+          position: p.position,
+          minutes:      saved?.minutes      ?? 0,
+          goals:        saved?.goals        ?? live?.goals        ?? 0,
+          assists:      saved?.assists      ?? live?.assists      ?? 0,
+          yellow_cards: saved?.yellow_cards ?? live?.yellow_cards ?? 0,
+          red_cards:    saved?.red_cards    ?? live?.red_cards    ?? 0,
+          clean_sheet:  saved?.clean_sheet  ?? false,
+          fantasy_points: saved?.fantasy_points ?? 0,
+        };
+      }));
     } catch { /* keep empty */ }
     finally { setStatsLoading(false); }
   }
@@ -280,6 +305,55 @@ export default function AdminPage() {
       setScoringMatch(null);
     } catch { /* show inline */ }
     finally { setSavingStats(false); setCalculating(false); }
+  }
+
+  async function openLiveScoring(match: AdminMatch) {
+    setLiveScoreMatch(match);
+    const supabase = createClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase as any).from("match_events").select("*").eq("match_id", match.id).order("minute", { ascending: true });
+    setLiveEvents(data ?? []);
+    setEventForm({ minute: "", event_type: "goal", player_id: "", player_name: "" });
+  }
+
+  async function submitEvent() {
+    if (!liveScoreMatch || !eventForm.minute || !eventForm.player_name) return;
+    setLoggingEvent(true);
+    try {
+      const result = await logMatchEventAction({
+        match_id: liveScoreMatch.id,
+        player_id: eventForm.player_id || null,
+        player_name: eventForm.player_name,
+        event_type: eventForm.event_type as "goal" | "own_goal" | "assist" | "yellow_card" | "red_card",
+        minute: parseInt(eventForm.minute),
+        home_team: liveScoreMatch.home_team,
+        away_team: liveScoreMatch.away_team,
+        is_sfc_player: players.some(p => p.name === eventForm.player_name),
+      });
+      if (result.success && result.event) {
+        setLiveEvents(prev => [...prev, result.event].sort((a, b) => a.minute - b.minute));
+        const supabase = createClient();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: fresh } = await (supabase as any).from("matches").select("*").eq("id", liveScoreMatch.id).single();
+        if (fresh) {
+          setDbMatches(prev => prev.map(m => m.id === liveScoreMatch.id ? fresh as AdminMatch : m));
+          setLiveScoreMatch(fresh as AdminMatch);
+        }
+        setEventForm(p => ({ ...p, minute: "", player_id: "", player_name: "" }));
+      }
+    } finally { setLoggingEvent(false); }
+  }
+
+  async function deleteEvent(eventId: string) {
+    await deleteMatchEventAction(eventId, liveScoreMatch!.id);
+    setLiveEvents(prev => prev.filter(e => e.id !== eventId));
+    const supabase = createClient();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: fresh } = await (supabase as any).from("matches").select("*").eq("id", liveScoreMatch!.id).single();
+    if (fresh) {
+      setDbMatches(prev => prev.map(m => m.id === liveScoreMatch!.id ? fresh as AdminMatch : m));
+      setLiveScoreMatch(fresh as AdminMatch);
+    }
   }
 
   async function updateMatchStatus(matchId: string, status: string) {
@@ -929,9 +1003,13 @@ export default function AdminPage() {
                         )}
                         {m.status === "live" && (
                           <div className="flex items-center gap-1.5">
+                            <button onClick={() => openLiveScoring(m)}
+                              className="text-[10px] font-bold px-2 sm:px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 hover:bg-red-500/20 transition-colors flex items-center gap-1 whitespace-nowrap">
+                              <Zap className="w-3 h-3" /> Live
+                            </button>
                             <button onClick={() => openScoring(m)}
                               className="text-[10px] font-bold px-2 sm:px-3 py-1.5 rounded-lg bg-sfc-blue/10 border border-sfc-blue/30 text-sfc-blue hover:bg-sfc-blue/20 transition-colors flex items-center gap-1 whitespace-nowrap">
-                              <Zap className="w-3 h-3" /> Stats
+                              <Edit className="w-3 h-3" /> Stats
                             </button>
                             <button
                               onClick={async () => {
@@ -1341,6 +1419,113 @@ export default function AdminPage() {
                       )}
                     </button>
                   </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── Live Scoring Modal ── */}
+      <AnimatePresence>
+        {liveScoreMatch && (
+          <>
+            <motion.div key="ls-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setLiveScoreMatch(null)}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
+            <motion.div key="ls-modal" initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg max-h-[92vh] flex flex-col">
+
+                {/* Header */}
+                <div className="flex items-center justify-between p-5 border-b border-slate-200 shrink-0">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                      <h2 className="font-bold text-sfc-black">Live Scoring</h2>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">{liveScoreMatch.home_team} vs {liveScoreMatch.away_team} · MD{liveScoreMatch.matchday}</p>
+                  </div>
+                  <button onClick={() => setLiveScoreMatch(null)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Score display */}
+                <div className="p-5 border-b border-slate-200 shrink-0">
+                  <div className="flex items-center justify-center gap-6">
+                    <div className="text-center min-w-0 flex-1">
+                      <p className="text-xs text-muted-foreground mb-1 truncate">{liveScoreMatch.home_team}</p>
+                    </div>
+                    <div className="text-center shrink-0">
+                      <p className="text-4xl font-display text-sfc-black">{liveScoreMatch.home_score ?? 0} – {liveScoreMatch.away_score ?? 0}</p>
+                    </div>
+                    <div className="text-center min-w-0 flex-1">
+                      <p className="text-xs text-muted-foreground mb-1 truncate">{liveScoreMatch.away_team}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Log event form */}
+                <div className="p-5 border-b border-slate-200 space-y-3 shrink-0">
+                  <h3 className="text-xs font-bold text-sfc-black uppercase tracking-wide">Log Event</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] text-muted-foreground font-medium block mb-1">Minute</label>
+                      <input type="number" min="0" max="120" value={eventForm.minute}
+                        onChange={e => setEventForm(p => ({ ...p, minute: e.target.value }))}
+                        placeholder="e.g. 11" className="input-field text-sm w-full" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-muted-foreground font-medium block mb-1">Event</label>
+                      <select value={eventForm.event_type} onChange={e => setEventForm(p => ({ ...p, event_type: e.target.value }))}
+                        className="input-field text-sm w-full">
+                        <option value="goal">⚽ Goal</option>
+                        <option value="own_goal">🔴 Own Goal</option>
+                        <option value="assist">🎯 Assist</option>
+                        <option value="yellow_card">🟨 Yellow Card</option>
+                        <option value="red_card">🟥 Red Card</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-muted-foreground font-medium block mb-1">Player</label>
+                    <input list="admin-live-players" value={eventForm.player_name}
+                      onChange={e => {
+                        const val = e.target.value;
+                        const match = players.find(p => p.name === val);
+                        setEventForm(p => ({ ...p, player_name: val, player_id: match?.id ?? "" }));
+                      }}
+                      placeholder="Type player name…" className="input-field text-sm w-full" />
+                    <datalist id="admin-live-players">
+                      {players.map(p => <option key={p.id} value={p.name} />)}
+                    </datalist>
+                  </div>
+                  <button onClick={submitEvent} disabled={loggingEvent || !eventForm.minute || !eventForm.player_name}
+                    className="btn-primary text-sm w-full py-2.5 flex items-center justify-center gap-2 disabled:opacity-50">
+                    {loggingEvent ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <Zap className="w-4 h-4" />}
+                    Log Event
+                  </button>
+                </div>
+
+                {/* Events log */}
+                <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
+                  {liveEvents.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-8">No events logged yet</p>
+                  ) : (
+                    [...liveEvents].reverse().map(ev => {
+                      const icons: Record<string, string> = { goal: "⚽", own_goal: "🔴", assist: "🎯", yellow_card: "🟨", red_card: "🟥" };
+                      return (
+                        <div key={ev.id} className="flex items-center gap-3 px-5 py-2.5">
+                          <span className="text-xs font-bold text-muted-foreground shrink-0 w-8 text-right">{ev.minute}&apos;</span>
+                          <span className="text-sm flex-1 min-w-0 truncate">{icons[ev.event_type] ?? "📋"} {ev.player_name}</span>
+                          <button onClick={() => deleteEvent(ev.id)} className="text-slate-300 hover:text-red-400 transition-colors shrink-0">
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
             </motion.div>

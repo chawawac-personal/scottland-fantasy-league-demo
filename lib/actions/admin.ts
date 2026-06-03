@@ -211,6 +211,97 @@ export async function broadcastNotificationAction(title: string, body: string, t
   return { success: true, count: profiles.length };
 }
 
+export async function logMatchEventAction(event: {
+  match_id: string;
+  player_id: string | null;
+  player_name: string;
+  event_type: "goal" | "own_goal" | "assist" | "yellow_card" | "red_card";
+  minute: number;
+  home_team: string;
+  away_team: string;
+  is_sfc_player: boolean;
+}) {
+  const { error, supabase } = await requireAdmin();
+  if (error || !supabase) return { error: error ?? "Unknown error" };
+
+  // Insert the event
+  const { data: ev, error: evErr } = await supabase.from("match_events").insert({
+    match_id: event.match_id,
+    player_id: event.player_id,
+    player_name: event.player_name.slice(0, 100),
+    event_type: event.event_type,
+    minute: Math.max(0, Math.min(120, event.minute)),
+  }).select().single();
+  if (evErr) return { error: evErr.message };
+
+  // Recalculate score from all goal events for this match
+  if (event.event_type === "goal" || event.event_type === "own_goal") {
+    const { data: allEvents } = await supabase
+      .from("match_events")
+      .select("event_type, is_sfc_player:player_id")
+      .eq("match_id", event.match_id)
+      .in("event_type", ["goal", "own_goal"]);
+
+    // Re-derive score by replaying all goal events using current event data
+    const { data: goalEvents } = await supabase
+      .from("match_events")
+      .select("event_type, player_name")
+      .eq("match_id", event.match_id)
+      .in("event_type", ["goal", "own_goal"]);
+
+    // For scoring: we store which team scored via a convention —
+    // use home_score / away_score recalculated from a helper query
+    const sfcIsHome = event.home_team === "Scottland FC";
+    const { data: sfcPlayers } = await supabase.from("players").select("id, name");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sfcNames = new Set((sfcPlayers ?? []).map((p: any) => p.name));
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: rawGoals } = await supabase.from("match_events").select("event_type, player_name").eq("match_id", event.match_id).in("event_type", ["goal","own_goal"]);
+    let homeGoals = 0, awayGoals = 0;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (rawGoals ?? []).forEach((g: any) => {
+      const isSfcScorer = sfcNames.has(g.player_name);
+      const scoredForSfc = g.event_type === "goal" ? isSfcScorer : !isSfcScorer;
+      if (scoredForSfc) { if (sfcIsHome) homeGoals++; else awayGoals++; }
+      else { if (sfcIsHome) awayGoals++; else homeGoals++; }
+    });
+
+    await supabase.from("matches").update({ home_score: homeGoals, away_score: awayGoals }).eq("id", event.match_id);
+  }
+
+  return { success: true, event: ev };
+}
+
+export async function deleteMatchEventAction(eventId: string, matchId: string) {
+  const { error, supabase } = await requireAdmin();
+  if (error || !supabase) return { error: error ?? "Unknown error" };
+
+  await supabase.from("match_events").delete().eq("id", eventId);
+
+  // Recalculate score after removal
+  const { data: match } = await supabase.from("matches").select("home_team, away_team").eq("id", matchId).single();
+  if (match) {
+    const sfcIsHome = match.home_team === "Scottland FC";
+    const { data: sfcPlayers } = await supabase.from("players").select("name");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sfcNames = new Set((sfcPlayers ?? []).map((p: any) => p.name));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: rawGoals } = await supabase.from("match_events").select("event_type, player_name").eq("match_id", matchId).in("event_type", ["goal","own_goal"]);
+    let homeGoals = 0, awayGoals = 0;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (rawGoals ?? []).forEach((g: any) => {
+      const isSfcScorer = sfcNames.has(g.player_name);
+      const scoredForSfc = g.event_type === "goal" ? isSfcScorer : !isSfcScorer;
+      if (scoredForSfc) { if (sfcIsHome) homeGoals++; else awayGoals++; }
+      else { if (sfcIsHome) awayGoals++; else homeGoals++; }
+    });
+    await supabase.from("matches").update({ home_score: homeGoals, away_score: awayGoals }).eq("id", matchId);
+  }
+
+  return { success: true };
+}
+
 export async function adminResetPasswordAction(targetUserId: string, newPassword: string) {
   if (!newPassword || newPassword.length < 8) return { error: "Password must be at least 8 characters" };
 
