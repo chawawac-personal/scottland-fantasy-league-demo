@@ -56,6 +56,7 @@ const EVENT_CONFIG: Record<string, { icon: string; label: string; pts: string; b
   goal:              { icon: "⚽", label: "GOAL!",         pts: "+4", bg: "bg-sfc-blue/20 border-sfc-blue/30",     text: "text-sfc-blue"    },
   own_goal:          { icon: "🔴", label: "OWN GOAL",      pts: "-",  bg: "bg-orange-500/20 border-orange-500/30", text: "text-orange-500"  },
   opponent_own_goal: { icon: "🔵", label: "OWN GOAL",      pts: "-",  bg: "bg-teal-500/20 border-teal-500/30",     text: "text-teal-600"    },
+  opponent_goal:     { icon: "⚫", label: "GOAL",           pts: "-",  bg: "bg-slate-200 border-slate-300",           text: "text-slate-500"   },
   assist:            { icon: "🎯", label: "ASSIST",         pts: "+3", bg: "bg-purple-500/20 border-purple-500/30", text: "text-purple-400"  },
   yellow_card:       { icon: "🟨", label: "YELLOW CARD",   pts: "-1", bg: "bg-amber-500/20 border-amber-500/30",   text: "text-amber-400"   },
   red_card:          { icon: "🟥", label: "RED CARD",       pts: "-3", bg: "bg-red-500/20 border-red-500/30",       text: "text-red-400"     },

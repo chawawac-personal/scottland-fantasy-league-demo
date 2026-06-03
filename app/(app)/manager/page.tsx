@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { TopBar } from "@/components/layout/TopBar";
 import { Radio, Trophy, Edit, Plus, Zap, X, Clock, CheckCircle, XCircle } from "lucide-react";
 import { cn, getPositionColor } from "@/lib/utils";
-import { cancelMatchLiveAction, logMatchEventAction, deleteMatchEventAction } from "@/lib/actions/admin";
+import { cancelMatchLiveAction, logMatchEventAction, deleteMatchEventAction, reopenMatchAction } from "@/lib/actions/admin";
 
 interface AdminMatch {
   id: string;
@@ -53,6 +53,7 @@ export default function ManagerPage() {
   const [liveEvents, setLiveEvents] = useState<{ id: string; minute: number; event_type: string; player_name: string }[]>([]);
   const [eventForm, setEventForm] = useState({ minute: "", event_type: "goal", player_id: "", player_name: "" });
   const [loggingEvent, setLoggingEvent] = useState(false);
+  const [reopening, setReopening] = useState(false);
 
   // ── Players ───────────────────────────────────────────────────────────────
   const [players, setPlayers] = useState<{ id: string; name: string; position: string; total_points: number; is_injured: boolean }[]>([]);
@@ -200,15 +201,15 @@ export default function ManagerPage() {
   }
 
   async function submitEvent() {
-    const needsPlayer = eventForm.event_type !== "opponent_own_goal";
-    if (!liveScoreMatch || !eventForm.minute || (needsPlayer && !eventForm.player_name)) return;
+    const noPlayer = eventForm.event_type === "opponent_own_goal" || eventForm.event_type === "opponent_goal";
+    if (!liveScoreMatch || !eventForm.minute || (!noPlayer && !eventForm.player_name)) return;
     setLoggingEvent(true);
     try {
       const result = await logMatchEventAction({
         match_id: liveScoreMatch.id,
-        player_id: needsPlayer ? (eventForm.player_id || null) : null,
-        player_name: needsPlayer ? eventForm.player_name : "Opponent OG",
-        event_type: eventForm.event_type as "goal" | "own_goal" | "assist" | "yellow_card" | "red_card" | "opponent_own_goal",
+        player_id: noPlayer ? null : (eventForm.player_id || null),
+        player_name: noPlayer ? (eventForm.event_type === "opponent_goal" ? "Opponent" : "Opponent OG") : eventForm.player_name,
+        event_type: eventForm.event_type as "goal" | "own_goal" | "assist" | "yellow_card" | "red_card" | "opponent_own_goal" | "opponent_goal",
         minute: parseInt(eventForm.minute),
         home_team: liveScoreMatch.home_team,
         away_team: liveScoreMatch.away_team,
@@ -238,6 +239,18 @@ export default function ManagerPage() {
       setMatches(prev => prev.map(m => m.id === liveScoreMatch!.id ? fresh as AdminMatch : m));
       setLiveScoreMatch(fresh as AdminMatch);
     }
+  }
+
+  async function handleReopen(match: AdminMatch) {
+    if (!confirm(`Reopen "${match.home_team} vs ${match.away_team}"?\n\nThis will:\n• Reverse all fantasy points from this match\n• Delete saved player stats\n• Set the match back to Live so you can re-score`)) return;
+    setReopening(true);
+    try {
+      const result = await reopenMatchAction(match.id, match.matchday, match.season);
+      if (result.success) {
+        setMatches(prev => prev.map(m => m.id === match.id ? { ...m, status: "live", home_score: null, away_score: null } : m));
+        setScoringMatch(null);
+      }
+    } finally { setReopening(false); }
   }
 
   async function toggleInjury(id: string, current: boolean) {
@@ -513,12 +526,13 @@ export default function ManagerPage() {
                   {/* Event type buttons */}
                   <div className="grid grid-cols-3 gap-1.5">
                     {[
-                      { type: "goal",              label: "⚽ Goal",     color: "bg-sfc-blue/10 border-sfc-blue/30 text-sfc-blue" },
-                      { type: "own_goal",          label: "🔴 Own Goal", color: "bg-orange-500/10 border-orange-500/30 text-orange-500" },
-                      { type: "opponent_own_goal", label: "🔵 Opp. OG",  color: "bg-teal-500/10 border-teal-500/30 text-teal-600" },
-                      { type: "assist",            label: "🎯 Assist",   color: "bg-purple-500/10 border-purple-500/30 text-purple-500" },
-                      { type: "yellow_card",       label: "🟨 Yellow",   color: "bg-amber-500/10 border-amber-500/30 text-amber-500" },
-                      { type: "red_card",          label: "🟥 Red",      color: "bg-red-500/10 border-red-500/30 text-red-500" },
+                      { type: "goal",              label: "⚽ Goal",      color: "bg-sfc-blue/10 border-sfc-blue/30 text-sfc-blue" },
+                      { type: "own_goal",          label: "🔴 Own Goal",  color: "bg-orange-500/10 border-orange-500/30 text-orange-500" },
+                      { type: "opponent_own_goal", label: "🔵 Opp. OG",   color: "bg-teal-500/10 border-teal-500/30 text-teal-600" },
+                      { type: "opponent_goal",     label: "⚫ Opp. Goal", color: "bg-slate-200 border-slate-400 text-slate-600" },
+                      { type: "assist",            label: "🎯 Assist",    color: "bg-purple-500/10 border-purple-500/30 text-purple-500" },
+                      { type: "yellow_card",       label: "🟨 Yellow",    color: "bg-amber-500/10 border-amber-500/30 text-amber-500" },
+                      { type: "red_card",          label: "🟥 Red",       color: "bg-red-500/10 border-red-500/30 text-red-500" },
                     ].map(({ type, label, color }) => (
                       <button key={type}
                         onClick={() => setEventForm(p => ({ ...p, event_type: type, player_id: "", player_name: "" }))}
@@ -529,8 +543,8 @@ export default function ManagerPage() {
                   </div>
 
                   <div className="flex gap-2">
-                    {/* Player select — hidden for opponent own goals */}
-                    {eventForm.event_type !== "opponent_own_goal" && (
+                    {/* Player select — hidden for no-player event types */}
+                    {(eventForm.event_type !== "opponent_own_goal" && eventForm.event_type !== "opponent_goal") && (
                       <select className="select text-sm py-2 flex-1" value={eventForm.player_id}
                         onChange={e => {
                           const p = players.find(pl => pl.id === e.target.value);
@@ -546,15 +560,17 @@ export default function ManagerPage() {
                         ))}
                       </select>
                     )}
-                    {eventForm.event_type === "opponent_own_goal" && (
-                      <p className="flex-1 text-xs text-muted-foreground self-center">No player needed — opponent scored against themselves</p>
+                    {(eventForm.event_type === "opponent_own_goal" || eventForm.event_type === "opponent_goal") && (
+                      <p className="flex-1 text-xs text-muted-foreground self-center">
+                        {eventForm.event_type === "opponent_goal" ? "Opponent scored — updates their score, no player needed" : "Opponent scored against themselves — counts for SFC"}
+                      </p>
                     )}
                     {/* Minute */}
                     <input type="number" min={0} max={120} placeholder="Min" value={eventForm.minute}
                       onChange={e => setEventForm(p => ({ ...p, minute: e.target.value }))}
                       className="input text-sm py-2 w-20 shrink-0" />
                     <button onClick={submitEvent}
-                      disabled={loggingEvent || !eventForm.minute || (eventForm.event_type !== "opponent_own_goal" && !eventForm.player_name)}
+                      disabled={loggingEvent || !eventForm.minute || (eventForm.event_type !== "opponent_own_goal" && eventForm.event_type !== "opponent_goal" && !eventForm.player_name)}
                       className="btn-primary text-sm py-2 px-4 shrink-0 disabled:opacity-60">
                       {loggingEvent ? "…" : "Log"}
                     </button>
@@ -568,7 +584,7 @@ export default function ManagerPage() {
                   ) : (
                     <div className="divide-y divide-slate-100">
                       {[...liveEvents].reverse().map(ev => {
-                        const icons: Record<string, string> = { goal:"⚽", own_goal:"🔴", opponent_own_goal:"🔵", assist:"🎯", yellow_card:"🟨", red_card:"🟥" };
+                        const icons: Record<string, string> = { goal:"⚽", own_goal:"🔴", opponent_own_goal:"🔵", opponent_goal:"⚫", assist:"🎯", yellow_card:"🟨", red_card:"🟥" };
                         return (
                           <div key={ev.id} className="flex items-center gap-3 px-5 py-3">
                             <span className="text-xs font-bold text-sfc-blue w-8 shrink-0">{ev.minute}&apos;</span>
@@ -677,8 +693,15 @@ export default function ManagerPage() {
                     <Clock className="w-3 h-3 inline mr-1" />
                     Set minutes to 0 to exclude a player. Points auto-calculate on save.
                   </p>
-                  <div className="flex items-center gap-3 sm:shrink-0 justify-end">
+                  <div className="flex items-center gap-3 sm:shrink-0 justify-end flex-wrap">
                     <button onClick={() => setScoringMatch(null)} disabled={savingStats} className="btn-outline text-sm px-4 sm:px-5 py-2.5">Cancel</button>
+                    {scoringMatch?.status === "finished" && (
+                      <button onClick={() => handleReopen(scoringMatch)} disabled={reopening || savingStats}
+                        className="text-sm px-4 py-2.5 rounded-xl border border-amber-400/40 text-amber-600 hover:bg-amber-50 transition-colors flex items-center gap-2 disabled:opacity-50">
+                        {reopening ? <span className="w-4 h-4 border-2 border-amber-400/40 border-t-amber-500 rounded-full animate-spin" /> : "↩"}
+                        Reopen Match
+                      </button>
+                    )}
                     <button onClick={saveAndFinalise} disabled={savingStats || statsLoading}
                       className="btn-primary text-sm px-4 sm:px-6 py-2.5 flex items-center gap-2 disabled:opacity-60">
                       {savingStats

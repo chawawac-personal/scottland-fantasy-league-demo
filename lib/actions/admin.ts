@@ -215,7 +215,7 @@ export async function logMatchEventAction(event: {
   match_id: string;
   player_id: string | null;
   player_name: string;
-  event_type: "goal" | "own_goal" | "assist" | "yellow_card" | "red_card" | "opponent_own_goal";
+  event_type: "goal" | "own_goal" | "assist" | "yellow_card" | "red_card" | "opponent_own_goal" | "opponent_goal";
   minute: number;
   home_team: string;
   away_team: string;
@@ -232,9 +232,8 @@ export async function logMatchEventAction(event: {
   }).select().single();
   if (evErr) return { error: evErr.message };
 
-  if (event.event_type === "goal" || event.event_type === "own_goal" || event.event_type === "opponent_own_goal") {
-    await recalculateScore(supabase, event.match_id, event.home_team);
-  }
+  const isScoring = ["goal", "own_goal", "opponent_own_goal", "opponent_goal"].includes(event.event_type);
+  if (isScoring) await recalculateScore(supabase, event.match_id, event.home_team);
 
   return { success: true, event: ev };
 }
@@ -242,14 +241,14 @@ export async function logMatchEventAction(event: {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function recalculateScore(supabase: any, matchId: string, homeTeam: string) {
   const sfcIsHome = homeTeam === "Scottland FC";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: rawGoals } = await supabase.from("match_events").select("event_type").eq("match_id", matchId).in("event_type", ["goal", "own_goal", "opponent_own_goal"]);
+  const { data: rawGoals } = await supabase
+    .from("match_events").select("event_type").eq("match_id", matchId)
+    .in("event_type", ["goal", "own_goal", "opponent_own_goal", "opponent_goal"]);
   let sfcGoals = 0, oppGoals = 0;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (rawGoals ?? []).forEach((g: any) => {
-    if (g.event_type === "goal")              sfcGoals++;   // SFC player scored
-    else if (g.event_type === "own_goal")     oppGoals++;   // SFC player scored against themselves
-    else if (g.event_type === "opponent_own_goal") sfcGoals++; // opponent scored against themselves
+    if (g.event_type === "goal" || g.event_type === "opponent_own_goal") sfcGoals++;
+    else oppGoals++; // own_goal or opponent_goal
   });
   await supabase.from("matches").update({
     home_score: sfcIsHome ? sfcGoals : oppGoals,
@@ -266,6 +265,24 @@ export async function deleteMatchEventAction(eventId: string, matchId: string) {
   const { data: match } = await supabase.from("matches").select("home_team").eq("id", matchId).single();
   if (match) await recalculateScore(supabase, matchId, match.home_team);
 
+  return { success: true };
+}
+
+export async function reopenMatchAction(matchId: string, matchday: number, season: string) {
+  const { error, supabase } = await requireAdmin();
+  if (error || !supabase) return { error: error ?? "Unknown error" };
+
+  // Reverse points before deleting stats — weekly_points is the match's contribution
+  await supabase.rpc("reverse_matchday_team_points", { p_matchday: matchday, p_season: season });
+
+  // Delete all saved stats for this match
+  await supabase.from("player_match_stats").delete().eq("match_id", matchId);
+
+  // Set match back to live so the manager can re-score
+  await supabase.from("matches").update({ status: "live" }).eq("id", matchId);
+
+  revalidatePath("/manager");
+  revalidatePath("/admin");
   return { success: true };
 }
 

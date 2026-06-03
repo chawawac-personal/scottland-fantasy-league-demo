@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { saveFlagsAction, updateMatchStatusAction, cancelMatchLiveAction, saveFixtureAction, saveMatchStatsAction, savePrizesAction, updateUserRoleAction, broadcastNotificationAction, addPlayerAction, editPlayerAction, deletePlayerAction, adminResetPasswordAction, logMatchEventAction, deleteMatchEventAction } from "@/lib/actions/admin";
+import { saveFlagsAction, updateMatchStatusAction, cancelMatchLiveAction, saveFixtureAction, saveMatchStatsAction, savePrizesAction, updateUserRoleAction, broadcastNotificationAction, addPlayerAction, editPlayerAction, deletePlayerAction, adminResetPasswordAction, logMatchEventAction, deleteMatchEventAction, reopenMatchAction } from "@/lib/actions/admin";
 import { deleteLeagueAction } from "@/lib/actions/leagues";
 import { motion, AnimatePresence } from "framer-motion";
 import { TopBar } from "@/components/layout/TopBar";
@@ -166,6 +166,7 @@ export default function AdminPage() {
   const [liveEvents, setLiveEvents] = useState<{ id: string; minute: number; event_type: string; player_name: string }[]>([]);
   const [eventForm, setEventForm] = useState({ minute: "", event_type: "goal", player_id: "", player_name: "" });
   const [loggingEvent, setLoggingEvent] = useState(false);
+  const [reopening, setReopening] = useState(false);
 
   const [publicLeagues, setPublicLeagues] = useState<{ id: string; name: string; member_count: number; prizes: { first: string; second: string; third: string } | null }[]>([]);
   const [editingPrizes, setEditingPrizes] = useState<Record<string, { first: string; second: string; third: string }>>({});
@@ -317,15 +318,15 @@ export default function AdminPage() {
   }
 
   async function submitEvent() {
-    const needsPlayer = eventForm.event_type !== "opponent_own_goal";
-    if (!liveScoreMatch || !eventForm.minute || (needsPlayer && !eventForm.player_name)) return;
+    const noPlayer = eventForm.event_type === "opponent_own_goal" || eventForm.event_type === "opponent_goal";
+    if (!liveScoreMatch || !eventForm.minute || (!noPlayer && !eventForm.player_name)) return;
     setLoggingEvent(true);
     try {
       const result = await logMatchEventAction({
         match_id: liveScoreMatch.id,
-        player_id: needsPlayer ? (eventForm.player_id || null) : null,
-        player_name: needsPlayer ? eventForm.player_name : "Opponent OG",
-        event_type: eventForm.event_type as "goal" | "own_goal" | "assist" | "yellow_card" | "red_card" | "opponent_own_goal",
+        player_id: noPlayer ? null : (eventForm.player_id || null),
+        player_name: noPlayer ? (eventForm.event_type === "opponent_goal" ? "Opponent" : "Opponent OG") : eventForm.player_name,
+        event_type: eventForm.event_type as "goal" | "own_goal" | "assist" | "yellow_card" | "red_card" | "opponent_own_goal" | "opponent_goal",
         minute: parseInt(eventForm.minute),
         home_team: liveScoreMatch.home_team,
         away_team: liveScoreMatch.away_team,
@@ -354,6 +355,18 @@ export default function AdminPage() {
       setDbMatches(prev => prev.map(m => m.id === liveScoreMatch!.id ? fresh as AdminMatch : m));
       setLiveScoreMatch(fresh as AdminMatch);
     }
+  }
+
+  async function handleReopen(match: AdminMatch) {
+    if (!confirm(`Reopen "${match.home_team} vs ${match.away_team}"?\n\nThis will:\n• Reverse all fantasy points from this match\n• Delete saved player stats\n• Set the match back to Live so you can re-score`)) return;
+    setReopening(true);
+    try {
+      const result = await reopenMatchAction(match.id, match.matchday, match.season);
+      if (result.success) {
+        setDbMatches(prev => prev.map(m => m.id === match.id ? { ...m, status: "live", home_score: null, away_score: null } : m));
+        setScoringMatch(null);
+      }
+    } finally { setReopening(false); }
   }
 
   async function updateMatchStatus(matchId: string, status: string) {
@@ -1405,10 +1418,17 @@ export default function AdminPage() {
                     <Clock className="w-3 h-3 inline mr-1" />
                     Set minutes to 0 to exclude a player. Points auto-calculate via DB trigger when saved.
                   </p>
-                  <div className="flex items-center gap-3 justify-end sm:shrink-0">
+                  <div className="flex items-center gap-3 justify-end sm:shrink-0 flex-wrap">
                     <button onClick={() => setScoringMatch(null)} disabled={savingStats} className="btn-outline text-sm px-4 sm:px-5 py-2.5">
                       Cancel
                     </button>
+                    {scoringMatch?.status === "finished" && (
+                      <button onClick={() => handleReopen(scoringMatch)} disabled={reopening || savingStats}
+                        className="text-sm px-4 py-2.5 rounded-xl border border-amber-400/40 text-amber-600 hover:bg-amber-50 transition-colors flex items-center gap-2 disabled:opacity-50">
+                        {reopening ? <span className="w-4 h-4 border-2 border-amber-400/40 border-t-amber-500 rounded-full animate-spin" /> : "↩"}
+                        Reopen Match
+                      </button>
+                    )}
                     <button onClick={saveAndFinalise} disabled={savingStats || statsLoading}
                       className="btn-primary text-sm px-4 sm:px-6 py-2.5 flex items-center gap-2 disabled:opacity-60">
                       {savingStats ? (
@@ -1481,16 +1501,17 @@ export default function AdminPage() {
                       <select value={eventForm.event_type}
                         onChange={e => setEventForm(p => ({ ...p, event_type: e.target.value, player_id: "", player_name: "" }))}
                         className="input-field text-sm w-full">
-                        <option value="goal">⚽ Goal</option>
+                        <option value="goal">⚽ Goal (SFC)</option>
                         <option value="own_goal">🔴 Own Goal (by SFC)</option>
                         <option value="opponent_own_goal">🔵 Opp. OG (for us)</option>
+                        <option value="opponent_goal">⚫ Opp. Goal (vs us)</option>
                         <option value="assist">🎯 Assist</option>
                         <option value="yellow_card">🟨 Yellow Card</option>
                         <option value="red_card">🟥 Red Card</option>
                       </select>
                     </div>
                   </div>
-                  {eventForm.event_type !== "opponent_own_goal" ? (
+                  {(eventForm.event_type !== "opponent_own_goal" && eventForm.event_type !== "opponent_goal") ? (
                     <div>
                       <label className="text-[10px] text-muted-foreground font-medium block mb-1">Player</label>
                       <select value={eventForm.player_id}
@@ -1510,10 +1531,12 @@ export default function AdminPage() {
                       </select>
                     </div>
                   ) : (
-                    <p className="text-xs text-muted-foreground">No player needed — opponent scored against themselves, counts for SFC.</p>
+                    <p className="text-xs text-muted-foreground">
+                      {eventForm.event_type === "opponent_goal" ? "Opponent scored — updates their score. No player needed." : "Opponent scored against themselves — counts for SFC."}
+                    </p>
                   )}
                   <button onClick={submitEvent}
-                    disabled={loggingEvent || !eventForm.minute || (eventForm.event_type !== "opponent_own_goal" && !eventForm.player_name)}
+                    disabled={loggingEvent || !eventForm.minute || (eventForm.event_type !== "opponent_own_goal" && eventForm.event_type !== "opponent_goal" && !eventForm.player_name)}
                     className="btn-primary text-sm w-full py-2.5 flex items-center justify-center gap-2 disabled:opacity-50">
                     {loggingEvent ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <Zap className="w-4 h-4" />}
                     Log Event
@@ -1526,7 +1549,7 @@ export default function AdminPage() {
                     <p className="text-xs text-muted-foreground text-center py-8">No events logged yet</p>
                   ) : (
                     [...liveEvents].reverse().map(ev => {
-                      const icons: Record<string, string> = { goal: "⚽", own_goal: "🔴", opponent_own_goal: "🔵", assist: "🎯", yellow_card: "🟨", red_card: "🟥" };
+                      const icons: Record<string, string> = { goal: "⚽", own_goal: "🔴", opponent_own_goal: "🔵", opponent_goal: "⚫", assist: "🎯", yellow_card: "🟨", red_card: "🟥" };
                       return (
                         <div key={ev.id} className="flex items-center gap-3 px-5 py-2.5">
                           <span className="text-xs font-bold text-muted-foreground shrink-0 w-8 text-right">{ev.minute}&apos;</span>
