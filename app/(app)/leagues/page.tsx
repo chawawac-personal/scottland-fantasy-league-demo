@@ -52,54 +52,52 @@ export default function LeaguesPage() {
   const [publicLeagues, setPublicLeagues] = useState<{ id: string; name: string; description: string | null; prizes: unknown }[]>([]);
   const [joiningPublic, setJoiningPublic] = useState<string | null>(null);
 
+  async function refreshMyLeagues() {
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase as any)
+        .from("league_members")
+        .select("rank, points, leagues(id, name, type, invite_code, owner_id, description, max_members, prizes)")
+        .eq("user_id", user.id);
+      if (!data?.length) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const leagueIds = (data as any[]).map((m: any) => m.leagues.id);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: allMembers } = await (supabase as any)
+        .from("league_members")
+        .select("league_id, points, profiles(username)")
+        .in("league_id", leagueIds)
+        .order("points", { ascending: false });
+      const memberCountMap: Record<string, number> = {};
+      const leaderMap: Record<string, string> = {};
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (allMembers ?? []).forEach((lm: any) => {
+        memberCountMap[lm.league_id] = (memberCountMap[lm.league_id] ?? 0) + 1;
+        if (!leaderMap[lm.league_id]) leaderMap[lm.league_id] = lm.profiles?.username ?? "—";
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setLocalLeagues((data as any[]).map((m: any) => ({
+        id: m.leagues.id, name: m.leagues.name, type: m.leagues.type,
+        members: memberCountMap[m.leagues.id] ?? 0,
+        myRank: m.rank ?? 0, myPoints: m.points ?? 0,
+        leader: leaderMap[m.leagues.id] ?? "—",
+        inviteCode: m.leagues.invite_code ?? null,
+        isOwner: m.leagues.owner_id === user.id,
+        prizes: m.leagues.prizes ?? undefined,
+      })));
+    } catch { /* keep existing */ }
+  }
+
   useEffect(() => {
     async function loadAll() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
 
       // My leagues
-      try {
-        if (user) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { data } = await (supabase as any)
-            .from("league_members")
-            .select("rank, points, leagues(id, name, type, invite_code, owner_id, description, max_members, prizes)")
-            .eq("user_id", user.id);
-          if (data && data.length > 0) {
-            const leagueIds = (data as any[]).map((m: any) => m.leagues.id);
-
-            // Fetch actual member counts and leaders in one query
-            const { data: allMembers } = await (supabase as any)
-              .from("league_members")
-              .select("league_id, points, profiles(username)")
-              .in("league_id", leagueIds)
-              .order("points", { ascending: false });
-
-            const memberCountMap: Record<string, number> = {};
-            const leaderMap: Record<string, string> = {};
-            if (allMembers) {
-              (allMembers as any[]).forEach((lm: any) => {
-                memberCountMap[lm.league_id] = (memberCountMap[lm.league_id] ?? 0) + 1;
-                if (!leaderMap[lm.league_id]) leaderMap[lm.league_id] = lm.profiles?.username ?? "—";
-              });
-            }
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            setLocalLeagues((data as any[]).map((m: any) => ({
-              id: m.leagues.id,
-              name: m.leagues.name,
-              type: m.leagues.type,
-              members: memberCountMap[m.leagues.id] ?? 0,
-              myRank: m.rank ?? 0,
-              myPoints: m.points ?? 0,
-              leader: leaderMap[m.leagues.id] ?? "—",
-              inviteCode: m.leagues.invite_code ?? null,
-              isOwner: m.leagues.owner_id === user.id,
-              prizes: m.leagues.prizes ?? undefined,
-            })));
-          }
-        }
-      } catch { /* keep mock */ }
+      await refreshMyLeagues();
 
       // Public leagues available to join
       try {
@@ -200,8 +198,9 @@ export default function LeaguesPage() {
       if (result.error) {
         setJoinResult({ error: result.error });
       } else {
-        setJoinResult({ success: `You've joined "${result.league?.name}"!` });
         setJoinCode("");
+        await refreshMyLeagues();
+        setActiveTab("my-leagues");
       }
     } catch {
       setJoinResult({ error: "Something went wrong. Please try again." });
@@ -592,7 +591,7 @@ export default function LeaguesPage() {
 
           {/* ── Join League ── */}
           {activeTab === "join" && (
-            <motion.div key="join" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-5">
+            <motion.div key="join" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
               {/* Private league — invite code */}
               <div className="glass-card p-6 max-w-lg">
                 <h2 className="font-bold text-sfc-black text-lg mb-2">Join a Private League</h2>
@@ -637,7 +636,7 @@ export default function LeaguesPage() {
 
               {/* Public leagues */}
               {publicLeagues.length > 0 && (
-                <div className="glass-card overflow-hidden max-w-lg">
+                <div className="glass-card overflow-hidden">
                   <div className="p-5 border-b border-slate-200 flex items-center gap-2.5">
                     <Globe className="w-4 h-4 text-sfc-blue" />
                     <h2 className="font-bold text-sfc-black text-sm">Open to Everyone</h2>
@@ -658,6 +657,7 @@ export default function LeaguesPage() {
                             const res = await joinPublicLeague(league.id);
                             if (res.success) {
                               setPublicLeagues(prev => prev.filter(l => l.id !== league.id));
+                              await refreshMyLeagues();
                               setActiveTab("my-leagues");
                             }
                             setJoiningPublic(null);
