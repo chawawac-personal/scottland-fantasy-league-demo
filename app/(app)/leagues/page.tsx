@@ -494,14 +494,14 @@ export default function LeaguesPage() {
 
           {/* ── Create League ── */}
           {activeTab === "create" && (
-            <motion.div key="create" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            <motion.div key="create" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex justify-center">
               <AnimatePresence mode="wait">
                 {createdLeague ? (
                   <motion.div
                     key="success"
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="glass-card p-8 max-w-lg text-center"
+                    className="glass-card p-8 w-full max-w-2xl text-center"
                   >
                     <div className="text-5xl mb-4">🎉</div>
                     <h2 className="font-bold text-sfc-black text-xl mb-2">League Created!</h2>
@@ -527,7 +527,7 @@ export default function LeaguesPage() {
                     </button>
                   </motion.div>
                 ) : (
-                  <motion.div key="form" className="glass-card p-6 max-w-lg">
+                  <motion.div key="form" className="glass-card p-6 w-full max-w-2xl">
                     <h2 className="font-bold text-sfc-black text-lg mb-5">Create Private League</h2>
                     <div className="space-y-4">
                       <div>
