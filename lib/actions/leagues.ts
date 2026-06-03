@@ -56,14 +56,14 @@ export async function joinLeague(inviteCode: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Not authenticated" };
 
-  const { data: league } = await supabase
+  // Use service role for the lookup — RLS would block regular users from
+  // seeing private leagues, even with a valid invite code.
+  const { data: league } = await serviceRole()
     .from("leagues")
     .select()
     .eq("invite_code", inviteCode.toUpperCase())
     .single();
 
-  // Use the same message for both not-found and already-member to prevent
-  // invite code enumeration via distinct error responses.
   if (!league) return { error: "Unable to join league. Please check the invite code." };
 
   const { error } = await supabase
@@ -73,6 +73,46 @@ export async function joinLeague(inviteCode: string) {
   if (error) return { error: "Unable to join league. Please check the invite code." };
   revalidatePath("/leagues");
   return { success: true, league };
+}
+
+export async function getPublicLeagues() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase: any = await mkClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const { data: leagues } = await supabase
+    .from("leagues")
+    .select("id, name, description, prizes")
+    .eq("type", "public");
+
+  if (!leagues?.length) return { leagues: [] };
+
+  // Filter out leagues the user is already in
+  if (user) {
+    const { data: memberships } = await supabase
+      .from("league_members")
+      .select("league_id")
+      .eq("user_id", user.id);
+    const joined = new Set((memberships ?? []).map((m: { league_id: string }) => m.league_id));
+    return { leagues: (leagues as { id: string; name: string; description: string | null; prizes: unknown }[]).filter(l => !joined.has(l.id)) };
+  }
+
+  return { leagues };
+}
+
+export async function joinPublicLeague(leagueId: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase: any = await mkClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  const { error } = await supabase
+    .from("league_members")
+    .insert({ league_id: leagueId, user_id: user.id });
+
+  if (error) return { error: error.message };
+  revalidatePath("/leagues");
+  return { success: true };
 }
 
 export async function deleteLeagueAction(leagueId: string) {

@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { createLeague, joinLeague, deleteLeagueAction } from "@/lib/actions/leagues";
+import { createLeague, joinLeague, deleteLeagueAction, getPublicLeagues, joinPublicLeague } from "@/lib/actions/leagues";
 
 
 interface League {
@@ -49,6 +49,8 @@ export default function LeaguesPage() {
   const [membersLoading, setMembersLoading] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [publicLeagues, setPublicLeagues] = useState<{ id: string; name: string; description: string | null; prizes: unknown }[]>([]);
+  const [joiningPublic, setJoiningPublic] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadAll() {
@@ -98,6 +100,12 @@ export default function LeaguesPage() {
           }
         }
       } catch { /* keep mock */ }
+
+      // Public leagues available to join
+      try {
+        const { leagues: pub } = await getPublicLeagues();
+        setPublicLeagues(pub);
+      } catch { /* keep empty */ }
 
       // Global leaderboard + weekly top 3
       try {
@@ -584,9 +592,10 @@ export default function LeaguesPage() {
 
           {/* ── Join League ── */}
           {activeTab === "join" && (
-            <motion.div key="join" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            <motion.div key="join" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-5">
+              {/* Private league — invite code */}
               <div className="glass-card p-6 max-w-lg">
-                <h2 className="font-bold text-sfc-black text-lg mb-2">Join a League</h2>
+                <h2 className="font-bold text-sfc-black text-lg mb-2">Join a Private League</h2>
                 <p className="text-sm text-muted-foreground mb-5">
                   Enter the invite code shared by your league manager
                 </p>
@@ -625,6 +634,44 @@ export default function LeaguesPage() {
                   </button>
                 </div>
               </div>
+
+              {/* Public leagues */}
+              {publicLeagues.length > 0 && (
+                <div className="glass-card overflow-hidden max-w-lg">
+                  <div className="p-5 border-b border-slate-200 flex items-center gap-2.5">
+                    <Globe className="w-4 h-4 text-sfc-blue" />
+                    <h2 className="font-bold text-sfc-black text-sm">Open to Everyone</h2>
+                  </div>
+                  <div className="divide-y divide-slate-100">
+                    {publicLeagues.map(league => (
+                      <div key={league.id} className="flex items-center gap-3 p-4">
+                        <div className="w-9 h-9 rounded-xl bg-sfc-blue/10 border border-sfc-blue/20 flex items-center justify-center shrink-0">
+                          <Globe className="w-4 h-4 text-sfc-blue" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-sfc-black truncate">{league.name}</p>
+                          {league.description && <p className="text-xs text-muted-foreground truncate mt-0.5">{league.description}</p>}
+                        </div>
+                        <button
+                          onClick={async () => {
+                            setJoiningPublic(league.id);
+                            const res = await joinPublicLeague(league.id);
+                            if (res.success) {
+                              setPublicLeagues(prev => prev.filter(l => l.id !== league.id));
+                              setActiveTab("my-leagues");
+                            }
+                            setJoiningPublic(null);
+                          }}
+                          disabled={joiningPublic === league.id}
+                          className="btn-primary text-xs py-1.5 px-3 shrink-0 disabled:opacity-60"
+                        >
+                          {joiningPublic === league.id ? "…" : "Join"}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
