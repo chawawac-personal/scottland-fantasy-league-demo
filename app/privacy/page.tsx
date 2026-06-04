@@ -66,7 +66,7 @@ function PrivacyPolicyContent() {
               <li>Send transactional communications (e.g. password resets, matchday results, league notifications).</li>
               <li>Improve, maintain, and secure the Platform.</li>
               <li>Comply with legal obligations and enforce our Terms of Service.</li>
-              <li>Send optional marketing communications about OMNI Global products and Scottland FC. You may opt out at any time by clicking the unsubscribe link in any marketing email or by emailing <strong>privacy@omniglobal.co</strong> with the subject line &ldquo;Unsubscribe&rdquo;. Opting out will not affect transactional communications required for the operation of your account.</li>
+              <li>Send optional marketing communications about OMNI Global products and Scottland FC. You may opt out at any time by clicking the unsubscribe link in any marketing email or by emailing <strong>privacy@omniglobal.one</strong> with the subject line &ldquo;Unsubscribe&rdquo;. Opting out will not affect transactional communications required for the operation of your account.</li>
             </ul>
             <p className="mt-3">
               We process your data on the legal bases of <em>contract performance</em> (providing the Platform),
@@ -184,7 +184,7 @@ function PrivacyPolicyContent() {
             </ul>
             <p className="mt-3">
               To exercise any of these rights, email us at{" "}
-              <strong>privacy@omniglobal.co</strong>. We will respond within 30 days.
+              <strong>privacy@omniglobal.one</strong>. We will respond within 30 days.
             </p>
           </section>
 
@@ -234,7 +234,7 @@ function PrivacyPolicyContent() {
             <address className="not-italic mt-3 p-4 rounded-xl bg-slate-50 border border-slate-200 text-sm space-y-1">
               <p><strong>OMNI Global</strong></p>
               <p>Scottland Fantasy League — Data Privacy</p>
-              <p>Email: <a href="mailto:privacy@omniglobal.co" className="text-sfc-blue hover:underline">privacy@omniglobal.co</a></p>
+              <p>Email: <a href="mailto:privacy@omniglobal.one" className="text-sfc-blue hover:underline">privacy@omniglobal.one</a></p>
             </address>
           </section>
 
