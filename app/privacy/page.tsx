@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { Shield, Star } from "lucide-react";
+import { Shield } from "lucide-react";
 import Link from "next/link";
 
 function PrivacyPolicyContent() {
@@ -15,10 +15,9 @@ function PrivacyPolicyContent() {
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-sfc-blue to-sfc-blue-dark shadow-blue-glow mb-4">
-            <Star className="w-7 h-7 text-white" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-white border border-slate-200 shadow-sm mb-4 overflow-hidden">
+            <img src="/logo.png" alt="Scottland FC" className="w-16 h-16 object-contain" />
           </div>
-          <p className="text-xs font-bold tracking-widest text-sfc-blue uppercase mb-1">OMNI Global</p>
           <h1 className="font-display text-3xl text-sfc-black tracking-wider">PRIVACY POLICY</h1>
           <p className="text-sm text-muted-foreground mt-2">Scottland Fantasy League — Effective 29 May 2026</p>
         </div>
