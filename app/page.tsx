@@ -77,9 +77,9 @@ export default function HomePage() {
           className="mt-24 grid grid-cols-2 sm:grid-cols-4 gap-5 max-w-3xl mx-auto"
         >
           {[
-            { value: "2,400+", label: "Active Managers" },
+            { value: "15", label: "Active Managers" },
             { value: "18", label: "Scottland FC Players" },
-            { value: "14", label: "Matchdays" },
+            { value: "15", label: "Matchdays Played" },
             { value: "Zimbabwe", label: "#1 Fan League" },
           ].map((stat) => (
             <div key={stat.label} className="glass-card p-6 text-center">
