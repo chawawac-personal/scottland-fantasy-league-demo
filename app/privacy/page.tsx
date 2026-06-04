@@ -79,7 +79,7 @@ function PrivacyPolicyContent() {
             <h2 className="text-base font-bold text-sfc-black mb-3">4. Data Sharing</h2>
             <p className="mb-3">We do not sell your personal data. We may share it only with:</p>
             <ul className="list-disc list-inside space-y-2 pl-2">
-              <li><strong>Service providers:</strong> hosting, database, and analytics vendors who process data on our behalf under confidentiality agreements (including Supabase, Inc. for database and authentication services).</li>
+              <li><strong>Service providers:</strong> hosting, database, and analytics vendors who process data on our behalf under confidentiality agreements.</li>
               <li><strong>Other users:</strong> your username, team name, and fantasy points are visible on public leaderboards as part of the core functionality of the Platform.</li>
               <li><strong>Legal authorities:</strong> where required by applicable law, court order, or governmental authority.</li>
               <li><strong>Business transfers:</strong> in the event of a merger, acquisition, or asset sale involving OMNI Global, your data may be transferred to the successor entity subject to the same protections.</li>
@@ -96,10 +96,10 @@ function PrivacyPolicyContent() {
               third-party services you access.
             </p>
             <p>
-              Our hosting and authentication services are provided by Supabase, Inc. (&ldquo;Supabase&rdquo;). While we
-              require Supabase to maintain appropriate data security standards, OMNI Global cannot guarantee the security
-              of data processed by Supabase and accepts no liability for any breach, loss, or damage arising from
-              Supabase&apos;s infrastructure, to the extent permitted by applicable law.
+              Our infrastructure is supported by third-party hosting and technology providers. While we require all such
+              providers to maintain appropriate data security standards, OMNI Global cannot guarantee the security of data
+              processed by third-party infrastructure and accepts no liability for any breach, loss, or damage arising
+              therefrom, to the extent permitted by applicable law.
             </p>
           </section>
 
