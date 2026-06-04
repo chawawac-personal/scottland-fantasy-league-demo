@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Scottland FC Fantasy League — User & Manager Tutorial</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  @page { size: A4; margin: 15mm 18mm; }
+
+  body {
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 9pt;
+    color: #1e293b;
+    background: #fff;
+    line-height: 1.42;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 9px;
+    border-bottom: 3px solid #1d4ed8;
+    margin-bottom: 12px;
+  }
+  .header img { width: 46px; height: 46px; object-fit: contain; }
+  .header-text h1 { font-size: 16pt; font-weight: 800; color: #1d4ed8; letter-spacing: 0.4px; line-height: 1.1; }
+  .header-text p { font-size: 8pt; color: #64748b; margin-top: 2px; }
+
+  /* ── Two column layout ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin-bottom: 11px; }
+
+  /* ── Panel ── */
+  .panel {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 7px 11px;
+    font-size: 9pt;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .panel-header.blue { background: #1d4ed8; color: #fff; }
+  .panel-header.amber { background: #d97706; color: #fff; }
+  .panel-header.green { background: #16a34a; color: #fff; }
+  .panel-body { padding: 9px 11px; }
+
+  /* ── Steps ── */
+  .steps { list-style: none; }
+  .steps li {
+    display: flex;
+    gap: 7px;
+    margin-bottom: 5px;
+    font-size: 8.2pt;
+    color: #334155;
+    line-height: 1.4;
+    align-items: flex-start;
+  }
+  .steps li:last-child { margin-bottom: 0; }
+  .step-num {
+    background: #1d4ed8;
+    color: #fff;
+    font-size: 7pt;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+    flex-shrink: 0;
+  }
+  .step-num.amber { background: #d97706; }
+  .step-num.green { background: #16a34a; }
+  .steps li strong { color: #1e293b; }
+
+  /* ── Scoring table ── */
+  .score-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 5px;
+    margin-bottom: 11px;
+  }
+  .score-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 6px 8px;
+    text-align: center;
+  }
+  .score-card .val { font-size: 11pt; font-weight: 800; color: #1d4ed8; }
+  .score-card .sub { font-size: 6.8pt; color: #64748b; margin-top: 1px; }
+
+  /* ── Tips bar ── */
+  .tips {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 7px;
+    padding: 8px 11px;
+    margin-bottom: 11px;
+  }
+  .tips-title { font-size: 7.8pt; font-weight: 700; color: #16a34a; margin-bottom: 4px; }
+  .tips-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 14px; }
+  .tips-grid p { font-size: 7.5pt; color: #15803d; line-height: 1.35; }
+  .tips-grid p::before { content: '✓ '; font-weight: 700; }
+
+  /* ── Role pills ── */
+  .role-pill {
+    display: inline-block;
+    font-size: 6.8pt;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+  .role-pill.user { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+  .role-pill.manager { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+
+  /* ── Section title ── */
+  .section-title {
+    font-size: 7.8pt;
+    font-weight: 700;
+    color: #1d4ed8;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
+
+  /* ── Footer ── */
+  .footer {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 7px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer p { font-size: 7.5pt; color: #94a3b8; }
+  .footer strong { color: #475569; }
+
+  @media print { body { font-size: 9pt; } }
+</style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <img src="../public/logo.png" alt="Scottland FC" />
+    <div class="header-text">
+      <h1>USER &amp; MANAGER TUTORIAL</h1>
+      <p>Scottland FC Fantasy League — Step-by-step guide for all platform roles · OMNI Global 2026</p>
+    </div>
+  </div>
+
+  <!-- Scoring quick ref -->
+  <div class="section-title">Points System Quick Reference</div>
+  <div class="score-grid">
+    <div class="score-card"><div class="val">+10</div><div class="sub">GK Goal</div></div>
+    <div class="score-card"><div class="val">+6</div><div class="sub">DEF Goal</div></div>
+    <div class="score-card"><div class="val">+5</div><div class="sub">MID Goal</div></div>
+    <div class="score-card"><div class="val">+4</div><div class="sub">FWD Goal</div></div>
+    <div class="score-card"><div class="val">+3</div><div class="sub">Assist (all)</div></div>
+    <div class="score-card"><div class="val">+4</div><div class="sub">Clean Sheet GK/DEF</div></div>
+    <div class="score-card"><div class="val">−1</div><div class="sub">Yellow Card</div></div>
+    <div class="score-card"><div class="val">−3</div><div class="sub">Red Card</div></div>
+  </div>
+
+  <!-- Main two-column -->
+  <div class="two-col">
+
+    <!-- LEFT: User guide -->
+    <div>
+      <div class="panel" style="margin-bottom:9px">
+        <div class="panel-header blue">👤 For Supporters (Fan Managers) <span class="role-pill user">USER</span></div>
+        <div class="panel-body">
+
+          <p style="font-size:7.8pt;color:#475569;margin-bottom:7px;font-weight:600;">① Getting Started</p>
+          <ol class="steps">
+            <li><span class="step-num">1</span>Visit the platform and click <strong>Get Started</strong>. Enter your email, choose a username, and set a password.</li>
+            <li><span class="step-num">2</span>Complete your profile — add your supporter branch and favourite player.</li>
+            <li><span class="step-num">3</span>Accept the Privacy Policy to activate your account.</li>
+          </ol>
+
+          <p style="font-size:7.8pt;color:#475569;margin:8px 0 5px;font-weight:600;">② Build Your Fantasy Team</p>
+          <ol class="steps">
+            <li><span class="step-num">1</span>Go to <strong>Player Market</strong>. You have a budget of 100M — buy players by position (GK, DEF, MID, FWD).</li>
+            <li><span class="step-num">2</span>Open <strong>My Team</strong>. Drag players from your squad list onto the virtual pitch until all 11 starting spots are filled.</li>
+            <li><span class="step-num">3</span>Choose your <strong>Captain</strong> (2× points) and <strong>Vice-Captain</strong> (1.5× points) then tap <strong>Save Team</strong>.</li>
+          </ol>
+
+          <p style="font-size:7.8pt;color:#475569;margin:8px 0 5px;font-weight:600;">③ Join or Create a League</p>
+          <ol class="steps">
+            <li><span class="step-num">1</span>Go to <strong>Leagues → Join</strong>. Enter a private invite code from your league manager — or click <strong>Join</strong> on any public league.</li>
+            <li><span class="step-num">2</span>To start your own league: <strong>Leagues → Create</strong> — enter a name, optional description and prizes. Share the generated invite code.</li>
+            <li><span class="step-num">3</span>View your league's internal leaderboard via <strong>View League</strong> on the My Leagues tab.</li>
+          </ol>
+
+          <p style="font-size:7.8pt;color:#475569;margin:8px 0 5px;font-weight:600;">④ Follow a Live Match</p>
+          <ol class="steps">
+            <li><span class="step-num">1</span>When a match is live, tap <strong>Matchday</strong> (sidebar) — look for the LIVE badge.</li>
+            <li><span class="step-num">2</span>Watch the event feed update in real time: goals ⚽, assists 🎯, cards 🟨🟥.</li>
+            <li><span class="step-num">3</span>Your <strong>Live Points</strong> panel shows your running total, which players contributed, and any captain multipliers applied.</li>
+            <li><span class="step-num">4</span>After the match the manager finalises stats — minutes, clean sheets and any remaining points are added automatically.</li>
+          </ol>
+
+          <p style="font-size:7.8pt;color:#475569;margin:8px 0 5px;font-weight:600;">⑤ Track Standings &amp; Stats</p>
+          <ol class="steps">
+            <li><span class="step-num">1</span><strong>Dashboard</strong> — see your global rank, weekly points, and upcoming fixtures at a glance.</li>
+            <li><span class="step-num">2</span><strong>Match Stats</strong> — full season results, upcoming fixtures, and sortable player season statistics.</li>
+            <li><span class="step-num">3</span><strong>Profile</strong> — XP progress, level title (Rookie → Legend), and your trophy cabinet of unlocked achievements.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Manager guide -->
+    <div>
+      <div class="panel" style="margin-bottom:9px">
+        <div class="panel-header amber">🎽 For the Club Manager <span class="role-pill manager">MANAGER</span></div>
+        <div class="panel-body">
+
+          <p style="font-size:7.8pt;color:#475569;margin-bottom:5px;font-weight:600;">① Add a Fixture</p>
+          <ol class="steps">
+            <li><span class="step-num amber">1</span>Open <strong>Manager Panel → Matches &amp; Scoring</strong>. Click <strong>Add Fixture</strong>.</li>
+            <li><span class="step-num amber">2</span>Enter the away team, matchday number, kick-off date/time, and season. Save — the fixture appears in all fans' upcoming lists immediately.</li>
+          </ol>
+
+          <p style="font-size:7.8pt;color:#475569;margin:8px 0 5px;font-weight:600;">② Start Live Scoring</p>
+          <ol class="steps">
+            <li><span class="step-num amber">1</span>When the match kicks off, press <strong>▶ Live</strong> on the fixture. This timestamps kick-off and sends a push notification to all fans.</li>
+            <li><span class="step-num amber">2</span>Tap the red <strong>⚡ Live</strong> button to open the Live Scoring panel on your phone during the game.</li>
+            <li><span class="step-num amber">3</span>Log events as they happen: select the event type (⚽ Goal, 🎯 Assist, 🟨 Yellow, 🟥 Red, 🔵 Opp. OG, ⚫ Opp. Goal), pick the player from the squad dropdown, enter the minute, and press <strong>Log</strong>.</li>
+            <li><span class="step-num amber">4</span>The scoreline and event feed update instantly for every fan watching the Live page. Mistakes can be deleted with the ✕ button on each event.</li>
+          </ol>
+
+          <p style="font-size:7.8pt;color:#475569;margin:8px 0 5px;font-weight:600;">③ Finalise Points After the Match</p>
+          <ol class="steps">
+            <li><span class="step-num amber">1</span>Open the <strong>Stats</strong> modal for the match. Goals, assists, and cards logged during live play are pre-filled automatically.</li>
+            <li><span class="step-num amber">2</span>Enter <strong>minutes played</strong> for each player and tick <strong>Clean Sheet</strong> where applicable (GK/DEF/MID only).</li>
+            <li><span class="step-num amber">3</span>Press <strong>Finalise &amp; Calculate Points</strong>. The system calculates every fan's matchday score, updates the global leaderboard, and sends a "points are in" notification to all users.</li>
+          </ol>
+
+          <p style="font-size:7.8pt;color:#475569;margin:8px 0 5px;font-weight:600;">④ Correct a Mistake</p>
+          <ol class="steps">
+            <li><span class="step-num amber">1</span>Open <strong>Stats</strong> on the finished match and click <strong>Reopen Match</strong>. All points are reversed automatically.</li>
+            <li><span class="step-num amber">2</span>Correct the player stats and re-finalise. Points are recalculated cleanly — no double-counting.</li>
+          </ol>
+
+          <p style="font-size:7.8pt;color:#475569;margin:8px 0 5px;font-weight:600;">⑤ Player Availability</p>
+          <ol class="steps">
+            <li><span class="step-num amber">1</span>Go to the <strong>Players</strong> tab. Toggle the injury switch next to any player to mark them as unavailable — they are hidden from the market and fans cannot pick them.</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Tips -->
+      <div class="tips">
+        <div class="tips-title">💡 Key Tips for Fans</div>
+        <div class="tips-grid">
+          <p>Captain a goal-scoring forward for maximum points</p>
+          <p>Check player ownership % to find hidden differentials</p>
+          <p>Private leagues support custom prize descriptions</p>
+          <p>Earn XP and badges by scoring high each matchday</p>
+          <p>Vote in fan polls — results appear in real time</p>
+          <p>Settings → Notifications to control your alerts</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p><strong>Scottland FC Fantasy League</strong> — For questions contact <strong>privacy@omniglobal.one</strong></p>
+    <p><strong>OMNI Global</strong> · © 2026 · Platform built by Jonathan Chawawa</p>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Scottland FC Fantasy League — Project Overview</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  @page { size: A4; margin: 16mm 18mm; }
+
+  body {
+    font-family: 'Inter', Arial, sans-serif;
+    font-size: 9.5pt;
+    color: #1e293b;
+    background: #fff;
+    line-height: 1.45;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #1d4ed8;
+    margin-bottom: 14px;
+  }
+  .header img { width: 52px; height: 52px; object-fit: contain; }
+  .header-text h1 {
+    font-size: 18pt;
+    font-weight: 800;
+    color: #1d4ed8;
+    letter-spacing: 0.5px;
+    line-height: 1.1;
+  }
+  .header-text p { font-size: 8.5pt; color: #64748b; margin-top: 2px; }
+  .badge {
+    margin-left: auto;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1d4ed8;
+    font-size: 7.5pt;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  /* ── Section titles ── */
+  .section-title {
+    font-size: 8pt;
+    font-weight: 700;
+    color: #1d4ed8;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e2e8f0;
+  }
+
+  /* ── Intro block ── */
+  .intro {
+    background: #f8fafc;
+    border-left: 3px solid #1d4ed8;
+    padding: 10px 13px;
+    margin-bottom: 14px;
+    border-radius: 0 6px 6px 0;
+  }
+  .intro p { font-size: 9.5pt; line-height: 1.55; color: #334155; }
+
+  /* ── Feature grid ── */
+  .features { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; margin-bottom: 14px; }
+  .feature-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
+    padding: 9px 10px;
+    background: #fff;
+  }
+  .feature-card .icon { font-size: 15pt; margin-bottom: 4px; }
+  .feature-card h3 { font-size: 8.5pt; font-weight: 700; color: #1e293b; margin-bottom: 3px; }
+  .feature-card p { font-size: 7.8pt; color: #64748b; line-height: 1.4; }
+
+  /* ── Two-column row ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .box {
+    border: 1px solid #e2e8f0;
+    border-radius: 7px;
+    padding: 10px 12px;
+  }
+  .box ul { padding-left: 13px; }
+  .box ul li { font-size: 8.2pt; color: #334155; margin-bottom: 3px; line-height: 1.4; }
+  .box ul li strong { color: #1e293b; }
+
+  /* ── Stats bar ── */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 7px;
+    margin-bottom: 14px;
+  }
+  .stat-item {
+    text-align: center;
+    background: #eff6ff;
+    border-radius: 7px;
+    padding: 8px 6px;
+  }
+  .stat-item .val { font-size: 14pt; font-weight: 800; color: #1d4ed8; }
+  .stat-item .lbl { font-size: 7pt; color: #64748b; margin-top: 1px; font-weight: 500; }
+
+  /* ── Footer ── */
+  .footer {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer p { font-size: 7.8pt; color: #94a3b8; }
+  .footer strong { color: #475569; }
+
+  @media print {
+    body { font-size: 9.5pt; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <img src="../public/logo.png" alt="Scottland FC" />
+    <div class="header-text">
+      <h1>SCOTTLAND FC FANTASY LEAGUE</h1>
+      <p>Project Overview — Prepared by OMNI Global · 2026</p>
+    </div>
+    <div class="badge">CONFIDENTIAL</div>
+  </div>
+
+  <!-- Intro -->
+  <div class="intro">
+    <p>The <strong>Scottland FC Fantasy League</strong> is a bespoke digital fan engagement platform that bridges passionate supporters
+    and real-time match action. Fans draft real club players, earn live fantasy points based on actual match statistics,
+    and compete on weekly leaderboards — transforming casual viewers into highly active team managers and driving
+    year-round loyalty to the Scottland FC community.</p>
+  </div>
+
+  <!-- Platform Stats -->
+  <div class="section-title">Platform at a Glance</div>
+  <div class="stats-bar">
+    <div class="stat-item"><div class="val">2,400+</div><div class="lbl">Target Managers</div></div>
+    <div class="stat-item"><div class="val">18</div><div class="lbl">SFC Players</div></div>
+    <div class="stat-item"><div class="val">34</div><div class="lbl">Matchdays / Season</div></div>
+    <div class="stat-item"><div class="val">Real-Time</div><div class="lbl">Live Scoring</div></div>
+  </div>
+
+  <!-- Feature Grid -->
+  <div class="section-title">Core Features</div>
+  <div class="features">
+    <div class="feature-card">
+      <div class="icon">⚽</div>
+      <h3>Fantasy Team Builder</h3>
+      <p>Pick 11 starters from SFC's 18-player squad within a budget. Set captain (2×) and vice-captain (1.5×) for bonus points.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📡</div>
+      <h3>Live Matchday Centre</h3>
+      <p>Real-time score updates, event feed (goals, cards, assists) and a live personal points tracker updating as events are logged.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🏆</div>
+      <h3>Private & Public Leagues</h3>
+      <p>Fans create private leagues with invite codes or join public competitions. Prize descriptions configurable per league.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📊</div>
+      <h3>Player Market</h3>
+      <p>Buy and sell players within budget. Search, filter by position, and sort by stats — with live ownership percentages.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🎖</div>
+      <h3>Gamification</h3>
+      <p>XP points, level titles (Rookie → Legend), achievement badges, and a weekly digest keep fans engaged year-round.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📣</div>
+      <h3>Fan Community</h3>
+      <p>Fan polls, matchday chat with emoji reactions, and a discussion board foster an active supporter community.</p>
+    </div>
+  </div>
+
+  <!-- Two column: Opportunity + Scoring -->
+  <div class="two-col">
+    <div class="box">
+      <div class="section-title" style="margin-bottom:7px">Business Opportunity</div>
+      <ul>
+        <li><strong>Sponsor visibility</strong> via branded mini-leagues and prize giveaways</li>
+        <li><strong>Fan data</strong> for targeted club communications and merchandise</li>
+        <li><strong>Year-round engagement</strong> — not limited to match days</li>
+        <li><strong>Matchday attendance</strong> incentivised through league rewards</li>
+        <li><strong>Official partner placement</strong> within polls and notifications</li>
+      </ul>
+    </div>
+    <div class="box">
+      <div class="section-title" style="margin-bottom:7px">Technology Stack</div>
+      <ul>
+        <li><strong>Frontend:</strong> Next.js 14 (React, TypeScript)</li>
+        <li><strong>Backend / DB:</strong> Supabase (PostgreSQL + Row-Level Security)</li>
+        <li><strong>Realtime:</strong> Supabase Realtime channels (WebSockets)</li>
+        <li><strong>Hosting:</strong> Vercel (global edge deployment)</li>
+        <li><strong>Auth:</strong> Supabase Auth (email + password)</li>
+        <li><strong>Styling:</strong> Tailwind CSS + Framer Motion</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p><strong>Author:</strong> Jonathan Chawawa — Systems Engineer &amp; Scottland FC Supporter</p>
+    <p><strong>OMNI Global</strong> · privacy@omniglobal.one · © 2026</p>
+  </div>
+
+</body>
+</html>
