@@ -300,6 +300,12 @@ export async function reopenMatchAction(matchId: string, matchday: number, seaso
   // Set match back to live so the manager can re-score
   await supabase.from("matches").update({ status: "live" }).eq("id", matchId);
 
+  // The live trigger fires immediately and sends "now LIVE!" notifications —
+  // delete them since this is a stat correction, not a real kickoff.
+  // Also delete the stale "points are in!" notifications from the finalisation.
+  await supabase.from("notifications").delete().like("title", `MD${matchday} is now LIVE!%`);
+  await supabase.from("notifications").delete().like("title", `MD${matchday} points are in!%`);
+
   revalidatePath("/manager");
   revalidatePath("/admin");
   return { success: true };
