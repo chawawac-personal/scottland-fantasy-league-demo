@@ -45,7 +45,7 @@ export default function HomePage() {
         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sfc-blue/10 border border-sfc-blue/20 text-sfc-blue text-sm font-medium mb-8">
             <Shield className="w-4 h-4" />
-            Exclusively for Scottland FC Supporters
+            Made for Scottland FC Supporters
           </div>
 
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-display tracking-wider text-sfc-black mb-4">
