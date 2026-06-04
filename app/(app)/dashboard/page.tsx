@@ -29,7 +29,7 @@ export default function DashboardPage() {
   const [season, setSeason] = useState("2025/26");
   const [leaderboard, setLeaderboard] = useState<{ rank: number; username: string; team: string; points: number; weekly: number; change: number }[]>([]);
   const [displayMatches, setDisplayMatches] = useState<{ home: string; away: string; date: string; time: string; matchday: number; isLive: boolean; homeScore: number | null; awayScore: number | null }[]>([]);
-  const [recentActivity, setRecentActivity] = useState<{ type: string; title: string; text: string; pts: string; time: string }[]>([]);
+  const [recentActivity, setRecentActivity] = useState<{ id: string; type: string; title: string; text: string; pts: string; time: string }[]>([]);
   const [profile, setProfile] = useState<{ username: string; level: number; xp: number; avatarUrl: string | null; fantasyPoints: number } | null>(null);
   const [weeklyPoints, setWeeklyPoints]     = useState(0);
   const [globalRank, setGlobalRank]         = useState<number | null>(null);
@@ -144,13 +144,14 @@ export default function DashboardPage() {
         if (user) {
           const { data: notifs } = await sb
             .from("notifications")
-            .select("title, body, type, created_at")
+            .select("id, title, body, type, created_at")
             .eq("user_id", user.id)
             .order("created_at", { ascending: false })
             .limit(4);
           if (notifs && notifs.length > 0) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setRecentActivity((notifs as any[]).map((n: any) => ({
+              id: n.id,
               type: n.type,
               title: n.title ?? "",
               text: n.body ?? "",
@@ -162,6 +163,27 @@ export default function DashboardPage() {
       } catch { /* show empty state */ }
     }
     fetchAll();
+
+    const supabase = createClient();
+    let userId: string | null = null;
+    supabase.auth.getUser().then(({ data: { user } }) => { userId = user?.id ?? null; });
+
+    const channel = supabase.channel("dashboard-notifications")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications" }, (payload) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const n = payload.new as any;
+        if (n.user_id === userId) {
+          setRecentActivity(prev => [{ id: n.id, type: n.type, title: n.title ?? "", text: n.body ?? "", pts: "", time: n.created_at }, ...prev].slice(0, 4));
+        }
+      })
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "notifications" }, (payload) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const deleted = payload.old as any;
+        setRecentActivity(prev => prev.filter(a => a.id !== deleted.id));
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const filteredLeaderboard = leaderboard.filter((e) =>
@@ -337,11 +359,11 @@ export default function DashboardPage() {
           <div className="glass-card p-6">
             <h2 className="section-header mb-5">Recent Activity</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              {recentActivity.map((activity, i) => {
+              {recentActivity.map((activity) => {
                 const cfg = ACTIVITY_CONFIG[activity.type] ?? ACTIVITY_CONFIG.system;
                 const Icon = cfg.icon;
                 return (
-                  <div key={i} className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div key={activity.id} className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", cfg.bg)}>
                         <Icon className={cn("w-4 h-4", cfg.color)} />
