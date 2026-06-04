@@ -4,10 +4,6 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Scottland Fantasy League",
   description: "The premier fantasy football platform for Scottland FC supporters in Zimbabwe",
-  icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
-  },
   openGraph: {
     title: "Scottland Fantasy League",
     description: "The premier fantasy football platform for Scottland FC supporters in Zimbabwe",
