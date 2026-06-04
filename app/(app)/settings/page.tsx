@@ -180,7 +180,7 @@ export default function SettingsPage() {
     <div className="min-h-screen">
       <TopBar title="Settings" subtitle="Configure your experience" />
 
-      <div className="p-4 sm:p-6 lg:p-8 max-w-2xl space-y-6">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-2xl mx-auto space-y-6">
 
         {/* Notification Preferences */}
         <div className="glass-card p-7">
