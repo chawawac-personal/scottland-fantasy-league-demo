@@ -197,70 +197,87 @@ export default function MatchStatsPage() {
 
         {/* Player season stats */}
         {sortedStats.length > 0 && (
-          <div className="glass-card overflow-x-auto">
+          <div className="glass-card overflow-hidden">
             <div className="p-5 border-b border-slate-200">
               <h2 className="font-bold text-sfc-black text-sm flex items-center gap-2">
                 <BarChart2 className="w-4 h-4 text-sfc-blue" /> Player Season Stats
               </h2>
-              <p className="text-xs text-muted-foreground mt-0.5">Click a column header to sort</p>
+              <p className="text-xs text-muted-foreground mt-0.5 hidden sm:block">Click a column header to sort</p>
             </div>
-            <table className="w-full">
-              <thead className="bg-slate-100/20 border-b border-slate-200">
-                <tr>
-                  <th className="text-left px-3 sm:px-5 py-3 text-xs font-semibold text-muted-foreground">Player</th>
-                  <th className="text-center px-3 py-3 text-xs font-semibold text-muted-foreground">Pos</th>
-                  {([
-                    { k: "total_points" as StatSort,   label: "Pts",  hide: "" },
-                    { k: "goals" as StatSort,          label: "G",    hide: "" },
-                    { k: "assists" as StatSort,        label: "A",    hide: "" },
-                    { k: "clean_sheets" as StatSort,   label: "CS",   hide: "hidden sm:table-cell" },
-                    { k: "minutes_played" as StatSort, label: "Mins", hide: "hidden sm:table-cell" },
-                  ]).map(({ k, label, hide }) => (
-                    <th
-                      key={k}
-                      onClick={() => toggleSort(k)}
-                      className={cn(
-                        "text-right px-4 py-3 text-xs font-semibold cursor-pointer select-none hover:text-sfc-black transition-colors",
-                        statSort === k ? "text-sfc-blue" : "text-muted-foreground",
-                        hide
-                      )}
-                    >
-                      {label}<SortIcon k={k} />
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {sortedStats.map((p, i) => (
-                  <motion.tr
-                    key={p.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: i * 0.02 }}
-                    className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors"
-                  >
-                    <td className="px-3 sm:px-5 py-3">
-                      <div className="flex items-center gap-1.5 sm:gap-2">
-                        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-sfc-blue/10 flex items-center justify-center text-[10px] font-bold text-sfc-blue flex-shrink-0">
-                          {i + 1}
+
+            {/* ── Mobile card list ── */}
+            <div className="sm:hidden divide-y divide-slate-100">
+              {sortedStats.map((p, i) => (
+                <motion.div key={p.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
+                  className="flex items-center gap-3 px-4 py-3">
+                  <div className="w-6 h-6 rounded-lg bg-sfc-blue/10 flex items-center justify-center text-[10px] font-bold text-sfc-blue shrink-0">
+                    {i + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="text-sm font-semibold text-sfc-black truncate">{p.name}</span>
+                      <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0", getPositionColor(p.position))}>{p.position}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                      <span>⚽ {p.goals}G</span>
+                      <span>🎯 {p.assists}A</span>
+                      <span>🧤 {p.clean_sheets}CS</span>
+                      <span>⏱ {p.minutes_played}m</span>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-base font-bold text-sfc-blue">{p.total_points}</p>
+                    <p className="text-[9px] text-muted-foreground">pts</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* ── Desktop table ── */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-100/20 border-b border-slate-200">
+                  <tr>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-muted-foreground">Player</th>
+                    <th className="text-center px-3 py-3 text-xs font-semibold text-muted-foreground">Pos</th>
+                    {([
+                      { k: "total_points" as StatSort,   label: "Pts"  },
+                      { k: "goals" as StatSort,          label: "G"    },
+                      { k: "assists" as StatSort,        label: "A"    },
+                      { k: "clean_sheets" as StatSort,   label: "CS"   },
+                      { k: "minutes_played" as StatSort, label: "Mins" },
+                    ]).map(({ k, label }) => (
+                      <th key={k} onClick={() => toggleSort(k)}
+                        className={cn("text-right px-4 py-3 text-xs font-semibold cursor-pointer select-none hover:text-sfc-black transition-colors",
+                          statSort === k ? "text-sfc-blue" : "text-muted-foreground")}>
+                        {label}<SortIcon k={k} />
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedStats.map((p, i) => (
+                    <motion.tr key={p.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.02 }}
+                      className="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-lg bg-sfc-blue/10 flex items-center justify-center text-[10px] font-bold text-sfc-blue shrink-0">{i + 1}</div>
+                          <span className="text-sm font-medium text-sfc-black">{p.name}</span>
                         </div>
-                        <span className="text-xs sm:text-sm font-medium text-sfc-black truncate">{p.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-2 sm:px-3 py-3 text-center">
-                      <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full", getPositionColor(p.position))}>
-                        {p.position}
-                      </span>
-                    </td>
-                    <td className="px-2 sm:px-4 py-3 text-right text-xs sm:text-sm font-bold text-sfc-blue">{p.total_points}</td>
-                    <td className="px-2 sm:px-4 py-3 text-right text-xs sm:text-sm text-sfc-black">{p.goals}</td>
-                    <td className="px-2 sm:px-4 py-3 text-right text-xs sm:text-sm text-sfc-black">{p.assists}</td>
-                    <td className="hidden sm:table-cell px-4 py-3 text-right text-sm text-sfc-black">{p.clean_sheets}</td>
-                    <td className="hidden sm:table-cell px-4 py-3 text-right text-sm text-muted-foreground">{p.minutes_played}</td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full", getPositionColor(p.position))}>{p.position}</span>
+                      </td>
+                      <td className="px-4 py-3 text-right text-sm font-bold text-sfc-blue">{p.total_points}</td>
+                      <td className="px-4 py-3 text-right text-sm text-sfc-black">{p.goals}</td>
+                      <td className="px-4 py-3 text-right text-sm text-sfc-black">{p.assists}</td>
+                      <td className="px-4 py-3 text-right text-sm text-sfc-black">{p.clean_sheets}</td>
+                      <td className="px-4 py-3 text-right text-sm text-muted-foreground">{p.minutes_played}</td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
