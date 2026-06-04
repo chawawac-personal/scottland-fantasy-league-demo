@@ -66,7 +66,7 @@ function PrivacyPolicyContent() {
               <li>Send transactional communications (e.g. password resets, matchday results, league notifications).</li>
               <li>Improve, maintain, and secure the Platform.</li>
               <li>Comply with legal obligations and enforce our Terms of Service.</li>
-              <li>Send optional marketing communications about OMNI Global products (you may opt out at any time).</li>
+              <li>Send optional marketing communications about OMNI Global products and Scottland FC. You may opt out at any time by clicking the unsubscribe link in any marketing email or by emailing <strong>privacy@omniglobal.co</strong> with the subject line &ldquo;Unsubscribe&rdquo;. Opting out will not affect transactional communications required for the operation of your account.</li>
             </ul>
             <p className="mt-3">
               We process your data on the legal bases of <em>contract performance</em> (providing the Platform),
@@ -84,6 +84,23 @@ function PrivacyPolicyContent() {
               <li><strong>Legal authorities:</strong> where required by applicable law, court order, or governmental authority.</li>
               <li><strong>Business transfers:</strong> in the event of a merger, acquisition, or asset sale involving OMNI Global, your data may be transferred to the successor entity subject to the same protections.</li>
             </ul>
+          </section>
+
+          {/* 4A */}
+          <section>
+            <h2 className="text-base font-bold text-sfc-black mb-3">4A. Third-Party Services</h2>
+            <p className="mb-3">
+              The Platform may contain links to third-party websites, services, or content. OMNI Global is not responsible
+              for the privacy practices, content, or availability of any third-party services. This Privacy Policy applies
+              solely to data collected through the Platform. We encourage you to review the privacy policies of any
+              third-party services you access.
+            </p>
+            <p>
+              Our hosting and authentication services are provided by Supabase, Inc. (&ldquo;Supabase&rdquo;). While we
+              require Supabase to maintain appropriate data security standards, OMNI Global cannot guarantee the security
+              of data processed by Supabase and accepts no liability for any breach, loss, or damage arising from
+              Supabase&apos;s infrastructure, to the extent permitted by applicable law.
+            </p>
           </section>
 
           {/* 5 */}
@@ -118,6 +135,31 @@ function PrivacyPolicyContent() {
             </p>
           </section>
 
+          {/* 7A */}
+          <section>
+            <h2 className="text-base font-bold text-sfc-black mb-3">7A. Limitation of Liability</h2>
+            <p className="mb-3">
+              To the maximum extent permitted by applicable law, OMNI Global, its directors, officers, employees, agents,
+              partners, and licensors shall not be liable for any indirect, incidental, special, consequential, or punitive
+              damages — including but not limited to loss of profits, data, goodwill, or other intangible losses — arising from:
+            </p>
+            <ul className="list-disc list-inside space-y-2 pl-2">
+              <li>your use of, or inability to use, the Platform;</li>
+              <li>any unauthorised access to or alteration of your data;</li>
+              <li>any third-party conduct on the Platform;</li>
+              <li>any interruption, suspension, or termination of the Platform.</li>
+            </ul>
+            <p className="mt-3">
+              OMNI Global&apos;s total aggregate liability to you for any claim arising under or in connection with this
+              Privacy Policy or the Platform shall not exceed the greater of (i) the amount you paid to OMNI Global in the
+              twelve months preceding the claim, or (ii) USD $10 (ten United States dollars).
+            </p>
+            <p className="mt-3">
+              Nothing in this clause limits OMNI Global&apos;s liability for death or personal injury caused by its
+              negligence, fraud, or any liability that cannot be excluded by law.
+            </p>
+          </section>
+
           {/* 8 */}
           <section>
             <h2 className="text-base font-bold text-sfc-black mb-3">8. Children&apos;s Privacy</h2>
@@ -143,6 +185,22 @@ function PrivacyPolicyContent() {
             <p className="mt-3">
               To exercise any of these rights, email us at{" "}
               <strong>privacy@omniglobal.co</strong>. We will respond within 30 days.
+            </p>
+          </section>
+
+          {/* 9A */}
+          <section>
+            <h2 className="text-base font-bold text-sfc-black mb-3">9A. Zimbabwe Cyber and Data Protection Act (CDPA) 2021</h2>
+            <p className="mb-3">
+              This Privacy Policy is intended to comply with Zimbabwe&apos;s Cyber and Data Protection Act [Chapter 12:07]
+              (the &ldquo;CDPA&rdquo;) and any regulations made thereunder. Where the CDPA grants you rights as a data
+              subject, those rights are in addition to, and not in limitation of, any rights described in Section 9 above.
+              In the event of any conflict between this Privacy Policy and the CDPA, the CDPA shall prevail.
+            </p>
+            <p>
+              If you believe your rights under the CDPA have been infringed, you may lodge a complaint with the Postal
+              and Telecommunications Regulatory Authority of Zimbabwe (POTRAZ) or such other supervisory authority as may
+              be designated under the CDPA.
             </p>
           </section>
 
