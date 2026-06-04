@@ -117,7 +117,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="relative z-10 border-t border-slate-200 py-8 text-center">
         <p className="text-sm text-muted-foreground">
-          &copy; 2026 Scottland Fantasy League &mdash; For Scottland FC Supporters in Zimbabwe
+          &copy; 2026 Scottland Fantasy League
           {" · "}
           <a href="/privacy" className="hover:text-sfc-blue transition-colors">Privacy Policy</a>
         </p>
