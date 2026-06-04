@@ -70,7 +70,7 @@ export function TopBar({ title, subtitle, rightContent }: TopBarProps) {
 
     load();
 
-    // Realtime — new notifications appear instantly without refresh
+    // Realtime — notifications appear and disappear instantly without refresh
     const channel = supabase
       .channel("topbar-notifications")
       .on(
@@ -82,6 +82,15 @@ export function TopBar({ title, subtitle, rightContent }: TopBarProps) {
           if (n.user_id === userId) {
             setNotifs((prev) => [n, ...prev].slice(0, 10));
           }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "notifications" },
+        (payload) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const deleted = payload.old as any;
+          setNotifs((prev) => prev.filter(n => n.id !== deleted.id));
         }
       )
       .subscribe();
