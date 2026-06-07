@@ -38,3 +38,6 @@ next-env.d.ts
 
 # Vercel
 .vercel
+
+# Internal docs — contain sensitive ops info, keys, legal drafts
+docs/
